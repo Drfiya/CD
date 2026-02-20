@@ -18,34 +18,43 @@ export async function registerWithMembership(data: RegisterInput): Promise<Regis
 
   const { name, email, password } = validatedFields.data;
 
-  // Check if user exists
-  const existingUser = await db.user.findUnique({
-    where: { email },
-  });
+  try {
+    // Check if user exists
+    const existingUser = await db.user.findUnique({
+      where: { email },
+    });
 
-  if (existingUser) {
-    return { error: { email: ['Email already in use'] } };
-  }
+    if (existingUser) {
+      return { error: { email: ['Email already in use'] } };
+    }
 
-  // Hash password with salt rounds of 10
-  const hashedPassword = await bcrypt.hash(password, 10);
+    // Hash password with salt rounds of 10
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Create User and Membership atomically
-  const user = await db.user.create({
-    data: {
-      name,
-      email,
-      hashedPassword,
-      membership: {
-        create: {
-          status: 'ACTIVE',
-          planName: 'Community Membership',
+    // Create User and Membership atomically
+    const user = await db.user.create({
+      data: {
+        name,
+        email,
+        hashedPassword,
+        membership: {
+          create: {
+            status: 'ACTIVE',
+            planName: 'Community Membership',
+          },
         },
       },
-    },
-  });
+    });
 
-  return { success: true, userId: user.id };
+    return { success: true, userId: user.id };
+  } catch (err) {
+    console.error('Registration error:', err);
+    // Handle Prisma unique constraint violation (race condition)
+    if (err && typeof err === 'object' && 'code' in err && err.code === 'P2002') {
+      return { error: { email: ['Email already in use'] } };
+    }
+    return { error: { email: ['Registration failed. Please try again.'] } };
+  }
 }
 
 export async function registerUser(formData: FormData) {
@@ -61,27 +70,35 @@ export async function registerUser(formData: FormData) {
 
   const { name, email, password } = validatedFields.data;
 
-  // Check if user exists
-  const existingUser = await db.user.findUnique({
-    where: { email },
-  });
+  try {
+    // Check if user exists
+    const existingUser = await db.user.findUnique({
+      where: { email },
+    });
 
-  if (existingUser) {
-    return { error: { email: ['Email already in use'] } };
+    if (existingUser) {
+      return { error: { email: ['Email already in use'] } };
+    }
+
+    // Hash password with salt rounds of 10
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await db.user.create({
+      data: {
+        name,
+        email,
+        hashedPassword,
+      },
+    });
+
+    return { success: true };
+  } catch (err) {
+    console.error('Registration error:', err);
+    if (err && typeof err === 'object' && 'code' in err && err.code === 'P2002') {
+      return { error: { email: ['Email already in use'] } };
+    }
+    return { error: { email: ['Registration failed. Please try again.'] } };
   }
-
-  // Hash password with salt rounds of 10
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  await db.user.create({
-    data: {
-      name,
-      email,
-      hashedPassword,
-    },
-  });
-
-  return { success: true };
 }
 
 export async function requestPasswordReset(formData: FormData) {
