@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { authOptions } from '@/lib/auth';
 import { getCommunitySettings } from '@/lib/settings-actions';
 import { isEuropeanCountry } from '@/lib/i18n/geolocation';
-import { tMany } from '@/lib/translation/helpers';
+import { getUserLanguage, tMany } from '@/lib/translation/helpers';
 import db from '@/lib/db';
 import { LandingVideoPlayer } from '@/components/landing/LandingVideoPlayer';
 import { LandingPricing } from '@/components/landing/LandingPricing';
@@ -34,11 +34,14 @@ export default async function LandingPage() {
         db.course.count({ where: { status: 'PUBLISHED' } }).catch(() => 0),
     ]);
 
-    // Default content (science community focused)
-    const headline = settings.landingHeadline || 'Join the Science Experts Community';
-    const subheadline = settings.landingSubheadline || 'Where researchers, scientists, and innovators connect, learn, and grow together.';
-    const description = settings.landingDescription || 'Get access to exclusive courses, expert discussions, live events, and a network of brilliant minds. Whether you\'re a seasoned researcher or an aspiring scientist — this is your community.';
-    const benefits = settings.landingBenefits.length > 0 ? settings.landingBenefits : [
+    // Detect visitor language
+    const userLang = await getUserLanguage();
+
+    // Default EN content
+    const enHeadline = settings.landingHeadline || 'Join the Science Experts Community Today';
+    const enSubheadline = settings.landingSubheadline || 'Where researchers, scientists, and innovators connect, learn, and grow together.';
+    const enDescription = settings.landingDescription || 'Get access to exclusive courses, expert discussions, live events, and a network of brilliant minds. Whether you\'re a seasoned researcher or an aspiring scientist — this is your community.';
+    const enBenefits = settings.landingBenefits.length > 0 ? settings.landingBenefits : [
         'Access to all expert-led courses and masterclasses',
         'Join live Q&A sessions and workshops with leading scientists',
         'Private discussion forums with peer researchers',
@@ -48,14 +51,52 @@ export default async function LandingPage() {
         'Direct access to mentors and advisors',
         'Community-driven research project opportunities',
     ];
-    const ctaText = settings.landingCtaText || 'Join Now';
+    const enCtaText = settings.landingCtaText || 'Join Now';
 
-    // Translate texts
+    // Check for saved translation
+    const savedTranslation = userLang !== 'en' ? settings.landingTranslations[userLang] : undefined;
+
+    // Resolve content: saved translation > auto-translate > English
+    let headline: string, subheadline: string, description: string, ctaText: string;
+    let finalBenefits: string[];
+    let videoUrls = settings.landingVideoUrls;
+
+    if (userLang === 'en') {
+        // English: use directly
+        headline = enHeadline;
+        subheadline = enSubheadline;
+        description = enDescription;
+        ctaText = enCtaText;
+        finalBenefits = enBenefits;
+    } else if (savedTranslation?.headline) {
+        // Saved translation exists — use it (with EN fallback for individual missing fields)
+        headline = savedTranslation.headline || enHeadline;
+        subheadline = savedTranslation.subheadline || enSubheadline;
+        description = savedTranslation.description || enDescription;
+        ctaText = savedTranslation.ctaText || enCtaText;
+        finalBenefits = savedTranslation.benefits?.length ? savedTranslation.benefits : enBenefits;
+        if (savedTranslation.videoUrls?.length) {
+            videoUrls = savedTranslation.videoUrls;
+        }
+    } else {
+        // No saved translation — auto-translate on-the-fly via DeepL
+        const autoTranslated = await tMany({
+            headline: enHeadline,
+            subheadline: enSubheadline,
+            description: enDescription,
+            ctaText: enCtaText,
+        }, 'landing_page');
+        headline = autoTranslated.headline;
+        subheadline = autoTranslated.subheadline;
+        description = autoTranslated.description;
+        ctaText = autoTranslated.ctaText;
+        finalBenefits = await Promise.all(
+            enBenefits.map(b => tMany({ benefit: b }, 'landing_page').then(r => r.benefit))
+        );
+    }
+
+    // Translate UI labels
     const translated = await tMany({
-        headline,
-        subheadline,
-        description,
-        ctaText,
         statsMembers: 'Members',
         statsCourses: 'Courses',
         statsOnline: 'Online',
@@ -67,9 +108,8 @@ export default async function LandingPage() {
         termsOfService: 'Terms of Service',
     }, 'landing_page');
 
-    const translatedBenefits = await Promise.all(
-        benefits.map(b => tMany({ benefit: b }, 'landing_page').then(r => r.benefit))
-    );
+    // Merge content into translated object for template
+    const allTranslated = { ...translated, headline, subheadline, description, ctaText };
 
     return (
         <div className="landing-page">
@@ -99,10 +139,10 @@ export default async function LandingPage() {
             </nav>
 
             {/* Video Section – above the fold */}
-            {settings.landingVideoUrls.length > 0 && (
+            {videoUrls.length > 0 && (
                 <section className="landing-video-hero">
                     <div className="landing-container">
-                        <LandingVideoPlayer videoUrls={settings.landingVideoUrls} />
+                        <LandingVideoPlayer videoUrls={videoUrls} />
                     </div>
                 </section>
             )}
@@ -115,8 +155,8 @@ export default async function LandingPage() {
                         <span className="landing-hero-badge-dot" />
                         {settings.communityName}
                     </div>
-                    <h1 className="landing-hero-title">{translated.headline}</h1>
-                    <p className="landing-hero-subtitle">{translated.subheadline}</p>
+                    <h1 className="landing-hero-title">{allTranslated.headline}</h1>
+                    <p className="landing-hero-subtitle">{allTranslated.subheadline}</p>
                     <div className="landing-hero-actions">
                         <Link href="/register" className="landing-hero-cta-primary">{translated.joinNow}</Link>
                         <Link href="/login" className="landing-hero-cta-secondary">{translated.logIn}</Link>
@@ -157,7 +197,7 @@ export default async function LandingPage() {
                         <div className="landing-benefits">
                             <h2 className="landing-section-title">{translated.whatYouGet}</h2>
                             <ul className="landing-benefits-list">
-                                {translatedBenefits.map((benefit, i) => (
+                                {finalBenefits.map((benefit, i) => (
                                     <li key={i} className="landing-benefit-item">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="landing-benefit-check">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
@@ -196,7 +236,7 @@ export default async function LandingPage() {
                                     priceUsd={settings.landingPriceUsd}
                                     priceEur={settings.landingPriceEur}
                                     isEurope={isEurope}
-                                    ctaText={translated.ctaText}
+                                    ctaText={allTranslated.ctaText}
                                 />
                             </div>
                         </div>
@@ -209,7 +249,7 @@ export default async function LandingPage() {
                 <div className="landing-container">
                     <h2 className="landing-section-title">{translated.aboutTitle}</h2>
                     <div className="landing-about-text">
-                        {translated.description.split('\n').map((paragraph, i) => (
+                        {allTranslated.description.split('\n').map((paragraph, i) => (
                             <p key={i}>{paragraph}</p>
                         ))}
                     </div>

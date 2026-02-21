@@ -359,6 +359,7 @@ model CommunitySettings {
   landingPriceEur       Int      @default(89)   // Price in EUR
   landingCtaText        String?  @db.VarChar(100) // CTA button text
   landingTestimonials   Json     @default("[]") // Array of {name, text, role}
+  landingTranslations   Json     @default("{}") // Per-language overrides: { "de": { headline, subheadline, description, benefits, videoUrls }, ... }
 
   updatedAt             DateTime @updatedAt
 }
