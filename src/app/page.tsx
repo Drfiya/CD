@@ -68,31 +68,50 @@ export default async function LandingPage() {
         description = enDescription;
         ctaText = enCtaText;
         finalBenefits = enBenefits;
-    } else if (savedTranslation?.headline) {
-        // Saved translation exists — use it (with EN fallback for individual missing fields)
-        headline = savedTranslation.headline || enHeadline;
-        subheadline = savedTranslation.subheadline || enSubheadline;
-        description = savedTranslation.description || enDescription;
-        ctaText = savedTranslation.ctaText || enCtaText;
-        finalBenefits = savedTranslation.benefits?.length ? savedTranslation.benefits : enBenefits;
-        if (savedTranslation.videoUrls?.length) {
-            videoUrls = savedTranslation.videoUrls;
-        }
     } else {
-        // No saved translation — auto-translate on-the-fly via DeepL
-        const autoTranslated = await tMany({
-            headline: enHeadline,
-            subheadline: enSubheadline,
-            description: enDescription,
-            ctaText: enCtaText,
-        }, 'landing_page');
-        headline = autoTranslated.headline;
-        subheadline = autoTranslated.subheadline;
-        description = autoTranslated.description;
-        ctaText = autoTranslated.ctaText;
-        finalBenefits = await Promise.all(
-            enBenefits.map(b => tMany({ benefit: b }, 'landing_page').then(r => r.benefit))
-        );
+        // Non-English: use saved translations, auto-translate any missing fields via DeepL
+        // Collect fields that need auto-translation
+        const needsTranslation: Record<string, string> = {};
+        if (!savedTranslation?.headline) needsTranslation.headline = enHeadline;
+        if (!savedTranslation?.subheadline) needsTranslation.subheadline = enSubheadline;
+        if (!savedTranslation?.description) needsTranslation.description = enDescription;
+        if (!savedTranslation?.ctaText) needsTranslation.ctaText = enCtaText;
+
+        // Auto-translate only the missing fields (if any)
+        let autoTranslated: Record<string, string> = {};
+        if (Object.keys(needsTranslation).length > 0) {
+            try {
+                autoTranslated = await tMany(needsTranslation, 'landing_page');
+            } catch {
+                // If DeepL fails, fall back to English for missing fields
+                autoTranslated = needsTranslation;
+            }
+        }
+
+        // Combine: saved translation takes priority, auto-translated fills gaps
+        headline = savedTranslation?.headline || autoTranslated.headline || enHeadline;
+        subheadline = savedTranslation?.subheadline || autoTranslated.subheadline || enSubheadline;
+        description = savedTranslation?.description || autoTranslated.description || enDescription;
+        ctaText = savedTranslation?.ctaText || autoTranslated.ctaText || enCtaText;
+
+        // Benefits: use saved, or auto-translate each one
+        if (savedTranslation?.benefits?.length) {
+            finalBenefits = savedTranslation.benefits;
+        } else {
+            try {
+                finalBenefits = await Promise.all(
+                    enBenefits.map(b => tMany({ benefit: b }, 'landing_page').then(r => r.benefit))
+                );
+            } catch {
+                finalBenefits = enBenefits;
+            }
+        }
+
+        // Per-language video URLs
+        if (savedTranslation?.videoUrls?.length) {
+            videoUrls = savedTranslation.videoUrls.filter(u => u.trim() !== '');
+            if (videoUrls.length === 0) videoUrls = settings.landingVideoUrls;
+        }
     }
 
     // Translate UI labels
