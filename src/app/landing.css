@@ -621,7 +621,7 @@
 /* --- Responsive --- */
 @media (max-width: 640px) {
   .landing-video-hero {
-    padding: 5rem 1rem 1rem;
+    padding: 7.5rem 1rem 1rem;
   }
 
   .landing-hero {
