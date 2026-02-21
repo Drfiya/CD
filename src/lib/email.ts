@@ -2,7 +2,13 @@ import { Resend } from 'resend';
 import crypto from 'crypto';
 import db from '@/lib/db';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization — only create Resend client when actually needed
+// This prevents crashes when RESEND_API_KEY is not set but other
+// server actions in auth-actions.ts import from this module chain
+function getResendClient(): Resend | null {
+  if (!process.env.RESEND_API_KEY) return null;
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 export async function sendPasswordResetEmail(email: string) {
   // Check if user exists (but don't reveal this to caller)
@@ -40,6 +46,8 @@ export async function sendPasswordResetEmail(email: string) {
   }
 
   try {
+    const resend = getResendClient();
+    if (!resend) return { success: true };
     await resend.emails.send({
       from: 'Community <onboarding@resend.dev>', // Use Resend's test domain
       to: email,

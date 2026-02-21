@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 
@@ -9,10 +11,44 @@ interface PaywallModalProps {
 
 export function PaywallModal({ isOpen }: PaywallModalProps) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const [isLoading, setIsLoading] = useState(false);
 
   if (!isOpen) {
     return null;
   }
+
+  const handleSubscribe = async () => {
+    if (!session?.user?.id) {
+      // If somehow not authenticated, redirect to register
+      router.push('/register');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: session.user.id,
+          email: session.user.email,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        console.error('No checkout URL returned');
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error('Failed to create checkout session:', error);
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -38,17 +74,26 @@ export function PaywallModal({ isOpen }: PaywallModalProps) {
               Community Membership
             </p>
             <p className="text-3xl font-bold text-primary">
-              $29<span className="text-lg font-normal text-muted-foreground">/month</span>
+              $89<span className="text-lg font-normal text-muted-foreground">/month</span>
             </p>
+          </div>
+
+          {/* Stripe trust badge */}
+          <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            Secure payment powered by Stripe
           </div>
 
           {/* CTA Button */}
           <Button
             size="lg"
             className="w-full"
-            onClick={() => router.push('/register')}
+            onClick={handleSubscribe}
+            disabled={isLoading}
           >
-            Get Started
+            {isLoading ? 'Redirecting to Stripe...' : 'Subscribe Now'}
           </Button>
         </div>
       </div>

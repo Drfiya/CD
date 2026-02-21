@@ -28,24 +28,40 @@ export function RegistrationWizard() {
     setIsProcessing(true);
     setError(null);
 
-    // Simulate payment processing delay (1.5s)
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      // Step 1: Register the user (membership created as EXPIRED until payment confirmed)
+      const result = await registerWithMembership(accountData);
 
-    // Register user with membership
-    const result = await registerWithMembership(accountData);
+      if ('error' in result) {
+        setIsProcessing(false);
+        const firstError = Object.values(result.error)[0]?.[0];
+        setError(firstError || 'Registration failed. Please try again.');
+        setStep('account');
+        return;
+      }
 
-    if ('error' in result) {
+      // Step 2: Create Stripe Checkout session and redirect
+      const response = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: result.userId,
+          email: accountData.email,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.url) {
+        throw new Error(data.error || 'Failed to create checkout session');
+      }
+
+      // Redirect to Stripe Checkout
+      window.location.href = data.url;
+    } catch (err) {
       setIsProcessing(false);
-      // Handle field errors - show first error
-      const firstError = Object.values(result.error)[0]?.[0];
-      setError(firstError || 'Registration failed. Please try again.');
-      // Go back to account step if it's a field error
-      setStep('account');
-      return;
+      setError(err instanceof Error ? err.message : 'Payment setup failed. Please try again.');
     }
-
-    setIsProcessing(false);
-    setStep('success');
   };
 
   const handleBack = () => {

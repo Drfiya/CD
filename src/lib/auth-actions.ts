@@ -32,6 +32,7 @@ export async function registerWithMembership(data: RegisterInput): Promise<Regis
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create User and Membership atomically
+    // Membership starts as EXPIRED — Stripe webhook will activate it after payment
     const user = await db.user.create({
       data: {
         name,
@@ -39,7 +40,7 @@ export async function registerWithMembership(data: RegisterInput): Promise<Regis
         hashedPassword,
         membership: {
           create: {
-            status: 'ACTIVE',
+            status: 'EXPIRED',
             planName: 'Community Membership',
           },
         },

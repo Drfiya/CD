@@ -21,21 +21,50 @@ export function RegistrationStepPayment({
           <div>
             <h3 className="font-semibold text-lg">Community Membership</h3>
             <p className="text-gray-600 text-sm mt-1">
-              Full access to all community features
+              Full access to all community features, courses, and events
             </p>
           </div>
           <div className="text-right">
-            <span className="text-2xl font-bold">$29</span>
+            <span className="text-2xl font-bold">$89</span>
             <span className="text-gray-600">/month</span>
           </div>
         </div>
       </div>
 
-      {/* Mock Payment Notice */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-        <p>
-          This is a mock payment. No real charges will be made.
-        </p>
+      {/* What's included */}
+      <ul className="space-y-2 text-sm text-gray-700">
+        <li className="flex items-center gap-2">
+          <svg className="h-4 w-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          Unlimited community discussions
+        </li>
+        <li className="flex items-center gap-2">
+          <svg className="h-4 w-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          Full course library access
+        </li>
+        <li className="flex items-center gap-2">
+          <svg className="h-4 w-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          Events calendar and registration
+        </li>
+        <li className="flex items-center gap-2">
+          <svg className="h-4 w-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          Cancel anytime — no commitment
+        </li>
+      </ul>
+
+      {/* Stripe trust badge */}
+      <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+        Secure payment powered by Stripe
       </div>
 
       {/* Action Buttons */}
@@ -77,10 +106,10 @@ export function RegistrationStepPayment({
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              Processing...
+              Redirecting to Stripe...
             </span>
           ) : (
-            'Complete Payment'
+            'Proceed to Checkout'
           )}
         </Button>
       </div>
