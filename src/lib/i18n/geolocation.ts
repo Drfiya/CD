@@ -61,6 +61,76 @@ const countryToLanguage: Record<string, string> = {
     'CM': 'fr', // Cameroon
     'HT': 'fr', // Haiti
 
+    // Portuguese-speaking countries
+    'PT': 'pt', // Portugal
+    'BR': 'pt', // Brazil
+    'AO': 'pt', // Angola
+    'MZ': 'pt', // Mozambique
+
+    // Italian-speaking countries
+    'IT': 'it', // Italy
+    'SM': 'it', // San Marino
+
+    // Dutch-speaking countries
+    'NL': 'nl', // Netherlands
+
+    // Polish
+    'PL': 'pl', // Poland
+
+    // Russian-speaking countries
+    'RU': 'ru', // Russia
+    'BY': 'ru', // Belarus
+    'KZ': 'ru', // Kazakhstan
+    'KG': 'ru', // Kyrgyzstan
+
+    // Ukrainian
+    'UA': 'uk', // Ukraine
+
+    // Japanese
+    'JP': 'ja', // Japan
+
+    // Korean
+    'KR': 'ko', // South Korea
+
+    // Chinese
+    'CN': 'zh', // China
+    'TW': 'zh', // Taiwan
+    'HK': 'zh', // Hong Kong
+    'SG': 'zh', // Singapore (multilingual, Chinese majority)
+
+    // Arabic-speaking countries
+    'SA': 'ar', // Saudi Arabia
+    'AE': 'ar', // UAE
+    'EG': 'ar', // Egypt
+    'IQ': 'ar', // Iraq
+    'MA': 'ar', // Morocco
+    'DZ': 'ar', // Algeria
+    'TN': 'ar', // Tunisia
+    'JO': 'ar', // Jordan
+    'LB': 'ar', // Lebanon
+    'KW': 'ar', // Kuwait
+    'QA': 'ar', // Qatar
+    'BH': 'ar', // Bahrain
+    'OM': 'ar', // Oman
+
+    // Turkish
+    'TR': 'tr', // Turkey
+
+    // Swedish
+    'SE': 'sv', // Sweden
+
+    // Danish
+    'DK': 'da', // Denmark
+
+    // Finnish
+    'FI': 'fi', // Finland
+
+    // Norwegian
+    'NO': 'nb', // Norway
+
+    // Czech
+    'CZ': 'cs', // Czech Republic
+
     // English-speaking countries (explicit, but also default)
     'US': 'en',
     'GB': 'en',
@@ -69,6 +139,11 @@ const countryToLanguage: Record<string, string> = {
     'NZ': 'en',
     'IE': 'en',
     'ZA': 'en',
+    'IN': 'en', // India (English widely used)
+    'PH': 'en', // Philippines
+    'NG': 'en', // Nigeria
+    'GH': 'en', // Ghana
+    'KE': 'en', // Kenya
 };
 
 /**
