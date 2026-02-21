@@ -89,18 +89,28 @@
 
 /* --- Video Hero (above the fold) --- */
 .landing-video-hero {
-  padding: 8rem 1.5rem 2.5rem;
+  margin-top: 56px;
+  /* accounts for the fixed nav height */
+  padding: 2rem 1.5rem 2.5rem;
   background: #ffffff;
 }
 
 /* --- Hero Section --- */
 .landing-hero {
   position: relative;
-  padding: 6rem 1.5rem 5rem;
+  margin-top: 56px;
+  /* accounts for the fixed nav height */
+  padding: 20px 1.5rem 5rem;
+  /* 20px gap below the nav line */
   text-align: center;
   overflow: hidden;
   background: #ffffff;
   border-bottom: 1px solid #e5e7eb;
+}
+
+/* When video hero is present above, hero doesn't need the nav offset */
+.landing-video-hero+.landing-hero {
+  margin-top: 0;
 }
 
 .landing-hero-bg {
