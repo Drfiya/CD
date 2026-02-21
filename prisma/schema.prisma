@@ -342,11 +342,24 @@ model CommunitySettings {
   id                    String   @id @default("singleton")
   communityName         String   @default("Community")
   communityDescription  String?  @db.Text
-  communityLogo         String?  // Supabase storage URL
+  communityLogo         String?  // Logo URL (local or remote)
+  logoSize              Int      @default(36) // Logo display height in pixels (20-80)
   welcomeMessage        String?  @db.Text
   registrationOpen      Boolean  @default(true)
   postingEnabled        Boolean  @default(true)
   commentsEnabled       Boolean  @default(true)
+
+  // Landing Page fields
+  landingHeadline       String?  @db.Text      // Main headline
+  landingSubheadline    String?  @db.Text      // Short subtitle
+  landingDescription    String?  @db.Text      // Description text (auto-translated)
+  landingVideoUrls      Json     @default("[]") // Array of video URLs (YouTube/Vimeo/Loom)
+  landingBenefits       Json     @default("[]") // Array of benefit strings
+  landingPriceUsd       Int      @default(89)   // Price in USD
+  landingPriceEur       Int      @default(89)   // Price in EUR
+  landingCtaText        String?  @db.VarChar(100) // CTA button text
+  landingTestimonials   Json     @default("[]") // Array of {name, text, role}
+
   updatedAt             DateTime @updatedAt
 }
 

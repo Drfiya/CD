@@ -119,6 +119,25 @@ export function getLanguageFromAcceptHeader(acceptLanguage: string | null | unde
 
     return 'en';
 }
+/**
+ * European countries that should see EUR pricing.
+ * Includes EU countries + EEA + Switzerland.
+ */
+const europeanCountries = new Set([
+    'DE', 'AT', 'CH', 'LI', 'FR', 'BE', 'LU', 'MC', 'NL',
+    'IT', 'ES', 'PT', 'GR', 'IE', 'FI', 'SE', 'DK', 'NO',
+    'PL', 'CZ', 'SK', 'HU', 'RO', 'BG', 'HR', 'SI', 'EE',
+    'LV', 'LT', 'MT', 'CY', 'IS',
+]);
+
+/**
+ * Check if a country should see EUR pricing.
+ * @param countryCode - ISO 3166-1 alpha-2 country code
+ */
+export function isEuropeanCountry(countryCode: string | null | undefined): boolean {
+    if (!countryCode) return false;
+    return europeanCountries.has(countryCode.toUpperCase().trim());
+}
 
 /**
  * Cookie name for storing language preference

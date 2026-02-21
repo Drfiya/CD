@@ -34,6 +34,7 @@ export function Avatar({ src, name, size = 'md', className }: AvatarProps) {
         alt={name || 'Avatar'}
         width={dimension}
         height={dimension}
+        unoptimized
         className={cn('rounded-full object-cover', className)}
         style={{ width: dimension, height: dimension }}
       />

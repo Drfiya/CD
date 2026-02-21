@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition, useRef, useState } from 'react';
+import { useTransition, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { toast } from 'sonner';
@@ -9,6 +9,7 @@ import {
   updateCommunitySettings,
   uploadCommunityLogo,
   removeCommunityLogo,
+  updateLogoSize,
   type CommunitySettings,
 } from '@/lib/settings-actions';
 
@@ -25,7 +26,24 @@ export function SettingsForm({ settings }: SettingsFormProps) {
   const [logoPreview, setLogoPreview] = useState<string | null>(
     settings.communityLogo
   );
+  const [logoSize, setLogoSize] = useState(settings.logoSize || 36);
+  const [isSizePending, startSizeTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const sizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleLogoSizeChange = useCallback((newSize: number) => {
+    setLogoSize(newSize);
+    // Debounce the save
+    if (sizeTimeoutRef.current) clearTimeout(sizeTimeoutRef.current);
+    sizeTimeoutRef.current = setTimeout(() => {
+      startSizeTransition(async () => {
+        const result = await updateLogoSize(newSize);
+        if (result.error) {
+          toast.error(result.error);
+        }
+      });
+    }, 500);
+  }, []);
 
   const handleSubmit = (formData: FormData) => {
     startTransition(async () => {
@@ -71,7 +89,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
           typeof result.error === 'string'
             ? result.error
             : Object.values(result.error as Record<string, string[]>).flat()[0] ||
-              'Upload failed';
+            'Upload failed';
         toast.error(errorMsg);
         return;
       }
@@ -99,7 +117,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
     });
   };
 
-  const anyPending = isPending || isUploadPending || isRemovePending;
+  const anyPending = isPending || isUploadPending || isRemovePending || isSizePending;
 
   return (
     <div className="space-y-6">
@@ -113,12 +131,13 @@ export function SettingsForm({ settings }: SettingsFormProps) {
               <Image
                 src={logoPreview}
                 alt="Community logo"
-                width={96}
-                height={96}
-                className="w-24 h-24 rounded-lg object-cover border"
+                width={300}
+                height={167}
+                unoptimized
+                className="h-24 w-auto max-w-[180px] rounded-lg object-contain border bg-white p-1"
               />
             ) : (
-              <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center border">
+              <div className="h-24 w-32 rounded-lg bg-muted flex items-center justify-center border">
                 <span className="text-muted-foreground text-sm">No logo</span>
               </div>
             )}
@@ -127,7 +146,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
           {/* Upload/Remove Buttons */}
           <div className="flex-1 space-y-3">
             <p className="text-sm text-muted-foreground">
-              Upload a logo for your community. Recommended size: 96x96 pixels.
+              Upload a logo for your community. Supports any aspect ratio (e.g. 300×167).
               Max file size: 2MB. Supports JPEG, PNG, WebP, and SVG.
             </p>
             <div className="flex gap-3">
@@ -161,6 +180,49 @@ export function SettingsForm({ settings }: SettingsFormProps) {
             </div>
           </div>
         </div>
+
+        {/* Logo Size Slider - only visible when logo is uploaded */}
+        {logoPreview && (
+          <div className="mt-5 pt-5 border-t">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-medium text-foreground">
+                Logo Size
+              </label>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {logoSize}px
+              </span>
+            </div>
+            <input
+              type="range"
+              min={20}
+              max={80}
+              step={1}
+              value={logoSize}
+              onChange={(e) => handleLogoSizeChange(Number(e.target.value))}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
+              disabled={anyPending}
+            />
+            <div className="flex justify-between text-xs text-muted-foreground mt-1">
+              <span>Klein</span>
+              <span>Groß</span>
+            </div>
+            {/* Live preview at current size */}
+            <div className="mt-3 p-3 bg-gray-50 rounded-lg border">
+              <p className="text-xs text-muted-foreground mb-2">Preview:</p>
+              <div className="flex items-center h-16">
+                <Image
+                  src={logoPreview}
+                  alt="Logo size preview"
+                  width={300}
+                  height={167}
+                  unoptimized
+                  className="w-auto object-contain"
+                  style={{ height: `${logoSize}px` }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Details Form */}

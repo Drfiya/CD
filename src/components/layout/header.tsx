@@ -14,28 +14,32 @@ export async function Header({ messages }: HeaderProps) {
   const settings = await getCommunitySettings();
 
   return (
-    <header className="h-16 border-b border-border bg-white">
+    <header className="min-h-16 border-b border-border bg-white py-2">
       <div className="h-full max-w-7xl mx-auto px-4 flex items-center gap-2 lg:gap-6">
-        {/* Left column - Fixed width on mobile to match nav hamburger area */}
-        <div className="w-10 lg:w-64 shrink-0 flex items-center">
-          <Link href="/" className="flex items-center gap-2 lg:gap-3 hover:opacity-80 transition-opacity">
+        {/* Left column - logo */}
+        <div className="shrink-0 flex items-center">
+          <Link href="/" className="flex items-center gap-2 lg:gap-3 hover:opacity-80 transition-opacity ml-4">
             {settings.communityLogo ? (
               <Image
                 src={settings.communityLogo}
                 alt={`${settings.communityName} logo`}
-                width={36}
-                height={36}
-                className="w-8 h-8 lg:w-9 lg:h-9 rounded-full object-cover"
+                width={180}
+                height={100}
+                unoptimized
+                className="w-auto object-contain"
+                style={{ height: `${settings.logoSize || 36}px`, maxWidth: '200px' }}
               />
             ) : (
-              <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-full bg-gray-200 flex items-center justify-center text-sm font-bold text-gray-600">
-                {settings.communityName?.slice(0, 2).toUpperCase() || 'GS'}
-              </div>
+              <>
+                <div className="w-9 h-8 lg:h-9 rounded-md bg-gray-200 flex items-center justify-center text-sm font-bold text-gray-600">
+                  {settings.communityName?.slice(0, 2).toUpperCase() || 'GS'}
+                </div>
+                {/* Community name fallback - only shown when no logo */}
+                <span className="hidden lg:block text-lg font-semibold text-gray-900">
+                  {settings.communityName}
+                </span>
+              </>
             )}
-            {/* Community name - hidden on mobile, shown on lg+ */}
-            <span className="hidden lg:block text-lg font-semibold text-gray-900">
-              {settings.communityName}
-            </span>
           </Link>
         </div>
 
