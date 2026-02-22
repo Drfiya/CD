@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe';
+import { getStripe } from '@/lib/stripe';
 import db from '@/lib/db';
 
 /**
@@ -12,6 +12,7 @@ import db from '@/lib/db';
  */
 export async function POST(req: Request) {
     try {
+        const stripe = getStripe();
         const body = await req.json();
         const { userId, email } = body;
 

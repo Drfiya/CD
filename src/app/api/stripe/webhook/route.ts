@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import { stripe } from '@/lib/stripe';
+import { getStripe } from '@/lib/stripe';
 import db from '@/lib/db';
 import type Stripe from 'stripe';
 
@@ -8,6 +8,7 @@ import type Stripe from 'stripe';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
+    const stripe = getStripe();
     const body = await req.text();
     const headersList = await headers();
     const signature = headersList.get('stripe-signature');
@@ -75,6 +76,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     const customerId = session.customer as string;
 
     // Retrieve the subscription to get the price ID
+    const stripe = getStripe();
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
     const priceId = subscription.items.data[0]?.price?.id;
 
