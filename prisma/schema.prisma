@@ -41,6 +41,7 @@ model User {
   auditLogs      AuditLog[]
   membership     Membership?
   kanbanCards    KanbanCard[]
+  devResources   DevTrackerResource[]
 
   @@index([email])
   @@index([points])
@@ -420,4 +421,65 @@ model KanbanCard {
 
   @@index([status, position])
   @@index([createdById])
+}
+
+// Dev Tracker — Branch/feature card metadata (replaces localStorage)
+model DevTrackerCard {
+  id              String   @id @default(cuid())
+  branchName      String   @unique           // Git branch name — the primary key from GitHub
+  column          String   @default("active") // active, pr_open, merged, follow_up
+  priority        String?                     // high, medium, low
+  assignee        String?                     // canonical team member name
+  platformTag     String?                     // detected topic / feature area
+  flagged         Boolean  @default(false)
+  notes           String?  @db.Text
+  lastSyncedAt    DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([column])
+  @@index([flagged])
+}
+
+// Dev Tracker — Shared resources (prompts, links, notes)
+enum DevResourceType {
+  PROMPT
+  LINK
+  NOTE
+}
+
+model DevTrackerResource {
+  id          String          @id @default(cuid())
+  type        DevResourceType
+  title       String          @db.VarChar(200)
+  content     String          @db.Text
+  starred     Boolean         @default(false)
+  useCount    Int             @default(0)
+  createdById String
+  createdBy   User            @relation(fields: [createdById], references: [id])
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([type])
+  @@index([starred])
+  @@index([createdById])
+}
+
+// Dev Tracker — Launch readiness checklist
+model LaunchChecklistItem {
+  id          String   @id @default(cuid())
+  category    String                          // technical, content, legal, payments, testing, operations
+  label       String   @db.VarChar(300)
+  checked     Boolean  @default(false)
+  autoChecked Boolean  @default(false)        // true = system-verified, false = manual checkbox
+  blocker     Boolean  @default(false)        // blocks launch if unchecked
+  position    Int      @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([blocker])
 }

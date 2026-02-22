@@ -63,6 +63,11 @@ const tabs: Tab[] = [
     label: 'Audit Log',
     canAccess: (role) => canEditSettings(role),
   },
+  {
+    href: '/admin/dev-tracker',
+    label: 'Dev Tracker',
+    canAccess: (role) => canEditSettings(role),
+  },
 ];
 
 /**
