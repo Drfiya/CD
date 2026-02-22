@@ -23,8 +23,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Allow API auth routes and translation API (used by public landing page)
-  if (pathname.startsWith('/api/auth') || pathname.startsWith('/api/translate')) {
+  // Allow API auth routes, Stripe webhooks, and translation API (used by public landing page)
+  if (pathname.startsWith('/api/auth') || pathname.startsWith('/api/stripe') || pathname.startsWith('/api/translate')) {
     return NextResponse.next();
   }
 
@@ -51,7 +51,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization)
      * - favicon.ico
-     * - public assets
+     * - public assets (logos, images)
      */
     '/((?!_next/static|_next/image|favicon.ico|community-logo|.*\\.svg$|.*\\.png$).*)',
   ],

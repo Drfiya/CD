@@ -111,10 +111,23 @@ export async function translatePostForUser<T extends TranslatablePost>(
     post: T,
     userLanguage: string
 ): Promise<T> {
-    const sourceLanguage = post.languageCode || 'en';
+    const storedLanguage = post.languageCode || 'en';
 
-    // No translation needed if languages match
-    if (sourceLanguage === userLanguage) {
+    // When stored language matches user language, verify via auto-detection.
+    // This catches posts whose language was misdetected (e.g. DeepL was
+    // unavailable at creation time, so the fallback 'en' was stored).
+    let effectiveSourceLanguage = storedLanguage;
+    if (storedLanguage === userLanguage && post.plainText) {
+        const detected = await detectLanguage(post.plainText);
+        if (detected !== userLanguage) {
+            effectiveSourceLanguage = detected;
+        } else {
+            return post; // Genuinely the same language
+        }
+    }
+
+    // No translation needed if languages truly match
+    if (effectiveSourceLanguage === userLanguage) {
         return post;
     }
 
@@ -127,7 +140,7 @@ export async function translatePostForUser<T extends TranslatablePost>(
             entityId: post.id,
             fieldName: 'plainText',
             content: post.plainText,
-            sourceLanguage,
+            sourceLanguage: effectiveSourceLanguage,
             targetLanguage: userLanguage,
         });
     }
@@ -139,7 +152,7 @@ export async function translatePostForUser<T extends TranslatablePost>(
             entityId: post.id,
             fieldName: 'title',
             content: post.title,
-            sourceLanguage,
+            sourceLanguage: effectiveSourceLanguage,
             targetLanguage: userLanguage,
         });
     }
@@ -167,10 +180,20 @@ export async function translateCommentForUser<T extends TranslatableComment>(
     comment: T,
     userLanguage: string
 ): Promise<T> {
-    const sourceLanguage = comment.languageCode || 'en';
+    const storedLanguage = comment.languageCode || 'en';
 
-    // No translation needed if languages match
-    if (sourceLanguage === userLanguage) {
+    // Verify via auto-detection when stored language matches user language
+    let effectiveSourceLanguage = storedLanguage;
+    if (storedLanguage === userLanguage && comment.content) {
+        const detected = await detectLanguage(comment.content);
+        if (detected !== userLanguage) {
+            effectiveSourceLanguage = detected;
+        } else {
+            return comment; // Genuinely the same language
+        }
+    }
+
+    if (effectiveSourceLanguage === userLanguage) {
         return comment;
     }
 
@@ -179,7 +202,7 @@ export async function translateCommentForUser<T extends TranslatableComment>(
         entityId: comment.id,
         fieldName: 'content',
         content: comment.content,
-        sourceLanguage,
+        sourceLanguage: effectiveSourceLanguage,
         targetLanguage: userLanguage,
     });
 

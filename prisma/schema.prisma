@@ -20,6 +20,7 @@ model User {
   level          Int       @default(1)
   role           String    @default("member") // member, moderator, admin, owner
   languageCode   String    @default("en")     // User's preferred language
+  stripeCustomerId String?  @unique           // Stripe Customer ID
 
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -40,6 +41,7 @@ model User {
   auditLogs      AuditLog[]
   membership     Membership?
   kanbanCards    KanbanCard[]
+  devResources   DevTrackerResource[]
 
   @@index([email])
   @@index([points])
@@ -378,7 +380,12 @@ model Membership {
   status    MembershipStatus @default(ACTIVE)
   planName  String           @default("Community Membership")
   paidAt    DateTime         @default(now())
-  expiresAt DateTime?        // null = no expiration (for mock payments)
+  expiresAt DateTime?        // null = no expiration
+
+  // Stripe integration
+  stripeCustomerId     String?  @unique
+  stripeSubscriptionId String?  @unique
+  stripePriceId        String?
 
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
@@ -428,4 +435,72 @@ model KanbanCard {
 
   @@index([status, position])
   @@index([createdById])
+}
+
+// Dev Tracker — Branch/feature card metadata (replaces localStorage)
+model DevTrackerCard {
+  id              String   @id @default(cuid())
+  branchName      String   @unique           // Git branch name — the primary key from GitHub
+  column          String   @default("active") // active, pr_open, merged, follow_up
+  priority        String?                     // high, medium, low
+  assignee        String?                     // canonical team member name
+  platformTag     String?                     // detected topic / feature area
+  flagged         Boolean  @default(false)
+  notes           String?  @db.Text
+  lastSyncedAt    DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([column])
+  @@index([flagged])
+}
+
+// Dev Tracker — Shared resources (prompts, links, notes, files)
+enum DevResourceType {
+  PROMPT
+  LINK
+  NOTE
+  FILE
+}
+
+model DevTrackerResource {
+  id          String          @id @default(cuid())
+  type        DevResourceType
+  title       String          @db.VarChar(200)
+  content     String          @db.Text          // Text content for PROMPT/LINK/NOTE, description for FILE
+  starred     Boolean         @default(false)
+  useCount    Int             @default(0)
+  createdById String
+  createdBy   User            @relation(fields: [createdById], references: [id])
+
+  // File upload fields (only populated when type = FILE)
+  fileUrl     String?                            // Supabase storage URL
+  fileName    String?         @db.VarChar(255)   // Original filename
+  fileSize    Int?                               // Size in bytes
+  mimeType    String?         @db.VarChar(100)   // MIME type
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([type])
+  @@index([starred])
+  @@index([createdById])
+}
+
+// Dev Tracker — Launch readiness checklist
+model LaunchChecklistItem {
+  id          String   @id @default(cuid())
+  category    String                          // technical, content, legal, payments, testing, operations
+  label       String   @db.VarChar(300)
+  checked     Boolean  @default(false)
+  autoChecked Boolean  @default(false)        // true = system-verified, false = manual checkbox
+  blocker     Boolean  @default(false)        // blocks launch if unchecked
+  position    Int      @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([blocker])
 }
