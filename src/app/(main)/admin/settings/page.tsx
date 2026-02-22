@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { canEditSettings } from '@/lib/permissions';
 import { getCommunitySettings } from '@/lib/settings-actions';
 import { SettingsForm } from '@/components/admin/settings-form';
+import { LandingSettingsForm } from '@/components/admin/landing-settings-form';
 
 export const metadata: Metadata = {
   title: 'Community Settings | Admin',
@@ -34,6 +35,9 @@ export default async function AdminSettingsPage() {
       </div>
 
       <SettingsForm settings={settings} />
+
+      <LandingSettingsForm settings={settings} />
     </div>
   );
 }
+

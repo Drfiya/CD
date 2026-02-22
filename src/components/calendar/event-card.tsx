@@ -25,6 +25,7 @@ export function EventCard({ occurrence }: EventCardProps) {
               src={event.coverImage}
               alt={event.title}
               fill
+              unoptimized
               className="object-cover"
             />
           </div>

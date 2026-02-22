@@ -49,6 +49,7 @@ export function MemberCard({ member }: MemberCardProps) {
               src={member.image}
               alt={member.name || 'Member'}
               fill
+              unoptimized
               className="rounded-full object-cover"
               sizes="48px"
             />

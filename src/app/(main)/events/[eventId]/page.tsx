@@ -47,6 +47,7 @@ export default async function EventDetailPage({ params }: PageProps) {
             src={event.coverImage}
             alt={event.title}
             fill
+            unoptimized
             className="object-cover"
             priority
           />

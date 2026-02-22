@@ -32,9 +32,11 @@ export async function Sidebar() {
           <Image
             src={settings.communityLogo}
             alt={`${settings.communityName} logo`}
-            width={32}
-            height={32}
-            className="w-8 h-8 rounded-md object-cover"
+            width={180}
+            height={100}
+            unoptimized
+            className="w-auto object-contain"
+            style={{ height: `${settings.logoSize || 36}px`, maxWidth: '140px' }}
           />
         )}
         <span className="text-xl font-bold text-foreground truncate">

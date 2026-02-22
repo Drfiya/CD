@@ -55,3 +55,5 @@ hooks/dist/
 
 # Prisma generated client
 src/generated/
+._*
+transparent-black-small.png

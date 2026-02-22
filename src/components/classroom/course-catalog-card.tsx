@@ -37,6 +37,7 @@ export function CourseCatalogCard({ course, ui }: CourseCatalogCardProps) {
             src={course.coverImage}
             alt={course.title}
             fill
+            unoptimized
             className="object-cover"
           />
         )}
