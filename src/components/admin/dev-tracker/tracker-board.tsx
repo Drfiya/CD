@@ -1,37 +1,51 @@
 'use client';
 
 /**
- * Dev Tracker Board — Client component.
- * Kanban board with GitHub-synced cards, drag-and-drop columns,
- * stats header, and topic tags.
+ * Unified Command Center Board — Client component.
+ * Shows both GitHub-synced code cards and manual task cards
+ * in 3 unified columns (To Do / In Progress / Done).
+ * Filter tabs: All | Code | Tasks.
  */
 
 import { useState, useCallback, useTransition } from 'react';
-import { syncDevTracker, saveCardMeta, updateCardColumn } from '@/lib/dev-tracker/actions';
-import type { SyncResponse } from '@/lib/dev-tracker/actions';
+import {
+    syncDevTracker,
+    updateCardColumn,
+    type UnifiedBoardData,
+    type UnifiedCardData,
+    getUnifiedBoard,
+} from '@/lib/dev-tracker/actions';
+import {
+    createKanbanCard,
+    moveKanbanCard,
+    deleteKanbanCard,
+    type KanbanCardData,
+} from '@/lib/kanban-actions';
 import type { TrackerCard, TrackerStats } from '@/lib/dev-tracker/sync';
+import type { KanbanStatus } from '@/generated/prisma/client';
 
-// --- Column config ---
+// --- Column definitions ---
 
 const COLUMNS = [
-    { id: 'active', label: 'Active', color: '#22c55e' },
-    { id: 'pr_open', label: 'PR Open', color: '#eab308' },
-    { id: 'merged', label: 'Merged / Done', color: '#6366f1' },
-    { id: 'follow_up', label: 'Needs Follow-Up', color: '#ef4444' },
+    { id: 'todo', label: 'To Do', color: '#3b82f6' },
+    { id: 'in_progress', label: 'In Progress', color: '#eab308' },
+    { id: 'done', label: 'Done', color: '#22c55e' },
 ] as const;
 
-// --- Freshness badge ---
+type FilterTab = 'all' | 'code' | 'tasks';
+
+// --- GitHub card freshness badge ---
 
 function FreshnessDot({ freshness }: { freshness: string }) {
     const colors: Record<string, string> = {
         green: 'bg-green-400',
         yellow: 'bg-yellow-400',
-        gray: 'bg-gray-400',
+        gray: 'bg-gray-300',
     };
     return (
         <span
-            className={`inline-block w-2 h-2 rounded-full ${colors[freshness] || colors.gray}`}
-            title={freshness === 'green' ? 'Active today' : freshness === 'yellow' ? 'Active this week' : 'Stale'}
+            className={`inline-block w-2 h-2 rounded-full ${colors[freshness] || 'bg-gray-300'}`}
+            title={freshness === 'green' ? 'Active (< 7 days)' : freshness === 'yellow' ? 'Stale (> 7 days)' : 'Inactive'}
         />
     );
 }
@@ -40,151 +54,200 @@ function FreshnessDot({ freshness }: { freshness: string }) {
 
 function TopicBadge({ label }: { label: string }) {
     return (
-        <span className="inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-indigo-100 text-indigo-700">
+        <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 mr-1">
             {label}
         </span>
     );
 }
 
-// --- Card ---
+// --- GitHub Card ---
 
-function TrackerCardUI({
+function GitHubCardUI({
     card,
     onDragStart,
 }: {
     card: TrackerCard;
-    onDragStart: (e: React.DragEvent, branchName: string) => void;
+    onDragStart: (e: React.DragEvent, id: string) => void;
 }) {
-    const [expanded, setExpanded] = useState(false);
-
     return (
         <div
             draggable
             onDragStart={(e) => onDragStart(e, card.branchName)}
-            onClick={() => setExpanded(!expanded)}
-            className="bg-white border border-gray-200 rounded-lg p-3 cursor-grab hover:shadow-md transition-shadow active:cursor-grabbing"
+            className="bg-white border border-gray-200 rounded-lg p-3 cursor-grab active:cursor-grabbing
+                       hover:shadow-md hover:border-indigo-200 transition-all group"
         >
-            {/* Header */}
-            <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
+            {/* Title row */}
+            <div className="flex items-start justify-between gap-1 mb-1">
+                <div className="flex items-center gap-1.5 min-w-0">
                     <FreshnessDot freshness={card.freshness} />
-                    <span className="text-sm font-medium text-gray-900 truncate">{card.title}</span>
+                    <span className="text-xs font-semibold text-gray-800 truncate">{card.title}</span>
                 </div>
-                {card.flagged && <span className="text-red-500 text-xs">🚩</span>}
+                <span className="text-[10px] text-gray-400 shrink-0">🔧</span>
             </div>
 
+            {/* Topic tag */}
+            {card.platformTagLabel && (
+                <div className="mb-1.5"><TopicBadge label={card.platformTagLabel} /></div>
+            )}
+
             {/* Meta row */}
-            <div className="flex items-center gap-2 mt-2 flex-wrap">
-                {card.platformTagLabel && <TopicBadge label={card.platformTagLabel} />}
-                <span className="text-xs text-gray-500">{card.commitCount} commits</span>
+            <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                <span>{card.commitCount} commit{card.commitCount !== 1 ? 's' : ''}</span>
                 {card.prNumber && (
-                    <a
-                        href={`https://github.com/Drfiya/CD/pull/${card.prNumber}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-blue-600 hover:underline"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        PR #{card.prNumber}
-                    </a>
+                    <span className="text-amber-600">PR #{card.prNumber}</span>
                 )}
+                {card.flagged && <span className="text-red-500">🔴</span>}
             </div>
 
             {/* Authors */}
-            <div className="flex items-center gap-1 mt-2">
-                {card.authors.map((author) => (
+            <div className="flex gap-1 mt-1.5">
+                {card.authors.map((a) => (
                     <span
-                        key={author}
-                        className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-200 text-xs font-medium text-gray-700"
-                        title={author}
+                        key={a}
+                        className="w-5 h-5 rounded-full bg-gray-200 text-[9px] font-bold flex items-center justify-center text-gray-600"
+                        title={a}
                     >
-                        {author[0]}
+                        {a[0]}
                     </span>
                 ))}
             </div>
+        </div>
+    );
+}
 
-            {/* Expanded details */}
-            {expanded && (
-                <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
-                    <p className="text-xs text-gray-500">
-                        Branch: <code className="bg-gray-100 px-1 rounded">{card.branchName}</code>
-                    </p>
-                    {card.lastCommitDate && (
-                        <p className="text-xs text-gray-500">
-                            Last commit: {new Date(card.lastCommitDate).toLocaleDateString()}
-                        </p>
-                    )}
-                    {card.notes && (
-                        <p className="text-xs text-gray-600 bg-yellow-50 p-2 rounded">{card.notes}</p>
-                    )}
-                    {card.priority && (
-                        <p className="text-xs text-gray-500">
-                            Priority:{' '}
-                            <span className={card.priority === 'high' ? 'text-red-600 font-medium' : ''}>
-                                {card.priority}
-                            </span>
-                        </p>
-                    )}
+// --- Manual Task Card ---
+
+function ManualCardUI({
+    card,
+    onDragStart,
+    onDelete,
+}: {
+    card: Extract<UnifiedCardData, { source: 'manual' }>;
+    onDragStart: (e: React.DragEvent, id: string) => void;
+    onDelete: (id: string) => void;
+}) {
+    return (
+        <div
+            draggable
+            onDragStart={(e) => onDragStart(e, card.id)}
+            className="bg-white border border-gray-200 rounded-lg p-3 cursor-grab active:cursor-grabbing
+                       hover:shadow-md hover:border-blue-200 transition-all group"
+        >
+            {/* Image */}
+            {card.imageUrl && (
+                <div className="mb-2 -mt-1 -mx-1 rounded-t overflow-hidden">
+                    <img src={card.imageUrl} alt="" className="w-full h-24 object-cover" />
                 </div>
             )}
+
+            {/* Title row */}
+            <div className="flex items-start justify-between gap-1 mb-1">
+                <span className="text-xs font-semibold text-gray-800">{card.title}</span>
+                <span className="text-[10px] text-gray-400 shrink-0">📋</span>
+            </div>
+
+            {/* Description */}
+            {card.description && (
+                <p className="text-[10px] text-gray-500 line-clamp-2 mb-1.5">{card.description}</p>
+            )}
+
+            {/* Footer */}
+            <div className="flex items-center justify-between mt-1.5">
+                <div className="flex items-center gap-1">
+                    {card.createdBy.image ? (
+                        <img src={card.createdBy.image} className="w-5 h-5 rounded-full" alt="" />
+                    ) : card.createdBy.name ? (
+                        <span className="w-5 h-5 rounded-full bg-blue-200 text-[9px] font-bold flex items-center justify-center text-blue-700">
+                            {card.createdBy.name[0]}
+                        </span>
+                    ) : null}
+                    <span className="text-[10px] text-gray-400">{card.createdBy.name}</span>
+                </div>
+                <button
+                    onClick={(e) => { e.stopPropagation(); onDelete(card.id); }}
+                    className="opacity-0 group-hover:opacity-100 text-[10px] text-red-400 hover:text-red-600 transition-opacity"
+                    title="Delete task"
+                >
+                    ✕
+                </button>
+            </div>
         </div>
     );
 }
 
 // --- Column ---
 
-function KanbanColumnUI({
+function ColumnUI({
     id,
     label,
     color,
     cards,
+    filter,
     onDragStart,
     onDrop,
+    onDeleteManual,
 }: {
     id: string;
     label: string;
     color: string;
-    cards: TrackerCard[];
-    onDragStart: (e: React.DragEvent, branchName: string) => void;
-    onDrop: (branchName: string, column: string) => void;
+    cards: UnifiedCardData[];
+    filter: FilterTab;
+    onDragStart: (e: React.DragEvent, cardId: string) => void;
+    onDrop: (cardId: string, column: string) => void;
+    onDeleteManual: (id: string) => void;
 }) {
-    const [dragOver, setDragOver] = useState(false);
+    // Apply filter
+    const filteredCards = cards.filter((c) => {
+        if (filter === 'code') return c.source === 'github';
+        if (filter === 'tasks') return c.source === 'manual';
+        return true;
+    });
 
     return (
         <div
-            className={`flex-1 min-w-[260px] rounded-xl border transition-colors ${dragOver ? 'border-indigo-400 bg-indigo-50/50' : 'border-gray-200 bg-gray-50/50'
-                }`}
-            onDragOver={(e) => {
-                e.preventDefault();
-                setDragOver(true);
-            }}
-            onDragLeave={() => setDragOver(false)}
+            className="flex-1 min-w-[240px]"
+            onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
                 e.preventDefault();
-                setDragOver(false);
-                const branchName = e.dataTransfer.getData('text/plain');
-                if (branchName) onDrop(branchName, id);
+                const cardId = e.dataTransfer.getData('text/plain');
+                if (cardId) onDrop(cardId, id);
             }}
         >
             {/* Column header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-                <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
-                    <h3 className="text-sm font-semibold text-gray-700">{label}</h3>
-                </div>
-                <span className="text-xs font-medium text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full">
-                    {cards.length}
+            <div className="flex items-center gap-2 mb-3">
+                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
+                <span className="text-xs font-semibold text-gray-700">{label}</span>
+                <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">
+                    {filteredCards.length}
                 </span>
             </div>
 
             {/* Cards */}
-            <div className="p-3 space-y-2 min-h-[100px]">
-                {cards.length === 0 ? (
-                    <p className="text-xs text-gray-400 text-center py-4">No items</p>
+            <div className="space-y-2 min-h-[80px] p-1 rounded-lg bg-gray-50/50">
+                {filteredCards.length === 0 ? (
+                    <div className="text-center py-6 text-xs text-gray-400">
+                        Drag cards here
+                    </div>
                 ) : (
-                    cards.map((card) => (
-                        <TrackerCardUI key={card.branchName} card={card} onDragStart={onDragStart} />
-                    ))
+                    filteredCards.map((card) => {
+                        if (card.source === 'github') {
+                            return (
+                                <GitHubCardUI
+                                    key={card.id}
+                                    card={card.card}
+                                    onDragStart={onDragStart}
+                                />
+                            );
+                        }
+                        return (
+                            <ManualCardUI
+                                key={card.id}
+                                card={card}
+                                onDragStart={onDragStart}
+                                onDelete={onDeleteManual}
+                            />
+                        );
+                    })
                 )}
             </div>
         </div>
@@ -193,45 +256,22 @@ function KanbanColumnUI({
 
 // --- Stats header ---
 
-function StatsHeader({ stats }: { stats: TrackerStats }) {
-    return (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <p className="text-sm text-gray-500">Features</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalFeatures}</p>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <p className="text-sm text-gray-500">Active</p>
-                <p className="text-2xl font-bold text-green-600">{stats.activeFeatures}</p>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <p className="text-sm text-gray-500">Shipped</p>
-                <p className="text-2xl font-bold text-indigo-600">{stats.shippedFeatures}</p>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <p className="text-sm text-gray-500">Commits This Week</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.commitsThisWeek}</p>
-            </div>
-        </div>
-    );
-}
-
-// --- Topic tags ---
-
-function TopicTags({ topics }: { topics: TrackerStats['topTopics'] }) {
-    if (topics.length === 0) return null;
+function StatsHeader({ stats, manualCount }: { stats: TrackerStats; manualCount: number }) {
+    const items = [
+        { label: 'Features', value: stats.totalFeatures },
+        { label: 'Active', value: stats.activeFeatures, color: 'text-green-600' },
+        { label: 'Shipped', value: stats.shippedFeatures, color: 'text-indigo-600' },
+        { label: 'Tasks', value: manualCount, color: 'text-blue-600' },
+        { label: 'Commits This Week', value: stats.commitsThisWeek },
+    ];
 
     return (
-        <div className="flex flex-wrap gap-2">
-            <span className="text-xs text-gray-500 self-center">Top areas:</span>
-            {topics.map(({ topic, label, count }) => (
-                <span
-                    key={topic}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100"
-                >
-                    {label}
-                    <span className="text-indigo-400">({count})</span>
-                </span>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {items.map(({ label, value, color }) => (
+                <div key={label} className="bg-gray-50 rounded-lg px-4 py-3">
+                    <div className="text-[10px] text-gray-500 font-medium">{label}</div>
+                    <div className={`text-xl font-bold ${color || 'text-gray-800'}`}>{value}</div>
+                </div>
             ))}
         </div>
     );
@@ -240,26 +280,62 @@ function TopicTags({ topics }: { topics: TrackerStats['topTopics'] }) {
 // --- Team time zones ---
 
 function TeamTimezones() {
-    const now = new Date();
-
-    const usTime = now.toLocaleTimeString('en-US', {
-        timeZone: 'America/Chicago',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-    });
-
-    const deTime = now.toLocaleTimeString('en-US', {
-        timeZone: 'Europe/Berlin',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-    });
+    const format = (tz: string) => {
+        try {
+            return new Date().toLocaleTimeString('en-US', {
+                timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: true,
+            });
+        } catch { return '—'; }
+    };
 
     return (
         <div className="flex items-center gap-4 text-xs text-gray-500">
-            <span>🇺🇸 {usTime}</span>
-            <span>🇩🇪 {deTime}</span>
+            <span className="font-medium">Build Tracker</span>
+            <span>🇺🇸 {format('America/Chicago')}</span>
+            <span>🇩🇪 {format('Europe/Berlin')}</span>
+        </div>
+    );
+}
+
+// --- New task modal ---
+
+function AddTaskForm({ onSubmit, onCancel }: {
+    onSubmit: (title: string, description?: string) => void;
+    onCancel: () => void;
+}) {
+    const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
+
+    return (
+        <div className="bg-white border border-blue-200 rounded-lg p-3 space-y-2">
+            <input
+                autoFocus
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Task title…"
+                className="w-full text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' && title.trim()) onSubmit(title.trim(), description.trim() || undefined);
+                    if (e.key === 'Escape') onCancel();
+                }}
+            />
+            <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Description (optional)…"
+                rows={2}
+                className="w-full text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400 resize-none"
+            />
+            <div className="flex gap-1.5 justify-end">
+                <button onClick={onCancel} className="text-[10px] text-gray-500 hover:text-gray-700 px-2 py-1">Cancel</button>
+                <button
+                    onClick={() => title.trim() && onSubmit(title.trim(), description.trim() || undefined)}
+                    disabled={!title.trim()}
+                    className="text-[10px] font-medium bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 disabled:opacity-50"
+                >
+                    Add Task
+                </button>
+            </div>
         </div>
     );
 }
@@ -267,137 +343,219 @@ function TeamTimezones() {
 // --- Main board component ---
 
 interface TrackerBoardProps {
-    initialData: SyncResponse | null;
+    initialData: UnifiedBoardData | null;
 }
 
 export function TrackerBoard({ initialData }: TrackerBoardProps) {
-    const [data, setData] = useState<SyncResponse | null>(initialData);
-    const [isSyncing, startSync] = useTransition();
-    const [error, setError] = useState<string | null>(null);
+    const [data, setData] = useState(initialData);
+    const [filter, setFilter] = useState<FilterTab>('all');
+    const [showAddTask, setShowAddTask] = useState(false);
+    const [isPending, startTransition] = useTransition();
 
-    const cards = data?.cards || [];
-    const stats = data?.stats || {
-        totalFeatures: 0,
-        activeFeatures: 0,
-        shippedFeatures: 0,
-        commitsThisWeek: 0,
-        topTopics: [],
+    // --- Group cards by column ---
+    const cardsByColumn: Record<string, UnifiedCardData[]> = {
+        todo: [], in_progress: [], done: [],
     };
+    if (data) {
+        for (const card of data.cards) {
+            cardsByColumn[card.column]?.push(card);
+        }
+    }
 
+    const manualCount = data?.cards.filter((c) => c.source === 'manual').length ?? 0;
+
+    // --- Sync handler ---
     const handleSync = useCallback(() => {
-        setError(null);
-        startSync(async () => {
+        startTransition(async () => {
             try {
-                const result = await syncDevTracker();
+                const result = await getUnifiedBoard();
                 setData(result);
             } catch (err) {
-                setError(err instanceof Error ? err.message : 'Sync failed');
+                console.error('Sync failed:', err);
             }
         });
     }, []);
 
-    const handleDragStart = useCallback((e: React.DragEvent, branchName: string) => {
-        e.dataTransfer.setData('text/plain', branchName);
+    // --- Drag-and-drop ---
+    const handleDragStart = useCallback((e: React.DragEvent, cardId: string) => {
+        e.dataTransfer.setData('text/plain', cardId);
         e.dataTransfer.effectAllowed = 'move';
     }, []);
 
-    const handleDrop = useCallback(
-        (branchName: string, column: string) => {
-            // Optimistic update
-            setData((prev) => {
-                if (!prev) return prev;
-                const updatedCards = prev.cards.map((c) =>
-                    c.branchName === branchName ? { ...c, column } : c
-                );
-                return { ...prev, cards: updatedCards };
-            });
+    const handleDrop = useCallback((cardId: string, targetColumn: string) => {
+        if (!data) return;
 
-            // Persist to DB
-            updateCardColumn(branchName, column).catch((err) => {
-                setError(err instanceof Error ? err.message : 'Failed to save');
-            });
-        },
-        []
-    );
+        // Find the card
+        const card = data.cards.find((c) => c.id === cardId);
+        if (!card || card.column === targetColumn) return;
 
-    const cardsForColumn = useCallback(
-        (columnId: string) =>
-            cards
-                .filter((c) => c.column === columnId)
-                .sort((a, b) => {
-                    // Flagged first, then by recency
-                    if (a.flagged !== b.flagged) return a.flagged ? -1 : 1;
-                    const dateA = a.lastCommitDate ? new Date(a.lastCommitDate).getTime() : 0;
-                    const dateB = b.lastCommitDate ? new Date(b.lastCommitDate).getTime() : 0;
-                    return dateB - dateA;
-                }),
-        [cards]
-    );
+        // Optimistic update
+        setData((prev) => {
+            if (!prev) return prev;
+            return {
+                ...prev,
+                cards: prev.cards.map((c) =>
+                    c.id === cardId ? { ...c, column: targetColumn as 'todo' | 'in_progress' | 'done' } : c
+                ),
+            };
+        });
+
+        // Persist to DB
+        startTransition(async () => {
+            try {
+                if (card.source === 'github') {
+                    // Map unified column back to DevTrackerCard column
+                    const devCol = targetColumn === 'todo' ? 'active'
+                        : targetColumn === 'in_progress' ? 'pr_open'
+                            : 'merged';
+                    await updateCardColumn(cardId, devCol);
+                } else {
+                    // Map unified column back to KanbanStatus
+                    const statusMap: Record<string, KanbanStatus> = {
+                        todo: 'TODO', in_progress: 'IN_PROGRESS', done: 'DONE',
+                    };
+                    await moveKanbanCard(cardId, statusMap[targetColumn], 0);
+                }
+            } catch (err) {
+                console.error('Move failed:', err);
+                // Revert on error
+                const result = await getUnifiedBoard();
+                setData(result);
+            }
+        });
+    }, [data]);
+
+    // --- Add task ---
+    const handleAddTask = useCallback((title: string, description?: string) => {
+        setShowAddTask(false);
+        startTransition(async () => {
+            try {
+                await createKanbanCard({ title, description });
+                const result = await getUnifiedBoard();
+                setData(result);
+            } catch (err) {
+                console.error('Create failed:', err);
+            }
+        });
+    }, []);
+
+    // --- Delete manual task ---
+    const handleDeleteManual = useCallback((id: string) => {
+        // Optimistic remove
+        setData((prev) => {
+            if (!prev) return prev;
+            return { ...prev, cards: prev.cards.filter((c) => c.id !== id) };
+        });
+
+        startTransition(async () => {
+            try {
+                await deleteKanbanCard(id);
+            } catch (err) {
+                console.error('Delete failed:', err);
+                const result = await getUnifiedBoard();
+                setData(result);
+            }
+        });
+    }, []);
+
+    // --- Filter tab counts ---
+    const codeCount = data?.cards.filter((c) => c.source === 'github').length ?? 0;
+    const taskCount = manualCount;
+    const allCount = (data?.cards.length ?? 0);
+
+    // --- Empty state ---
+    if (!data) {
+        return (
+            <div className="text-center py-16 space-y-4">
+                <p className="text-sm text-gray-500">Click Sync to pull data from GitHub</p>
+                <button
+                    onClick={handleSync}
+                    disabled={isPending}
+                    className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                >
+                    {isPending ? '⏳ Syncing…' : '🔄 Initial Sync'}
+                </button>
+            </div>
+        );
+    }
 
     return (
-        <div className="space-y-6">
-            {/* Top bar */}
-            <div className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center gap-4">
-                    <h2 className="text-lg font-semibold text-gray-900">Build Tracker</h2>
-                    <TeamTimezones />
-                </div>
+        <div className="space-y-4">
+            {/* Header: time zones + sync */}
+            <div className="flex items-center justify-between">
+                <TeamTimezones />
                 <div className="flex items-center gap-3">
-                    {data?.syncedAt && (
-                        <span className="text-xs text-gray-400">
+                    {data.syncedAt && (
+                        <span className="text-[10px] text-gray-400">
                             Last sync: {new Date(data.syncedAt).toLocaleTimeString()}
                         </span>
                     )}
                     <button
                         onClick={handleSync}
-                        disabled={isSyncing}
-                        className="px-4 py-2 text-sm font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        disabled={isPending}
+                        className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-1"
                     >
-                        {isSyncing ? 'Syncing…' : '🔄 Sync'}
+                        {isPending ? '⏳' : '🔄'} Sync
                     </button>
                 </div>
             </div>
 
-            {/* Error banner */}
-            {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                    <p className="text-sm text-red-700">{error}</p>
+            {/* Stats */}
+            <StatsHeader stats={data.stats} manualCount={manualCount} />
+
+            {/* Filter tabs + Add task button */}
+            <div className="flex items-center justify-between">
+                <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
+                    {([
+                        { key: 'all' as FilterTab, label: 'All', count: allCount },
+                        { key: 'code' as FilterTab, label: '🔧 Code', count: codeCount },
+                        { key: 'tasks' as FilterTab, label: '📋 Tasks', count: taskCount },
+                    ]).map(({ key, label, count }) => (
+                        <button
+                            key={key}
+                            onClick={() => setFilter(key)}
+                            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${filter === key
+                                    ? 'bg-white text-gray-800 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                        >
+                            {label} <span className="text-gray-400 ml-0.5">({count})</span>
+                        </button>
+                    ))}
                 </div>
+
+                <button
+                    onClick={() => setShowAddTask(true)}
+                    className="px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                >
+                    + Add Task
+                </button>
+            </div>
+
+            {/* Add task form */}
+            {showAddTask && (
+                <AddTaskForm
+                    onSubmit={handleAddTask}
+                    onCancel={() => setShowAddTask(false)}
+                />
             )}
 
-            {/* Stats */}
-            <StatsHeader stats={stats} />
-
-            {/* Topic tags */}
-            <TopicTags topics={stats.topTopics} />
-
-            {/* Kanban */}
+            {/* Board columns */}
             <div className="flex gap-4 overflow-x-auto pb-4">
                 {COLUMNS.map(({ id, label, color }) => (
-                    <KanbanColumnUI
+                    <ColumnUI
                         key={id}
                         id={id}
                         label={label}
                         color={color}
-                        cards={cardsForColumn(id)}
+                        cards={cardsByColumn[id] || []}
+                        filter={filter}
                         onDragStart={handleDragStart}
                         onDrop={handleDrop}
+                        onDeleteManual={handleDeleteManual}
                     />
                 ))}
             </div>
-
-            {/* No data state */}
-            {!data && !isSyncing && (
-                <div className="text-center py-12">
-                    <p className="text-gray-500 mb-4">Click Sync to pull data from GitHub</p>
-                    <button
-                        onClick={handleSync}
-                        className="px-6 py-3 text-sm font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
-                    >
-                        🔄 Initial Sync
-                    </button>
-                </div>
-            )}
         </div>
     );
 }

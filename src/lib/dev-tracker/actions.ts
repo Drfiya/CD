@@ -1,14 +1,15 @@
 'use server';
 
 /**
- * Server actions for the Dev Tracker.
- * Handles GitHub sync, card metadata CRUD, and resource CRUD.
+ * Server actions for the Command Center (formerly Dev Tracker).
+ * Handles GitHub sync, unified board, card metadata CRUD, and resource CRUD.
  */
 
 import db from '@/lib/db';
 import { fullSync } from './github-api';
 import { buildCards, computeStats, type TrackerCard, type TrackerStats, type CardMetadata } from './sync';
 import { revalidatePath } from 'next/cache';
+import type { KanbanStatus } from '@/generated/prisma/client';
 
 // --- Sync ---
 
@@ -45,6 +46,106 @@ export async function syncDevTracker(): Promise<SyncResponse> {
         cards,
         stats,
         syncedAt: new Date().toISOString(),
+    };
+}
+
+// --- Unified Board ---
+
+/** Discriminated union: a card from either GitHub sync or manual Kanban. */
+export type UnifiedCardData =
+    | {
+        source: 'github';
+        id: string;            // branchName as id
+        title: string;
+        column: 'todo' | 'in_progress' | 'done';
+        card: TrackerCard;     // full GitHub card data
+    }
+    | {
+        source: 'manual';
+        id: string;            // KanbanCard.id
+        title: string;
+        column: 'todo' | 'in_progress' | 'done';
+        description: string | null;
+        imageUrl: string | null;
+        position: number;
+        createdBy: { name: string | null; image: string | null };
+        createdAt: Date;
+    };
+
+export interface UnifiedBoardData {
+    cards: UnifiedCardData[];
+    stats: TrackerStats;
+    syncedAt: string;
+}
+
+/** Map DevTrackerCard columns → unified columns. */
+function mapGitHubColumn(col: string): 'todo' | 'in_progress' | 'done' {
+    switch (col) {
+        case 'active': return 'todo';
+        case 'pr_open': return 'in_progress';
+        case 'merged': return 'done';
+        case 'follow_up': return 'done';
+        default: return 'todo';
+    }
+}
+
+/** Map KanbanCard status → unified columns. */
+function mapKanbanStatus(status: KanbanStatus): 'todo' | 'in_progress' | 'done' {
+    switch (status) {
+        case 'TODO': return 'todo';
+        case 'IN_PROGRESS': return 'in_progress';
+        case 'DONE': return 'done';
+        default: return 'todo';
+    }
+}
+
+/**
+ * Fetches both GitHub-synced cards and manual Kanban cards,
+ * maps them into a single unified board with 3 columns.
+ */
+export async function getUnifiedBoard(): Promise<UnifiedBoardData> {
+    // Fetch GitHub data
+    const syncData = await syncDevTracker();
+
+    // Fetch manual Kanban cards
+    const kanbanCards = await db.kanbanCard.findMany({
+        orderBy: { position: 'asc' },
+        include: { createdBy: { select: { name: true, image: true } } },
+    });
+
+    // Build unified card list
+    const unifiedCards: UnifiedCardData[] = [];
+
+    // Add GitHub cards
+    for (const card of syncData.cards) {
+        unifiedCards.push({
+            source: 'github',
+            id: card.branchName,
+            title: card.title,
+            column: mapGitHubColumn(card.column),
+            card,
+        });
+    }
+
+    // Add manual Kanban cards
+    for (const k of kanbanCards) {
+        unifiedCards.push({
+            source: 'manual',
+            id: k.id,
+            title: k.title,
+            column: mapKanbanStatus(k.status),
+            description: k.description,
+            imageUrl: k.imageUrl,
+            position: k.position,
+            createdBy: k.createdBy,
+            createdAt: k.createdAt,
+        });
+    }
+
+    return {
+        cards: unifiedCards,
+        stats: syncData.stats,
+        syncedAt: syncData.syncedAt,
     };
 }
 

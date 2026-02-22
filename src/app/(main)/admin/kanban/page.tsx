@@ -1,37 +1,8 @@
-import { Suspense } from 'react';
-import { Metadata } from 'next';
-import { getKanbanCards } from '@/lib/kanban-actions';
-import { KanbanBoard } from '@/components/admin/kanban/kanban-board';
+import { redirect } from 'next/navigation';
 
-export const metadata: Metadata = {
-    title: 'Kanban Board | Admin',
-};
-
-async function KanbanContent() {
-    const cards = await getKanbanCards();
-
-    return <KanbanBoard initialData={cards} />;
-}
-
-export default function KanbanPage() {
-    return (
-        <div className="space-y-6 p-6">
-            <div>
-                <h1 className="text-2xl font-semibold text-gray-900">Kanban Board</h1>
-                <p className="text-muted-foreground mt-1">
-                    Manage projects and track progress.
-                </p>
-            </div>
-
-            <Suspense
-                fallback={
-                    <div className="p-8 text-center text-muted-foreground">
-                        Loading board...
-                    </div>
-                }
-            >
-                <KanbanContent />
-            </Suspense>
-        </div>
-    );
+/**
+ * Redirect old /admin/kanban URL to the unified Command Center board.
+ */
+export default function KanbanRedirect() {
+    redirect('/admin/dev-tracker');
 }
