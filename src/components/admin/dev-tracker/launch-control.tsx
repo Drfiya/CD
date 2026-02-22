@@ -2,7 +2,7 @@
 
 /**
  * Launch Control — Launch readiness dashboard.
- * Category-based checklists with an overall readiness score.
+ * Auto-detection checks + manual items, weighted scoring, blocker detection.
  */
 
 import { useState, useTransition } from 'react';
@@ -11,6 +11,7 @@ import {
     addChecklistItem,
     deleteChecklistItem,
 } from '@/lib/dev-tracker/actions';
+import { runLaunchChecks } from '@/lib/dev-tracker/launch-checks';
 
 // --- Types ---
 
@@ -54,20 +55,17 @@ function computeScores(items: ChecklistItem[]) {
         if (item.checked) byCategory[item.category].checked++;
     }
 
-    // Per-category percentage
     const categoryScores: Record<string, number> = {};
     for (const cat of CATEGORIES) {
         const { total, checked } = byCategory[cat.id];
         categoryScores[cat.id] = total > 0 ? Math.round((checked / total) * 100) : 0;
     }
 
-    // Weighted overall score
     let overall = 0;
     for (const cat of CATEGORIES) {
         overall += categoryScores[cat.id] * cat.weight;
     }
 
-    // Cap at 80% if any blocker is unchecked
     const hasBlocker = items.some((i) => i.blocker && !i.checked);
     if (hasBlocker && overall > 80) overall = 80;
 
@@ -78,7 +76,7 @@ function computeScores(items: ChecklistItem[]) {
     };
 }
 
-// --- Score ring ---
+// --- Score display ---
 
 function ScoreRing({ score, hasBlocker }: { score: number; hasBlocker: boolean }) {
     const color =
@@ -86,12 +84,19 @@ function ScoreRing({ score, hasBlocker }: { score: number; hasBlocker: boolean }
             score >= 60 ? 'text-yellow-500' :
                 'text-red-500';
 
+    const bgRing =
+        score >= 80 ? 'border-green-200 bg-green-50' :
+            score >= 60 ? 'border-yellow-200 bg-yellow-50' :
+                'border-red-200 bg-red-50';
+
     return (
-        <div className="flex flex-col items-center gap-2">
-            <div className={`text-5xl font-bold ${color}`}>{score}%</div>
-            <p className="text-sm text-gray-500">Launch Readiness</p>
+        <div className="flex flex-col items-center gap-3">
+            <div className={`w-32 h-32 rounded-full border-4 ${bgRing} flex items-center justify-center`}>
+                <div className={`text-4xl font-bold ${color}`}>{score}%</div>
+            </div>
+            <p className="text-sm font-medium text-gray-600">Launch Readiness</p>
             {hasBlocker && (
-                <span className="text-xs font-medium text-red-600 bg-red-50 px-3 py-1 rounded-full">
+                <span className="text-xs font-medium text-red-600 bg-red-50 px-3 py-1 rounded-full border border-red-200">
                     ⚠️ Blockers present — score capped at 80%
                 </span>
             )}
@@ -99,7 +104,37 @@ function ScoreRing({ score, hasBlocker }: { score: number; hasBlocker: boolean }
     );
 }
 
-// --- Add item form ---
+// --- Scan button ---
+
+function ScanButton({ onComplete }: { onComplete: (summary: string) => void }) {
+    const [scanning, startScan] = useTransition();
+    const [lastScanSummary, setLastScanSummary] = useState<string | null>(null);
+
+    const handleScan = () => {
+        startScan(async () => {
+            const { summary } = await runLaunchChecks();
+            setLastScanSummary(summary);
+            onComplete(summary);
+        });
+    };
+
+    return (
+        <div className="flex flex-col items-center gap-2">
+            <button
+                onClick={handleScan}
+                disabled={scanning}
+                className="px-6 py-2.5 text-sm font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+                {scanning ? '🔍 Scanning project…' : '🔍 Run Readiness Scan'}
+            </button>
+            {lastScanSummary && (
+                <p className="text-xs text-gray-500">{lastScanSummary}</p>
+            )}
+        </div>
+    );
+}
+
+// --- Add manual item ---
 
 function AddItemForm({
     category,
@@ -134,7 +169,7 @@ function AddItemForm({
                 type="text"
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
-                placeholder="Add checklist item…"
+                placeholder="Add manual item…"
                 className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none"
             />
             <label className="flex items-center gap-1 text-xs text-gray-500 cursor-pointer">
@@ -196,6 +231,9 @@ function CategorySection({
             score >= 60 ? 'bg-yellow-400' :
                 'bg-red-400';
 
+    const autoItems = items.filter((i) => i.autoChecked);
+    const manualItems = items.filter((i) => !i.autoChecked);
+
     return (
         <div className="bg-white border border-gray-200 rounded-lg p-4">
             {/* Header */}
@@ -208,52 +246,90 @@ function CategorySection({
             </div>
 
             {/* Progress bar */}
-            <div className="w-full h-1.5 bg-gray-100 rounded-full mb-3">
+            <div className="w-full h-1.5 bg-gray-100 rounded-full mb-4">
                 <div
                     className={`h-full rounded-full transition-all ${barColor}`}
                     style={{ width: `${score}%` }}
                 />
             </div>
 
-            {/* Items */}
-            <div className="space-y-1">
-                {items.map((item) => (
-                    <div key={item.id} className="flex items-center gap-2 group">
-                        <input
-                            type="checkbox"
-                            checked={item.checked}
-                            onChange={(e) => handleToggle(item.id, e.target.checked)}
-                            disabled={isPending}
-                            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                        />
-                        <span
-                            className={`text-sm flex-1 ${item.checked ? 'text-gray-400 line-through' : 'text-gray-700'
-                                }`}
-                        >
-                            {item.label}
-                        </span>
-                        {item.blocker && (
-                            <span className="text-xs font-medium text-red-500 bg-red-50 px-1.5 py-0.5 rounded">
-                                blocker
+            {/* Auto-detected items */}
+            {autoItems.length > 0 && (
+                <div className="space-y-1.5 mb-3">
+                    <p className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Auto-detected</p>
+                    {autoItems.map((item) => (
+                        <div key={item.id} className="flex items-center gap-2 group">
+                            <span className="text-sm w-5 text-center shrink-0">
+                                {item.checked ? '✅' : '❌'}
                             </span>
-                        )}
-                        <button
-                            onClick={() => handleDelete(item.id)}
-                            disabled={isPending}
-                            className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all text-xs"
-                        >
-                            ✕
-                        </button>
-                    </div>
-                ))}
-            </div>
+                            <span
+                                className={`text-sm flex-1 ${item.checked ? 'text-gray-500' : 'text-gray-800 font-medium'
+                                    }`}
+                            >
+                                {item.label}
+                            </span>
+                            {item.blocker && !item.checked && (
+                                <span className="text-xs font-medium text-red-500 bg-red-50 px-1.5 py-0.5 rounded border border-red-100">
+                                    blocker
+                                </span>
+                            )}
+                            <span className="text-[10px] text-gray-300 px-1.5 py-0.5 rounded bg-gray-50">
+                                auto
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            )}
 
-            {/* Add item */}
+            {/* Manual items */}
+            {manualItems.length > 0 && (
+                <div className="space-y-1.5 mb-3">
+                    <p className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Manual</p>
+                    {manualItems.map((item) => (
+                        <div key={item.id} className="flex items-center gap-2 group">
+                            <input
+                                type="checkbox"
+                                checked={item.checked}
+                                onChange={(e) => handleToggle(item.id, e.target.checked)}
+                                disabled={isPending}
+                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 shrink-0"
+                            />
+                            <span
+                                className={`text-sm flex-1 ${item.checked ? 'text-gray-400 line-through' : 'text-gray-700'
+                                    }`}
+                            >
+                                {item.label}
+                            </span>
+                            {item.blocker && !item.checked && (
+                                <span className="text-xs font-medium text-red-500 bg-red-50 px-1.5 py-0.5 rounded border border-red-100">
+                                    blocker
+                                </span>
+                            )}
+                            <button
+                                onClick={() => handleDelete(item.id)}
+                                disabled={isPending}
+                                className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all text-xs"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Empty state */}
+            {items.length === 0 && (
+                <p className="text-xs text-gray-400 text-center py-2">
+                    Run a scan to auto-populate, or add manually
+                </p>
+            )}
+
+            {/* Add manual item */}
             <button
                 onClick={() => setShowAdd(!showAdd)}
-                className="mt-2 text-xs text-gray-400 hover:text-indigo-600 transition-colors"
+                className="mt-1 text-xs text-gray-400 hover:text-indigo-600 transition-colors"
             >
-                {showAdd ? 'Cancel' : '+ Add item'}
+                {showAdd ? 'Cancel' : '+ Add manual item'}
             </button>
             {showAdd && <AddItemForm category={category} onAdded={onRefresh} />}
         </div>
@@ -264,23 +340,36 @@ function CategorySection({
 
 export function LaunchControl({ initialItems }: LaunchControlProps) {
     const [items, setItems] = useState(initialItems);
-
     const scores = computeScores(items);
 
     const handleRefresh = () => {
         window.location.reload();
     };
 
+    const passedCount = items.filter((i) => i.checked).length;
+    const totalCount = items.length;
+    const blockerCount = items.filter((i) => i.blocker && !i.checked).length;
+
     return (
         <div className="space-y-8">
-            {/* Readiness score */}
-            <div className="flex justify-center py-6">
+            {/* Readiness score + scan button */}
+            <div className="flex flex-col items-center gap-6 py-6">
                 <ScoreRing score={scores.overall} hasBlocker={scores.hasBlocker} />
+
+                <div className="flex items-center gap-6 text-sm text-gray-500">
+                    <span>✅ {passedCount} passed</span>
+                    <span>📋 {totalCount} total</span>
+                    {blockerCount > 0 && (
+                        <span className="text-red-600 font-medium">🚫 {blockerCount} blockers</span>
+                    )}
+                </div>
+
+                <ScanButton onComplete={handleRefresh} />
             </div>
 
             {/* Category grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {CATEGORIES.map(({ id, label, emoji, weight }) => (
+                {CATEGORIES.map(({ id, label, emoji }) => (
                     <CategorySection
                         key={id}
                         category={id}
@@ -294,8 +383,14 @@ export function LaunchControl({ initialItems }: LaunchControlProps) {
             </div>
 
             {/* Legend */}
-            <div className="text-center text-xs text-gray-400">
-                Weights: {CATEGORIES.map((c) => `${c.label} (${Math.round(c.weight * 100)}%)`).join(' · ')}
+            <div className="text-center space-y-1">
+                <p className="text-xs text-gray-400">
+                    Weights: {CATEGORIES.map((c) => `${c.label} (${Math.round(c.weight * 100)}%)`).join(' · ')}
+                </p>
+                <p className="text-xs text-gray-400">
+                    <span className="bg-gray-50 px-1.5 py-0.5 rounded text-gray-500">auto</span> = detected by system scan ·
+                    ☑️ = manually toggled by you
+                </p>
             </div>
         </div>
     );
