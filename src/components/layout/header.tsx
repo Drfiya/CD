@@ -24,7 +24,7 @@ export async function Header({ messages, showAdminLink }: HeaderProps) {
     <header className="border-b border-border bg-white dark:bg-neutral-900 transition-colors">
       <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-2 lg:gap-4">
         {/* Left: Logo — overflow hidden prevents bleeding past the border */}
-        <div className="shrink-0 flex items-center overflow-hidden">
+        <div className="shrink-0 flex items-center overflow-hidden lg:min-w-[220px]">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             {settings.communityLogo ? (
               <>
@@ -66,7 +66,7 @@ export async function Header({ messages, showAdminLink }: HeaderProps) {
         <HeaderNav messages={messages} />
 
         {/* Right: Action buttons */}
-        <div className="shrink-0 flex items-center gap-2">
+        <div className="shrink-0 flex items-center gap-2 lg:min-w-[220px] lg:justify-end">
           {/* Language Selector — desktop only (available in hamburger on mobile) */}
           <div className="hidden lg:block">
             <LanguageSelector />

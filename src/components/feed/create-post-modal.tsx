@@ -111,7 +111,7 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
             {/* Trigger - "Write something..." prompt with action row */}
             <div
                 onClick={() => setIsOpen(true)}
-                className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-100 dark:border-neutral-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-750 transition-colors"
+                className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-100 dark:border-neutral-700 cursor-pointer hover:border-gray-300 dark:hover:border-neutral-600 transition-colors"
             >
                 {/* Top row: avatar + placeholder */}
                 <div className="flex items-center gap-3 px-4 pt-4 pb-3">

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useRef, useEffect, useCallback } from 'react';
 import { LanguageSelector } from '@/components/translation/LanguageSelector';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import type { Messages } from '@/lib/i18n/messages/en';
@@ -67,36 +67,89 @@ interface HeaderNavProps {
 
 /**
  * Inline navigation rendered inside the header row.
- * Desktop: centered nav pills. Mobile: hamburger with dropdown.
- * Admin links (Kanban, Settings) are in the UserMenu dropdown, not here.
+ * Desktop: sliding pill indicator behind the active tab.
+ * Mobile: hamburger with dropdown.
  */
 export function HeaderNav({ messages }: HeaderNavProps) {
     const pathname = usePathname();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+    // Refs for measuring each nav link's position inside the container
+    const containerRef = useRef<HTMLDivElement>(null);
+    const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+
+    // Slider position state
+    const [slider, setSlider] = useState({ left: 0, width: 0, ready: false });
+
+    // Find the active link index
+    const activeIndex = navLinks.findIndex(
+        (link) => pathname === link.href || pathname.startsWith(`${link.href}/`)
+    );
+
+    /** Measure the active link and position the slider */
+    const updateSlider = useCallback(() => {
+        if (activeIndex < 0 || !containerRef.current) return;
+        const activeEl = linkRefs.current[activeIndex];
+        if (!activeEl) return;
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const linkRect = activeEl.getBoundingClientRect();
+        setSlider({
+            left: linkRect.left - containerRect.left,
+            width: linkRect.width,
+            ready: true,
+        });
+    }, [activeIndex]);
+
+    // Recalculate on mount, route change, and window resize
+    useEffect(() => {
+        updateSlider();
+        window.addEventListener('resize', updateSlider);
+        return () => window.removeEventListener('resize', updateSlider);
+    }, [updateSlider]);
+
     return (
         <>
-            {/* Desktop: centered nav links */}
-            <div className="hidden lg:flex flex-1 items-center justify-center gap-1">
-                {navLinks.map((link) => {
-                    const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
-                    return (
-                        <Link
-                            key={link.href}
-                            href={link.href}
-                            className={`
-                flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors
-                ${isActive
-                                    ? 'bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-neutral-100'
-                                    : 'text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-800 hover:text-gray-900 dark:hover:text-neutral-100'
-                                }
-              `}
-                        >
-                            {link.icon}
-                            <span>{messages.nav[link.labelKey]}</span>
-                        </Link>
-                    );
-                })}
+            {/* Desktop: nav links with sliding pill in a container bar */}
+            <div className="hidden lg:flex flex-1 items-center justify-center">
+                <div
+                    ref={containerRef}
+                    className="relative inline-flex items-center gap-0.5 p-1 bg-gray-100/80 dark:bg-neutral-800/80 rounded-full border border-gray-200 dark:border-neutral-700"
+                >
+                    {/* Sliding pill indicator */}
+                    {slider.ready && activeIndex >= 0 && (
+                        <div
+                            className="absolute bg-white dark:bg-neutral-700 rounded-full shadow-sm transition-all duration-300 ease-in-out"
+                            style={{
+                                left: slider.left,
+                                width: slider.width,
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                height: 'calc(100% - 6px)',
+                            }}
+                        />
+                    )}
+
+                    {navLinks.map((link, i) => {
+                        const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
+                        return (
+                            <Link
+                                key={link.href}
+                                href={link.href}
+                                ref={(el) => { linkRefs.current[i] = el; }}
+                                className={`
+                                    relative z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors
+                                    ${isActive
+                                        ? 'text-gray-900 dark:text-neutral-100'
+                                        : 'text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200'
+                                    }
+                                `}
+                            >
+                                {link.icon}
+                                <span>{messages.nav[link.labelKey]}</span>
+                            </Link>
+                        );
+                    })}
+                </div>
             </div>
 
             {/* Mobile: hamburger button */}
