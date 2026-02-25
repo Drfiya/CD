@@ -70,11 +70,11 @@ export function TopNav({ showAdminLink, messages }: TopNavProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <nav className="border-b border-border bg-white relative">
+    <nav className="border-b border-border bg-white dark:bg-neutral-900 relative transition-colors">
       <div className="max-w-7xl mx-auto px-4 h-12 flex items-center justify-between">
         {/* Mobile hamburger button */}
         <button
-          className="lg:hidden flex items-center justify-center p-2 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+          className="lg:hidden flex items-center justify-center p-2 rounded-lg text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-800 hover:text-gray-900 dark:hover:text-neutral-100 transition-colors"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
         >
@@ -107,8 +107,8 @@ export function TopNav({ showAdminLink, messages }: TopNavProps) {
                 className={`
                   flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors
                   ${isActive
-                    ? 'bg-gray-100 text-gray-900'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-neutral-100'
+                    : 'text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-800 hover:text-gray-900 dark:hover:text-neutral-100'
                   }
                 `}
               >
@@ -129,8 +129,8 @@ export function TopNav({ showAdminLink, messages }: TopNavProps) {
               className={`
                 hidden lg:flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors
                 ${pathname.startsWith('/admin/kanban')
-                  ? 'bg-gray-100 text-gray-900'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-neutral-100'
+                  : 'text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-800 hover:text-gray-900 dark:hover:text-neutral-100'
                 }
               `}
             >
@@ -148,8 +148,8 @@ export function TopNav({ showAdminLink, messages }: TopNavProps) {
               className={`
                 hidden lg:flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors
                 ${pathname.startsWith('/admin')
-                  ? 'bg-gray-100 text-gray-900'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-neutral-100'
+                  : 'text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-800 hover:text-gray-900 dark:hover:text-neutral-100'
                 }
               `}
             >
@@ -165,7 +165,7 @@ export function TopNav({ showAdminLink, messages }: TopNavProps) {
 
       {/* Mobile menu dropdown - fixed to escape overflow-hidden parent */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed top-[7rem] left-0 right-0 bg-white border-b border-gray-200 shadow-lg z-50">
+        <div className="lg:hidden fixed top-[7rem] left-0 right-0 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-700 shadow-lg z-50">
           <div className="px-4 py-2 space-y-1">
             {navLinks.map((link) => {
               const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
@@ -177,8 +177,8 @@ export function TopNav({ showAdminLink, messages }: TopNavProps) {
                   className={`
                     flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors
                     ${isActive
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-neutral-100'
+                      : 'text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-800 hover:text-gray-900 dark:hover:text-neutral-100'
                     }
                   `}
                 >
@@ -194,8 +194,8 @@ export function TopNav({ showAdminLink, messages }: TopNavProps) {
                 className={`
                   flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors
                   ${pathname.startsWith('/admin')
-                    ? 'bg-gray-100 text-gray-900'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-neutral-100'
+                    : 'text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-800 hover:text-gray-900 dark:hover:text-neutral-100'
                   }
                 `}
               >

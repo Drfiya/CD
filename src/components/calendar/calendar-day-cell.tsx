@@ -20,19 +20,17 @@ export function CalendarDayCell({
 
   return (
     <div
-      className={`bg-white min-h-[100px] p-1 ${
-        !isCurrentMonth ? 'bg-gray-50 text-gray-400' : ''
-      }`}
+      className={`bg-white min-h-[100px] p-1 ${!isCurrentMonth ? 'bg-gray-50 text-gray-400' : ''
+        }`}
     >
       {/* Day number */}
       <div
-        className={`w-7 h-7 flex items-center justify-center text-sm mb-1 ${
-          isDayToday
-            ? 'bg-blue-600 text-white rounded-full font-semibold'
+        className={`w-7 h-7 flex items-center justify-center text-sm mb-1 ${isDayToday
+            ? 'bg-red-600 text-white rounded-full font-semibold'
             : isCurrentMonth
               ? 'text-gray-900'
               : 'text-gray-400'
-        }`}
+          }`}
       >
         {format(day, 'd')}
       </div>
@@ -42,7 +40,7 @@ export function CalendarDayCell({
         {events.slice(0, maxEventsToShow).map((occurrence, index) => (
           <div
             key={`${occurrence.event.id}-${index}`}
-            className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded truncate cursor-pointer hover:bg-blue-200 transition-colors"
+            className="text-xs px-1.5 py-0.5 bg-red-100 text-red-800 rounded truncate cursor-pointer hover:bg-red-200 transition-colors"
             title={occurrence.event.title}
           >
             {occurrence.event.title}

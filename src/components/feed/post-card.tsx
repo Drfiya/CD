@@ -55,17 +55,17 @@ export function PostCard({
     postLanguage !== userLanguage;
 
   return (
-    <article className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <article className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-100 dark:border-neutral-700 overflow-hidden">
       <div className="p-5">
         {/* Header: Avatar, Name, Date, Menu */}
         <div className="flex items-start justify-between mb-3">
           <Link href={`/members/${post.author.id}`} className="flex items-center gap-3 group">
             <Avatar src={post.author.image} name={post.author.name} size="md" />
             <div>
-              <div className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+              <div className="font-medium text-gray-900 dark:text-neutral-100 group-hover:text-blue-600 transition-colors">
                 {post.author.name}
               </div>
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-gray-500 dark:text-neutral-400">
                 {format(new Date(post.createdAt), 'MMM d, yyyy', { locale: enUS })}
               </div>
             </div>
@@ -73,7 +73,7 @@ export function PostCard({
 
           {/* Three-dot menu */}
           {showActions && (
-            <button className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors">
+            <button className="text-gray-400 hover:text-gray-600 dark:hover:text-neutral-300 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
               </svg>
@@ -83,17 +83,17 @@ export function PostCard({
 
         {/* Post title (if present) */}
         {post.title && (
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">{post.title}</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-2">{post.title}</h3>
         )}
 
         {/* Post content - show translated plain text or original rich content */}
         {shouldShowTranslated ? (
-          <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap">
+          <div className="prose prose-sm max-w-none text-gray-700 dark:text-neutral-300 whitespace-pre-wrap">
             {translatedPlainText}
           </div>
         ) : (
           <div
-            className="prose prose-sm max-w-none text-gray-700"
+            className="prose prose-sm max-w-none text-gray-700 dark:text-neutral-300"
             dangerouslySetInnerHTML={{ __html: renderContent(post.content) }}
           />
         )}
@@ -111,7 +111,7 @@ export function PostCard({
       </div>
 
       {/* Footer: Like & Comment counts */}
-      <div className="px-5 py-3 border-t border-gray-100 flex items-center gap-6">
+      <div className="px-5 py-3 border-t border-gray-100 dark:border-neutral-700 flex items-center gap-6">
         {/* Like button */}
         <LikeButton
           targetId={post.id}

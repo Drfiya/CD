@@ -1,6 +1,7 @@
 'use client';
 
 import { SessionProvider } from 'next-auth/react';
+import { ThemeProvider } from 'next-themes';
 import { TranslationProvider } from '@/components/translation/TranslationContext';
 import { GlobalTranslator } from '@/components/translation/GlobalTranslator';
 
@@ -12,11 +13,13 @@ interface ProvidersProps {
 
 export function Providers({ children, initialLanguage }: ProvidersProps) {
   return (
-    <SessionProvider>
-      <TranslationProvider initialLanguage={initialLanguage}>
-        {children}
-        <GlobalTranslator />
-      </TranslationProvider>
-    </SessionProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <SessionProvider>
+        <TranslationProvider initialLanguage={initialLanguage}>
+          {children}
+          <GlobalTranslator />
+        </TranslationProvider>
+      </SessionProvider>
+    </ThemeProvider>
   );
 }

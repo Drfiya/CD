@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Tell Tailwind v4 to use class-based dark mode (matches next-themes) */
+@custom-variant dark (&:where(.dark *));
+
 /* Custom theme tokens - replaces tailwind.config.js */
 @theme {
   --color-primary: #1f2937;
@@ -23,16 +26,30 @@
   --radius-default: 0.75rem;
 }
 
+/* Dark theme overrides — applied when next-themes adds .dark to <html> */
+.dark {
+  --color-background: #0a0a0a;
+  --color-foreground: #e5e5e5;
+  --color-primary: #e5e5e5;
+  --color-primary-foreground: #0a0a0a;
+  --color-secondary: #a3a3a3;
+  --color-muted: #171717;
+  --color-muted-foreground: #a3a3a3;
+  --color-border: #262626;
+}
+
 /* Base styles */
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-sans);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Search result highlighting */
 mark {
-  background-color: rgb(254 240 138); /* yellow-200 */
+  background-color: rgb(254 240 138);
+  /* yellow-200 */
   color: inherit;
   padding: 0 2px;
   border-radius: 2px;

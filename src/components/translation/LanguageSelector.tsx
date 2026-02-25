@@ -30,7 +30,12 @@ function GlobeIcon({ className }: { className?: string }) {
     );
 }
 
-export function LanguageSelector() {
+interface LanguageSelectorProps {
+    /** Which edge the dropdown aligns to. Default 'right' (desktop header). */
+    dropdownAlign?: 'left' | 'right';
+}
+
+export function LanguageSelector({ dropdownAlign = 'right' }: LanguageSelectorProps) {
     const { currentLanguage, setLanguage, supportedLanguages, isTranslating } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -91,7 +96,7 @@ export function LanguageSelector() {
 
             {isOpen && (
                 <div
-                    className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 max-h-80 overflow-y-auto"
+                    className={`absolute ${dropdownAlign === 'left' ? 'left-0' : 'right-0'} mt-2 w-56 bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-gray-200 dark:border-neutral-700 py-1 z-50 max-h-80 overflow-y-auto`}
                     role="listbox"
                     aria-label="Select language"
                 >

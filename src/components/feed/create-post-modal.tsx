@@ -108,16 +108,30 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
 
     return (
         <>
-            {/* Trigger - "Write something..." input */}
+            {/* Trigger - "Write something..." prompt with action row */}
             <div
                 onClick={() => setIsOpen(true)}
-                className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"
+                className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-100 dark:border-neutral-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-750 transition-colors"
             >
-                <div className="flex items-center gap-3">
+                {/* Top row: avatar + placeholder */}
+                <div className="flex items-center gap-3 px-4 pt-4 pb-3">
                     <Avatar src={userImage} name={userName} size="sm" />
-                    <div className="flex-1 px-4 py-2.5 bg-gray-100 rounded-full text-gray-500 text-sm">
+                    <div className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-neutral-700 rounded-full text-gray-500 dark:text-neutral-400 text-sm">
                         {writeSomethingPlaceholder || 'Write something...'}
                     </div>
+                </div>
+
+                {/* Bottom row: attachment icons + Post button */}
+                <div className="flex items-center justify-end px-4 py-3 border-t border-gray-100 dark:border-neutral-700">
+                    <button
+                        type="button"
+                        className="inline-flex items-center gap-2 px-5 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-sm font-semibold tracking-wide rounded-full transition-colors shadow-md"
+                    >
+                        Post
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 -rotate-45">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                        </svg>
+                    </button>
                 </div>
             </div>
 
@@ -131,13 +145,13 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                     />
 
                     {/* Modal content */}
-                    <div className="relative bg-white rounded-xl w-full max-w-lg mx-4 shadow-xl">
+                    <div className="relative bg-white dark:bg-neutral-800 rounded-xl w-full max-w-lg mx-4 shadow-xl">
                         {/* Header */}
-                        <div className="flex items-center justify-between p-5 border-b border-gray-100">
-                            <h2 className="text-lg font-semibold text-gray-900">Create New Post</h2>
+                        <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-neutral-700">
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">Create New Post</h2>
                             <button
                                 onClick={() => setIsOpen(false)}
-                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                                className="text-gray-400 hover:text-gray-600 dark:hover:text-neutral-300 transition-colors"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -149,7 +163,7 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                             <div className="p-5 space-y-5">
                                 {/* Category selection */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Category</label>
                                     <div className="flex flex-wrap gap-2">
                                         {categories.map((category) => {
                                             const style = getCategoryStyle(category.name);
@@ -163,7 +177,7 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                             px-4 py-1.5 rounded-full text-sm font-medium border transition-all
                             ${isSelected
                                                             ? `${style.bg} ${style.text} ${style.border}`
-                                                            : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                                                            : 'bg-white dark:bg-neutral-700 text-gray-600 dark:text-neutral-300 border-gray-200 dark:border-neutral-600 hover:border-gray-300'
                                                         }
                           `}
                                                 >
@@ -176,21 +190,21 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
 
                                 {/* Post Title */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Post Title</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Post Title</label>
                                     <input
                                         type="text"
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         placeholder="Enter a title for your post (optional)"
                                         maxLength={200}
-                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300 transition-colors"
+                                        className="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-lg text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300 transition-colors"
                                     />
                                 </div>
 
                                 {/* Content */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Content *</label>
-                                    <div className="border border-gray-200 rounded-lg overflow-hidden">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Content *</label>
+                                    <div className="border border-gray-200 dark:border-neutral-700 rounded-lg">
                                         <PostEditor
                                             onChange={(json) => setContent(json)}
                                             placeholder="What would you like to share?"
@@ -264,7 +278,7 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                             </div>
 
                             {/* Footer with action buttons */}
-                            <div className="p-5 border-t border-gray-100 space-y-3">
+                            <div className="p-5 border-t border-gray-100 dark:border-neutral-700 space-y-3">
                                 {/* Media inputs row */}
                                 <div className="flex items-center gap-2">
                                     {/* Video/Image input */}
@@ -281,7 +295,7 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                                         type="button"
                                         onClick={() => setShowGifPicker(true)}
                                         disabled={isSubmitting}
-                                        className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+                                        className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 rounded-lg hover:bg-gray-200 dark:hover:bg-neutral-600 transition-colors disabled:opacity-50"
                                     >
                                         <span className="text-base">🎬</span>
                                         GIF
@@ -293,14 +307,14 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                                     <button
                                         type="button"
                                         onClick={() => setIsOpen(false)}
-                                        className="px-5 py-2 rounded-full text-sm font-medium text-gray-700 border border-gray-300 hover:bg-gray-50 transition-colors"
+                                        className="px-5 py-2 rounded-full text-sm font-medium text-gray-700 dark:text-neutral-300 border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={isSubmitting || !content || hasPendingVideo}
-                                        className="px-5 py-2 rounded-full text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        className="px-5 py-2 rounded-full text-sm font-medium text-white bg-gray-900 dark:bg-blue-600 hover:bg-gray-800 dark:hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                     >
                                         {isSubmitting ? 'Posting...' : 'Post'}
                                     </button>

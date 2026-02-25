@@ -11,11 +11,10 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
       <button
         type="button"
         onClick={() => onViewChange('calendar')}
-        className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-l-md border ${
-          view === 'calendar'
-            ? 'bg-blue-50 text-blue-700 border-blue-200'
+        className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-l-md border ${view === 'calendar'
+            ? 'bg-red-50 text-red-700 border-red-200'
             : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-        } transition-colors`}
+          } transition-colors`}
         aria-pressed={view === 'calendar'}
       >
         {/* Calendar icon */}
@@ -39,11 +38,10 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
       <button
         type="button"
         onClick={() => onViewChange('list')}
-        className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-r-md border-t border-r border-b -ml-px ${
-          view === 'list'
-            ? 'bg-blue-50 text-blue-700 border-blue-200'
+        className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-r-md border-t border-r border-b -ml-px ${view === 'list'
+            ? 'bg-red-50 text-red-700 border-red-200'
             : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-        } transition-colors`}
+          } transition-colors`}
         aria-pressed={view === 'list'}
       >
         {/* List icon */}

@@ -30,7 +30,7 @@ export function SidebarUserMenu() {
   return (
     <div className="p-4 border-t border-border">
       <div className="flex items-center gap-3 px-3 py-2 text-sm">
-        <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-medium">
+        <div className="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-medium">
           {initials}
         </div>
         <div className="flex-1 min-w-0">

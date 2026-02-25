@@ -1,7 +1,6 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { Header } from '@/components/layout/header';
-import { TopNav } from '@/components/layout/top-nav';
 import { StickyHeaderWrapper } from '@/components/layout/sticky-header-wrapper';
 import { PaywallModal } from '@/components/paywall/paywall-modal';
 import { Toaster } from 'sonner';
@@ -29,11 +28,10 @@ export default async function MainLayout({
   const showAdminLink = userRole && canEditSettings(userRole);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <StickyHeaderWrapper
-        header={<Header messages={messages} />}
-        nav={<TopNav showAdminLink={showAdminLink} messages={messages} />}
-      />
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-950 transition-colors">
+      <StickyHeaderWrapper>
+        <Header messages={messages} showAdminLink={showAdminLink} />
+      </StickyHeaderWrapper>
       <main className="py-6 px-4 md:px-8">{children}</main>
       <Toaster position="top-center" richColors />
       <PaywallModal isOpen={!!showPaywall} />

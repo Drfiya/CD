@@ -59,13 +59,13 @@ export function PostEditor({ content, onChange, placeholder }: PostEditorProps) 
   }
 
   return (
-    <div className="border rounded-lg p-4">
+    <div className="border dark:border-neutral-700 rounded-lg p-4 bg-white dark:bg-neutral-700">
       {/* Toolbar */}
-      <div className="flex gap-2 mb-3 pb-3 border-b">
+      <div className="flex gap-2 mb-3 pb-3 border-b dark:border-neutral-600">
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleBold().run()}
-          className={`px-3 py-1.5 text-sm font-bold text-gray-700 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors ${editor.isActive('bold') ? 'bg-gray-100 border-gray-400' : ''
+          className={`px-3 py-1.5 text-sm font-bold text-gray-700 dark:text-neutral-300 border border-gray-300 dark:border-neutral-600 rounded-full hover:bg-gray-50 dark:hover:bg-neutral-600 transition-colors ${editor.isActive('bold') ? 'bg-gray-100 dark:bg-neutral-600 border-gray-400' : ''
             }`}
           aria-label="Bold"
         >
@@ -74,7 +74,7 @@ export function PostEditor({ content, onChange, placeholder }: PostEditorProps) 
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={`px-3 py-1.5 text-sm italic text-gray-700 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors ${editor.isActive('italic') ? 'bg-gray-100 border-gray-400' : ''
+          className={`px-3 py-1.5 text-sm italic text-gray-700 dark:text-neutral-300 border border-gray-300 dark:border-neutral-600 rounded-full hover:bg-gray-50 dark:hover:bg-neutral-600 transition-colors ${editor.isActive('italic') ? 'bg-gray-100 dark:bg-neutral-600 border-gray-400' : ''
             }`}
           aria-label="Italic"
         >
@@ -87,7 +87,7 @@ export function PostEditor({ content, onChange, placeholder }: PostEditorProps) 
             ref={emojiButtonRef}
             type="button"
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className={`px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors ${showEmojiPicker ? 'bg-gray-100 border-gray-400' : ''}`}
+            className={`px-3 py-1.5 text-sm text-gray-700 dark:text-neutral-300 border border-gray-300 dark:border-neutral-600 rounded-full hover:bg-gray-50 dark:hover:bg-neutral-600 transition-colors ${showEmojiPicker ? 'bg-gray-100 dark:bg-neutral-600 border-gray-400' : ''}`}
             aria-label="Add emoji"
           >
             😊
@@ -116,7 +116,7 @@ export function PostEditor({ content, onChange, placeholder }: PostEditorProps) 
       {/* Editor content */}
       <EditorContent
         editor={editor}
-        className="prose prose-sm max-w-none min-h-[100px] [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[100px] [&_.ProseMirror:focus]:outline-none"
+        className="prose prose-sm dark:prose-invert max-w-none min-h-[100px] [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[100px] [&_.ProseMirror:focus]:outline-none"
         placeholder={placeholder}
       />
     </div>

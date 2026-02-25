@@ -123,7 +123,7 @@ async function FeedContent({ searchParams }: FeedPageProps) {
 
         {/* Posts list */}
         {translatedPosts.length === 0 ? (
-          <div className="bg-white rounded-xl p-12 text-center text-gray-500 shadow-sm border border-gray-100">
+          <div className="bg-white dark:bg-neutral-800 rounded-xl p-12 text-center text-gray-500 dark:text-neutral-400 shadow-sm border border-gray-100 dark:border-neutral-700">
             <p>{translatedUI.noPosts}</p>
           </div>
         ) : (
@@ -164,14 +164,14 @@ export default function FeedPage(props: FeedPageProps) {
     <Suspense fallback={
       <div className="flex gap-6 max-w-7xl mx-auto">
         <div className="w-64 shrink-0">
-          <div className="bg-white rounded-xl p-5 animate-pulse h-48" />
+          <div className="bg-white dark:bg-neutral-800 rounded-xl p-5 animate-pulse h-48" />
         </div>
         <div className="flex-1">
-          <div className="bg-white rounded-xl p-12 animate-pulse h-32" />
+          <div className="bg-white dark:bg-neutral-800 rounded-xl p-12 animate-pulse h-32" />
         </div>
         <div className="w-72 shrink-0 space-y-4">
-          <div className="bg-white rounded-xl p-5 animate-pulse h-24" />
-          <div className="bg-white rounded-xl p-5 animate-pulse h-48" />
+          <div className="bg-white dark:bg-neutral-800 rounded-xl p-5 animate-pulse h-24" />
+          <div className="bg-white dark:bg-neutral-800 rounded-xl p-5 animate-pulse h-48" />
         </div>
       </div>
     }>

@@ -37,8 +37,8 @@ export function CategoriesSidebar({ categories, activeCategory, translatedUI }: 
 
     return (
         <aside className="hidden lg:block w-64 shrink-0">
-            <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-                <h2 className="text-base font-semibold text-gray-900 mb-4">{translatedUI.categoriesTitle}</h2>
+            <div className="bg-white dark:bg-neutral-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-neutral-700">
+                <h2 className="text-base font-semibold text-gray-900 dark:text-neutral-100 mb-4">{translatedUI.categoriesTitle}</h2>
 
                 <nav className="space-y-1">
                     {/* All Posts */}
@@ -47,8 +47,8 @@ export function CategoriesSidebar({ categories, activeCategory, translatedUI }: 
                         className={`
               block px-3 py-2 rounded-lg text-sm font-medium transition-colors
               ${!activeCategory
-                                ? 'bg-gray-100 text-gray-900'
-                                : 'text-gray-600 hover:bg-gray-50'
+                                ? 'bg-gray-100 dark:bg-neutral-700 text-gray-900 dark:text-neutral-100'
+                                : 'text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-700'
                             }
             `}
                     >
@@ -63,8 +63,8 @@ export function CategoriesSidebar({ categories, activeCategory, translatedUI }: 
                             className={`
                 flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
                 ${activeCategory === category.id
-                                    ? 'bg-gray-100 text-gray-900'
-                                    : 'text-gray-600 hover:bg-gray-50'
+                                    ? 'bg-gray-100 dark:bg-neutral-700 text-gray-900 dark:text-neutral-100'
+                                    : 'text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-700'
                                 }
               `}
                         >
