@@ -160,10 +160,10 @@ function DropZone({
                 onDragLeave={handleDragLeave}
                 onClick={() => inputRef.current?.click()}
                 className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${dragActive
-                        ? 'border-indigo-500 bg-indigo-50 scale-[1.01]'
-                        : uploading
-                            ? 'border-yellow-400 bg-yellow-50'
-                            : 'border-gray-300 bg-gray-50/50 hover:border-indigo-400 hover:bg-indigo-50/30'
+                    ? 'border-indigo-500 bg-indigo-50 scale-[1.01]'
+                    : uploading
+                        ? 'border-yellow-400 bg-yellow-50'
+                        : 'border-gray-300 bg-gray-50/50 hover:border-indigo-400 hover:bg-indigo-50/30'
                     }`}
             >
                 <input
@@ -249,8 +249,8 @@ function AddTextForm({
                         type="button"
                         onClick={() => setType(t)}
                         className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${type === t
-                                ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
-                                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                            ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
+                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                             }`}
                     >
                         {getTypeIcon(t)} {t.charAt(0) + t.slice(1).toLowerCase()}
@@ -293,6 +293,7 @@ function ResourceCard({
 }) {
     const [isPending, startTransition] = useTransition();
     const [expanded, setExpanded] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState(false);
 
     const handleStar = () => {
         startTransition(async () => {
@@ -302,7 +303,6 @@ function ResourceCard({
     };
 
     const handleDelete = () => {
-        if (!confirm('Delete this resource?')) return;
         startTransition(async () => {
             await deleteResource(resource.id);
             onRefresh();
@@ -363,14 +363,31 @@ function ResourceCard({
                     >
                         📋
                     </button>
-                    <button
-                        onClick={handleDelete}
-                        disabled={isPending}
-                        className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                        title="Delete"
-                    >
-                        🗑️
-                    </button>
+                    {confirmDelete ? (
+                        <>
+                            <button
+                                onClick={handleDelete}
+                                disabled={isPending}
+                                className="px-2 py-0.5 text-xs font-medium rounded bg-red-600 text-white hover:bg-red-700 transition-colors"
+                            >
+                                {isPending ? '…' : 'Confirm?'}
+                            </button>
+                            <button
+                                onClick={() => setConfirmDelete(false)}
+                                className="px-2 py-0.5 text-xs font-medium rounded bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            onClick={() => setConfirmDelete(true)}
+                            className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                            title="Delete"
+                        >
+                            🗑️
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -499,8 +516,8 @@ export function ResourceLibrary({ initialResources, userId }: ResourceLibraryPro
                         key={id}
                         onClick={() => setActiveTab(id)}
                         className={`px-3 py-2 text-xs font-medium whitespace-nowrap border-b-2 transition-colors ${activeTab === id
-                                ? 'border-indigo-500 text-indigo-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                            ? 'border-indigo-500 text-indigo-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         {label}

@@ -7,7 +7,7 @@
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import db from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
@@ -115,7 +115,7 @@ export async function uploadResourceFile(formData: FormData): Promise<{
         return { error: `File too large. Maximum size is ${formatFileSize(MAX_FILE_SIZE)}.` };
     }
 
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     // Build storage path: dev-resources/<userId>/<timestamp>-<filename>
     const sanitizedName = sanitizeFilename(file.name);
@@ -125,7 +125,7 @@ export async function uploadResourceFile(formData: FormData): Promise<{
     const arrayBuffer = await file.arrayBuffer();
     const buffer = new Uint8Array(arrayBuffer);
 
-    const { error: uploadError } = await supabase.storage
+    let { error: uploadError } = await supabase.storage
         .from('dev-resources')
         .upload(path, buffer, {
             contentType: file.type,
@@ -133,13 +133,32 @@ export async function uploadResourceFile(formData: FormData): Promise<{
             upsert: false,
         });
 
+    // Auto-create bucket if it doesn't exist, then retry
+    if (uploadError?.message?.includes('Bucket not found') || uploadError?.message?.includes('not found')) {
+        const { error: bucketError } = await supabase.storage.createBucket('dev-resources', {
+            public: true,
+            fileSizeLimit: MAX_FILE_SIZE,
+            allowedMimeTypes: ALLOWED_MIME_TYPES,
+        });
+
+        if (bucketError && !bucketError.message?.includes('already exists')) {
+            console.error('Failed to create dev-resources bucket:', bucketError);
+            return { error: `Storage setup failed: ${bucketError.message}` };
+        }
+
+        // Retry upload after creating bucket
+        const retryResult = await supabase.storage
+            .from('dev-resources')
+            .upload(path, buffer, {
+                contentType: file.type,
+                cacheControl: '3600',
+                upsert: false,
+            });
+        uploadError = retryResult.error;
+    }
+
     if (uploadError) {
         console.error('Dev resource upload error:', uploadError);
-        if (uploadError.message?.includes('Bucket not found')) {
-            return {
-                error: 'Storage bucket "dev-resources" not configured. Please create it in Supabase Storage.',
-            };
-        }
         return { error: `Upload failed: ${uploadError.message}` };
     }
 

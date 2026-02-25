@@ -4,8 +4,9 @@ const nextConfig: NextConfig = {
   experimental: {
     turbopackFileSystemCacheForBuild: true,
     serverActions: {
-      bodySizeLimit: '10mb',
+      bodySizeLimit: '50mb',
     },
+    proxyClientMaxBodySize: '50mb',
   },
   images: {
     remotePatterns: [

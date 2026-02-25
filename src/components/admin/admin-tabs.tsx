@@ -54,11 +54,6 @@ const tabs: Tab[] = [
     canAccess: (role) => canEditSettings(role),
   },
   {
-    href: '/admin/audit-log',
-    label: 'Audit Log',
-    canAccess: (role) => canEditSettings(role),
-  },
-  {
     href: '/admin/dev-tracker',
     label: 'Command Center',
     canAccess: (role) => canEditSettings(role),
