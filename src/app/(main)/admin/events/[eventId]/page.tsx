@@ -59,7 +59,7 @@ export default async function EventEditPage({ params }: EventEditPageProps) {
       </div>
 
       {/* Event form */}
-      <div className="bg-white border rounded-lg p-6">
+      <div className="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg p-6">
         <EventForm event={event || undefined} />
       </div>
     </div>

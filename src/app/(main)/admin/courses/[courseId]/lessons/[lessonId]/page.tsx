@@ -51,7 +51,7 @@ export default async function LessonEditPage({ params }: PageProps) {
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Breadcrumb navigation */}
       <nav className="flex items-center gap-2 text-sm text-gray-500">
-        <Link href="/admin/courses" className="hover:text-neutral-100">
+        <Link href="/admin/courses" className="hover:text-gray-900">
           Courses
         </Link>
         <span>/</span>

@@ -84,9 +84,9 @@ export function PostTable({ posts }: PostTableProps) {
 
   if (posts.length === 0) {
     return (
-      <div className="text-center py-12 text-neutral-400">
+      <div className="text-center py-12 text-muted-foreground">
         <svg
-          className="w-12 h-12 mx-auto mb-4 text-neutral-600"
+          className="w-12 h-12 mx-auto mb-4 text-gray-300"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -98,7 +98,7 @@ export function PostTable({ posts }: PostTableProps) {
             d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
           />
         </svg>
-        <p className="text-lg font-medium text-neutral-100">No posts found</p>
+        <p className="text-lg font-medium">No posts found</p>
         <p className="text-sm mt-1">Posts will appear here once members create them.</p>
       </div>
     );
@@ -109,18 +109,18 @@ export function PostTable({ posts }: PostTableProps) {
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b border-neutral-700 bg-neutral-800">
-              <th className="text-left py-3 px-4 font-medium text-sm text-neutral-100">Author</th>
-              <th className="text-left py-3 px-4 font-medium text-sm text-neutral-100">Preview</th>
-              <th className="text-center py-3 px-4 font-medium text-sm text-neutral-100">Likes</th>
-              <th className="text-center py-3 px-4 font-medium text-sm text-neutral-100">Comments</th>
-              <th className="text-left py-3 px-4 font-medium text-sm text-neutral-100">Created</th>
-              <th className="text-right py-3 px-4 font-medium text-sm text-neutral-100">Actions</th>
+            <tr className="border-b bg-gray-50">
+              <th className="text-left py-3 px-4 font-medium text-sm">Author</th>
+              <th className="text-left py-3 px-4 font-medium text-sm">Preview</th>
+              <th className="text-center py-3 px-4 font-medium text-sm">Likes</th>
+              <th className="text-center py-3 px-4 font-medium text-sm">Comments</th>
+              <th className="text-left py-3 px-4 font-medium text-sm">Created</th>
+              <th className="text-right py-3 px-4 font-medium text-sm">Actions</th>
             </tr>
           </thead>
           <tbody>
             {posts.map((post) => (
-              <tr key={post.id} className="border-b border-neutral-700 hover:bg-neutral-800/50 text-neutral-200">
+              <tr key={post.id} className="border-b hover:bg-gray-50">
                 {/* Author */}
                 <td className="py-3 px-4">
                   <Link
@@ -138,7 +138,7 @@ export function PostTable({ posts }: PostTableProps) {
                 <td className="py-3 px-4">
                   <Link
                     href={`/feed/${post.id}`}
-                    className="text-sm text-neutral-300 hover:text-neutral-100 hover:underline line-clamp-2"
+                    className="text-sm text-gray-700 hover:text-primary hover:underline line-clamp-2"
                   >
                     {extractPreview(post.content)}
                   </Link>
@@ -188,7 +188,7 @@ export function PostTable({ posts }: PostTableProps) {
                           variant="ghost"
                           size="sm"
                           onClick={() => setEditingPost(post)}
-                          className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/30"
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                         >
                           Edit
                         </Button>
@@ -196,7 +196,7 @@ export function PostTable({ posts }: PostTableProps) {
                           variant="ghost"
                           size="sm"
                           onClick={() => setConfirmingId(post.id)}
-                          className="text-red-400 hover:text-red-300 hover:bg-red-900/30"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
                           Delete
                         </Button>

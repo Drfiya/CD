@@ -70,9 +70,9 @@ export function CommentTable({ comments }: CommentTableProps) {
 
   if (comments.length === 0) {
     return (
-      <div className="text-center py-12 text-neutral-400">
+      <div className="text-center py-12 text-muted-foreground">
         <svg
-          className="w-12 h-12 mx-auto mb-4 text-neutral-600"
+          className="w-12 h-12 mx-auto mb-4 text-gray-300"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -84,7 +84,7 @@ export function CommentTable({ comments }: CommentTableProps) {
             d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
           />
         </svg>
-        <p className="text-lg font-medium text-neutral-100">No comments found</p>
+        <p className="text-lg font-medium">No comments found</p>
         <p className="text-sm mt-1">Comments will appear here once members create them.</p>
       </div>
     );
@@ -95,18 +95,18 @@ export function CommentTable({ comments }: CommentTableProps) {
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b border-neutral-700 bg-neutral-800">
-              <th className="text-left py-3 px-4 font-medium text-sm text-neutral-100">Author</th>
-              <th className="text-left py-3 px-4 font-medium text-sm text-neutral-100">Content</th>
-              <th className="text-center py-3 px-4 font-medium text-sm text-neutral-100">Likes</th>
-              <th className="text-left py-3 px-4 font-medium text-sm text-neutral-100">Post</th>
-              <th className="text-left py-3 px-4 font-medium text-sm text-neutral-100">Created</th>
-              <th className="text-right py-3 px-4 font-medium text-sm text-neutral-100">Actions</th>
+            <tr className="border-b bg-gray-50">
+              <th className="text-left py-3 px-4 font-medium text-sm">Author</th>
+              <th className="text-left py-3 px-4 font-medium text-sm">Content</th>
+              <th className="text-center py-3 px-4 font-medium text-sm">Likes</th>
+              <th className="text-left py-3 px-4 font-medium text-sm">Post</th>
+              <th className="text-left py-3 px-4 font-medium text-sm">Created</th>
+              <th className="text-right py-3 px-4 font-medium text-sm">Actions</th>
             </tr>
           </thead>
           <tbody>
             {comments.map((comment) => (
-              <tr key={comment.id} className="border-b border-neutral-700 hover:bg-neutral-800/50 text-neutral-200">
+              <tr key={comment.id} className="border-b hover:bg-gray-50">
                 {/* Author */}
                 <td className="py-3 px-4">
                   <Link
@@ -122,7 +122,7 @@ export function CommentTable({ comments }: CommentTableProps) {
 
                 {/* Content */}
                 <td className="py-3 px-4">
-                  <span className="text-sm text-neutral-300 line-clamp-2">
+                  <span className="text-sm text-gray-700 line-clamp-2">
                     {truncate(comment.content)}
                   </span>
                 </td>
@@ -176,7 +176,7 @@ export function CommentTable({ comments }: CommentTableProps) {
                           variant="ghost"
                           size="sm"
                           onClick={() => setEditingComment(comment)}
-                          className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/30"
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                         >
                           Edit
                         </Button>
@@ -184,7 +184,7 @@ export function CommentTable({ comments }: CommentTableProps) {
                           variant="ghost"
                           size="sm"
                           onClick={() => setConfirmingId(comment.id)}
-                          className="text-red-400 hover:text-red-300 hover:bg-red-900/30"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
                           Delete
                         </Button>

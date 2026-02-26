@@ -37,7 +37,7 @@ export default async function CommentsPage({ searchParams }: CommentsPageProps) 
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-100">Comment Moderation</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">Comment Moderation</h1>
         <p className="text-muted-foreground mt-1">
           Review, edit, and delete comments. Edits are silent (no indicator shown to users).
         </p>

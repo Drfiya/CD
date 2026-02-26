@@ -29,7 +29,7 @@ export default async function AdminCoursesPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-100">Course Management</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">Course Management</h1>
         <p className="text-muted-foreground mt-1">
           Create and manage classroom courses
         </p>

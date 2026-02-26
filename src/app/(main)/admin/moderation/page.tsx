@@ -18,10 +18,10 @@ export default function ModerationPage() {
         </p>
       </div>
 
-      <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-8 text-center">
+      <div className="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg p-8 text-center">
         <div className="text-muted-foreground">
           <svg
-            className="w-12 h-12 mx-auto mb-4 text-neutral-600"
+            className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-neutral-600"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"

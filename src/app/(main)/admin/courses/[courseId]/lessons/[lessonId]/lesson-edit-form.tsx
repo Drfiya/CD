@@ -84,9 +84,9 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Title input */}
-      <div className="bg-white border rounded-lg p-4 space-y-4">
+      <div className="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg p-4 space-y-4">
         <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
             Lesson Title
           </label>
           <input
@@ -94,7 +94,7 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="w-full rounded-md border border-gray-300 dark:border-neutral-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-neutral-700 dark:text-neutral-100"
             placeholder="Enter lesson title..."
             required
             minLength={3}
@@ -104,14 +104,14 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
 
         {/* Status select */}
         <div>
-          <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
             Status
           </label>
           <select
             id="status"
             value={status}
             onChange={(e) => setStatus(e.target.value as 'DRAFT' | 'PUBLISHED')}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white"
+            className="w-full rounded-md border border-gray-300 dark:border-neutral-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-neutral-700 dark:text-neutral-100"
           >
             <option value="DRAFT">Draft</option>
             <option value="PUBLISHED">Published</option>
@@ -120,11 +120,11 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
       </div>
 
       {/* Video section */}
-      <div className="bg-white border rounded-lg p-4 space-y-4">
+      <div className="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg p-4 space-y-4">
         <h2 className="text-lg font-medium">Video (optional)</h2>
 
         <div>
-          <label htmlFor="videoUrl" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="videoUrl" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
             Video URL
           </label>
           <input
@@ -132,10 +132,10 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
             type="url"
             value={videoUrl}
             onChange={(e) => setVideoUrl(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="w-full rounded-md border border-gray-300 dark:border-neutral-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-neutral-700 dark:text-neutral-100"
             placeholder="Paste YouTube, Vimeo, or Loom URL..."
           />
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
             Supported: YouTube, Vimeo, Loom
           </p>
         </div>
@@ -143,7 +143,7 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
         {/* Video preview */}
         {videoEmbed && (
           <div className="mt-4">
-            <p className="text-sm font-medium text-gray-700 mb-2">Preview:</p>
+            <p className="text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Preview:</p>
             <div className="max-w-xl">
               <VideoEmbedPlayer embed={videoEmbed} />
             </div>
@@ -158,7 +158,7 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
       </div>
 
       {/* Content section */}
-      <div className="bg-white border rounded-lg p-4 space-y-4">
+      <div className="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg p-4 space-y-4">
         <h2 className="text-lg font-medium">Lesson Content</h2>
 
         <LessonEditor
@@ -168,7 +168,7 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
       </div>
 
       {/* Attachments section */}
-      <div className="bg-white border rounded-lg p-4 space-y-4">
+      <div className="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg p-4 space-y-4">
         <h2 className="text-lg font-medium">Attachments</h2>
 
         <AttachmentList
@@ -179,15 +179,15 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
 
       {/* Error message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-sm text-red-600">{error}</p>
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
         </div>
       )}
 
       {/* Success message */}
       {success && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <p className="text-sm text-green-600">Lesson saved successfully!</p>
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+          <p className="text-sm text-green-600 dark:text-green-400">Lesson saved successfully!</p>
         </div>
       )}
 
