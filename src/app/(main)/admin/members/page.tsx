@@ -38,7 +38,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Member Management</h1>
+        <h1 className="text-2xl font-semibold text-neutral-100">Member Management</h1>
         <p className="text-muted-foreground mt-1">
           Manage roles, ban, or remove members from the community
         </p>

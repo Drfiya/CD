@@ -103,7 +103,7 @@ export function MemberTable({ members, actorRole }: MemberTableProps) {
   return (
     <div className="space-y-4">
       {error && (
-        <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg">
+        <div className="p-3 text-sm text-red-400 bg-red-900/20 rounded-lg">
           {error}
         </div>
       )}
@@ -111,14 +111,14 @@ export function MemberTable({ members, actorRole }: MemberTableProps) {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b text-left text-sm text-muted-foreground">
-              <th className="pb-3 pr-4 font-medium">Member</th>
-              <th className="pb-3 pr-4 font-medium">Role</th>
-              <th className="pb-3 pr-4 font-medium">Points</th>
-              <th className="pb-3 pr-4 font-medium">Level</th>
-              <th className="pb-3 pr-4 font-medium">Joined</th>
-              <th className="pb-3 pr-4 font-medium">Status</th>
-              <th className="pb-3 font-medium">Actions</th>
+            <tr className="border-b border-neutral-700 text-left text-sm text-neutral-400">
+              <th className="pb-3 pr-4 font-medium text-neutral-100">Member</th>
+              <th className="pb-3 pr-4 font-medium text-neutral-100">Role</th>
+              <th className="pb-3 pr-4 font-medium text-neutral-100">Points</th>
+              <th className="pb-3 pr-4 font-medium text-neutral-100">Level</th>
+              <th className="pb-3 pr-4 font-medium text-neutral-100">Joined</th>
+              <th className="pb-3 pr-4 font-medium text-neutral-100">Status</th>
+              <th className="pb-3 font-medium text-neutral-100">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -129,7 +129,7 @@ export function MemberTable({ members, actorRole }: MemberTableProps) {
               return (
                 <tr
                   key={member.id}
-                  className="border-b last:border-0 hover:bg-muted/30"
+                  className="border-b border-neutral-700 last:border-0 hover:bg-neutral-800/50 text-neutral-200"
                 >
                   {/* Member info */}
                   <td className="py-4 pr-4">
@@ -159,7 +159,7 @@ export function MemberTable({ members, actorRole }: MemberTableProps) {
                           handleRoleChange(member.id, e.target.value as Role)
                         }
                         disabled={isPending}
-                        className="border rounded px-2 py-1 text-sm bg-white"
+                        className="border border-neutral-600 rounded px-2 py-1 text-sm bg-neutral-800 text-neutral-100"
                       >
                         {ASSIGNABLE_ROLES.filter((r) =>
                           canAssignRole(actorRole, r.role)
@@ -195,7 +195,7 @@ export function MemberTable({ members, actorRole }: MemberTableProps) {
                   <td className="py-4 pr-4">
                     {member.activeBan ? (
                       <div className="text-sm">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-900/50 text-red-200">
                           Banned
                         </span>
                         {member.activeBan.expiresAt && (
@@ -205,7 +205,7 @@ export function MemberTable({ members, actorRole }: MemberTableProps) {
                         )}
                       </div>
                     ) : (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-900/50 text-green-200">
                         Active
                       </span>
                     )}
@@ -222,7 +222,7 @@ export function MemberTable({ members, actorRole }: MemberTableProps) {
                               placeholder="Reason for removal"
                               value={removeReason}
                               onChange={(e) => setRemoveReason(e.target.value)}
-                              className="border rounded px-2 py-1 text-sm w-40"
+                              className="border border-neutral-600 rounded px-2 py-1 text-sm bg-neutral-800 text-neutral-100 w-40"
                             />
                             <Button
                               variant="ghost"
@@ -250,7 +250,7 @@ export function MemberTable({ members, actorRole }: MemberTableProps) {
                               variant="ghost"
                               size="sm"
                               onClick={() => setBanDialogUserId(member.id)}
-                              className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
+                              className="text-yellow-400 hover:text-yellow-300 hover:bg-yellow-900/30"
                             >
                               Ban
                             </Button>
@@ -258,7 +258,7 @@ export function MemberTable({ members, actorRole }: MemberTableProps) {
                               variant="ghost"
                               size="sm"
                               onClick={() => setConfirmingRemoveId(member.id)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              className="text-red-400 hover:text-red-300 hover:bg-red-900/30"
                             >
                               Remove
                             </Button>

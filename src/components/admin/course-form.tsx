@@ -58,7 +58,7 @@ export function CourseForm({ course, onSuccess }: CourseFormProps) {
     <form ref={formRef} action={handleSubmit} className="space-y-4">
       {/* Title */}
       <div>
-        <label htmlFor="course-title" className="block text-sm font-medium mb-1">
+        <label htmlFor="course-title" className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
           Title
         </label>
         <input
@@ -70,14 +70,14 @@ export function CourseForm({ course, onSuccess }: CourseFormProps) {
           minLength={3}
           maxLength={100}
           defaultValue={course?.title || ''}
-          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full px-3 py-2 border dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary"
           disabled={isPending}
         />
       </div>
 
       {/* Description */}
       <div>
-        <label htmlFor="course-description" className="block text-sm font-medium mb-1">
+        <label htmlFor="course-description" className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
           Description
         </label>
         <textarea
@@ -87,21 +87,21 @@ export function CourseForm({ course, onSuccess }: CourseFormProps) {
           maxLength={2000}
           rows={3}
           defaultValue={course?.description || ''}
-          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-y"
+          className="w-full px-3 py-2 border dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary resize-y"
           disabled={isPending}
         />
       </div>
 
       {/* Status */}
       <div>
-        <label htmlFor="course-status" className="block text-sm font-medium mb-1">
+        <label htmlFor="course-status" className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
           Status
         </label>
         <select
           id="course-status"
           name="status"
           defaultValue={course?.status || 'DRAFT'}
-          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full px-3 py-2 border dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary"
           disabled={isPending}
         >
           <option value="DRAFT">Draft</option>
@@ -118,7 +118,7 @@ export function CourseForm({ course, onSuccess }: CourseFormProps) {
       )}
 
       {/* Error */}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {/* Submit */}
       <Button type="submit" disabled={isPending}>

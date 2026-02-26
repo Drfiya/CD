@@ -24,7 +24,7 @@ export default async function CourseSettingsPage({ params }: PageProps) {
   if (!course) {
     return (
       <div className="text-center py-12">
-        <h1 className="text-2xl font-bold text-gray-900">Course Not Found</h1>
+        <h1 className="text-2xl font-bold text-neutral-100">Course Not Found</h1>
         <p className="mt-2 text-gray-600">The course you are looking for does not exist.</p>
       </div>
     );

@@ -50,14 +50,14 @@ export function CategoryForm() {
             placeholder="Category name"
             required
             maxLength={50}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-3 py-2 border dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary"
             disabled={isPending}
           />
         </div>
 
         {/* Color picker */}
         <div className="flex items-center gap-2">
-          <label htmlFor="category-color" className="text-sm text-muted-foreground">
+          <label htmlFor="category-color" className="text-sm text-gray-500 dark:text-neutral-400">
             Color
           </label>
           <input
@@ -65,7 +65,7 @@ export function CategoryForm() {
             name="color"
             type="color"
             defaultValue="#6366f1"
-            className="w-10 h-10 rounded-md border cursor-pointer"
+            className="w-10 h-10 rounded-md border dark:border-neutral-600 shadow-sm cursor-pointer"
             disabled={isPending}
           />
         </div>
@@ -78,7 +78,7 @@ export function CategoryForm() {
 
       {/* Error message */}
       {error && (
-        <p className="text-sm text-red-600">{error}</p>
+        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
       )}
     </form>
   );

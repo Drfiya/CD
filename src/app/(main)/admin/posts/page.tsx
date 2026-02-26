@@ -37,7 +37,7 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Post Moderation</h1>
+        <h1 className="text-2xl font-semibold text-neutral-100">Post Moderation</h1>
         <p className="text-muted-foreground mt-1">
           Review, edit, and delete posts. Edits are silent (no indicator shown to users).
         </p>

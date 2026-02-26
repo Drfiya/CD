@@ -42,7 +42,7 @@ export function CategoryList({ categories }: CategoryListProps) {
 
   if (categories.length === 0) {
     return (
-      <p className="text-muted-foreground text-center py-8">
+      <p className="text-gray-500 dark:text-neutral-400 text-center py-8">
         No categories yet. Create your first category above.
       </p>
     );
@@ -51,24 +51,24 @@ export function CategoryList({ categories }: CategoryListProps) {
   return (
     <div className="space-y-2">
       {error && (
-        <p className="text-sm text-red-600 mb-4">{error}</p>
+        <p className="text-sm text-red-600 dark:text-red-400 mb-4">{error}</p>
       )}
 
       {categories.map((category) => (
         <div
           key={category.id}
-          className="flex items-center justify-between p-3 border rounded-lg"
+          className="flex items-center justify-between p-3 border dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800"
         >
           {/* Color swatch and name */}
           <div className="flex items-center gap-3">
             <div
-              className="w-6 h-6 rounded-md border"
+              className="w-6 h-6 rounded-md border dark:border-neutral-700 shadow-sm"
               style={{ backgroundColor: category.color }}
               aria-label={`Color: ${category.color}`}
             />
-            <span className="font-medium">{category.name}</span>
+            <span className="font-medium text-gray-900 dark:text-neutral-100">{category.name}</span>
             {category._count && (
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-gray-500 dark:text-neutral-400">
                 ({category._count.posts} {category._count.posts === 1 ? 'post' : 'posts'})
               </span>
             )}
@@ -78,7 +78,7 @@ export function CategoryList({ categories }: CategoryListProps) {
           <div className="flex items-center gap-2">
             {confirmingId === category.id ? (
               <>
-                <span className="text-sm text-muted-foreground mr-2">
+                <span className="text-sm text-gray-500 dark:text-neutral-400 mr-2">
                   Are you sure? Posts will become uncategorized.
                 </span>
                 <Button
@@ -103,7 +103,7 @@ export function CategoryList({ categories }: CategoryListProps) {
                 variant="ghost"
                 size="sm"
                 onClick={() => setConfirmingId(category.id)}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
               >
                 Delete
               </Button>

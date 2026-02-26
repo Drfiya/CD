@@ -74,7 +74,7 @@ export function AdminTabs({ role }: AdminTabsProps) {
   const visibleTabs = tabs.filter((tab) => tab.canAccess(role));
 
   return (
-    <nav className="border-b border-gray-200 bg-white">
+    <nav className="border-b border-neutral-700 bg-neutral-900">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex gap-1 -mb-px overflow-x-auto">
           {visibleTabs.map((tab) => {
@@ -88,8 +88,8 @@ export function AdminTabs({ role }: AdminTabsProps) {
                 className={cn(
                   'px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors',
                   isActive
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-gray-300'
+                    ? 'border-neutral-100 text-neutral-100'
+                    : 'border-transparent text-neutral-400 hover:text-neutral-100 hover:border-neutral-500'
                 )}
               >
                 {tab.label}

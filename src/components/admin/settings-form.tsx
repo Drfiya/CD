@@ -187,9 +187,9 @@ export function SettingsForm({ settings }: SettingsFormProps) {
   return (
     <div className="space-y-6">
       {/* Light Logo Section */}
-      <div className="bg-white border rounded-lg p-6">
+      <div className="bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-lg p-6">
         <h2 className="text-lg font-medium mb-1">Community Logo</h2>
-        <p className="text-xs text-muted-foreground mb-4">
+        <p className="text-xs text-gray-500 dark:text-neutral-400 mb-4">
           This logo is shown on light backgrounds (light mode header, landing page).
         </p>
         <div className="flex items-start gap-6">
@@ -251,9 +251,9 @@ export function SettingsForm({ settings }: SettingsFormProps) {
       </div>
 
       {/* Dark Mode Logo Section */}
-      <div className="bg-white border rounded-lg p-6">
+      <div className="bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-lg p-6">
         <h2 className="text-lg font-medium mb-1">Dark Mode Logo</h2>
-        <p className="text-xs text-muted-foreground mb-4">
+        <p className="text-xs text-gray-500 dark:text-neutral-400 mb-4">
           This logo is shown on dark backgrounds (dark mode header). If not set, the light logo is used.
         </p>
         <div className="flex items-start gap-6">
@@ -316,12 +316,12 @@ export function SettingsForm({ settings }: SettingsFormProps) {
 
       {/* Logo Size Slider - visible when at least one logo is uploaded */}
       {(logoPreview || darkLogoPreview) && (
-        <div className="bg-white border rounded-lg p-6">
+        <div className="bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-lg p-6">
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium text-foreground">
+            <label className="text-sm font-medium text-gray-700 dark:text-neutral-200">
               Logo Size
             </label>
-            <span className="text-xs text-muted-foreground tabular-nums">
+            <span className="text-xs text-gray-500 dark:text-neutral-400 tabular-nums">
               {logoSize}px
             </span>
           </div>
@@ -335,7 +335,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
             disabled={anyPending}
           />
-          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+          <div className="flex justify-between text-xs text-gray-500 dark:text-neutral-400 mt-1">
             <span>Klein</span>
             <span>Groß</span>
           </div>
@@ -344,7 +344,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
           <div className="mt-4 grid grid-cols-2 gap-3">
             {/* Light preview */}
             <div className="p-3 bg-gray-50 rounded-lg border">
-              <p className="text-xs text-muted-foreground mb-2">Light Mode:</p>
+              <p className="text-xs text-gray-500 dark:text-neutral-400 mb-2">Light Mode:</p>
               <div className="flex items-center h-16">
                 {logoPreview ? (
                   <Image
@@ -357,7 +357,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
                     style={{ height: `${logoSize}px` }}
                   />
                 ) : (
-                  <span className="text-xs text-muted-foreground italic">No light logo</span>
+                  <span className="text-xs text-gray-500 dark:text-neutral-400 italic">No light logo</span>
                 )}
               </div>
             </div>
@@ -395,8 +395,8 @@ export function SettingsForm({ settings }: SettingsFormProps) {
       )}
 
       {/* Sidebar Banner Section */}
-      <div className="bg-white border rounded-lg p-6 space-y-4">
-        <h2 className="text-lg font-medium">Sidebar Banner</h2>
+      <div className="bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-lg p-6 space-y-4">
+        <h2 className="text-lg font-medium text-gray-900 dark:text-neutral-100">Sidebar Banner</h2>
         <p className="text-sm text-muted-foreground">Upload a banner image (9:16 format recommended, e.g. 1080×1920px) that appears below the categories in the feed sidebar.</p>
 
         {/* Banner Preview */}
@@ -473,7 +473,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
         {/* Banner URL */}
         {bannerPreview && (
           <div className="space-y-2">
-            <label htmlFor="bannerUrl" className="text-sm font-medium text-foreground">
+            <label htmlFor="bannerUrl" className="text-sm font-medium text-gray-700 dark:text-neutral-200">
               Link URL (optional)
             </label>
             <div className="flex gap-2">
@@ -483,7 +483,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
                 value={bannerUrl}
                 onChange={(e) => setBannerUrl(e.target.value)}
                 placeholder="https://example.com"
-                className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                className="flex-1 px-3 py-2 border dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
               />
               <Button
                 type="button"
@@ -504,7 +504,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
                 {isBannerSettingsPending ? 'Saving...' : 'Save'}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-gray-500 dark:text-neutral-400">
               When set, clicking the banner opens this URL.
             </p>
           </div>
@@ -513,7 +513,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
         {/* Enable/Disable Toggle */}
         {bannerPreview && (
           <div className="flex items-center justify-between pt-2">
-            <span className="text-sm font-medium text-foreground">Show banner on feed page</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-neutral-200">Show banner on feed page</span>
             <button
               type="button"
               role="switch"
@@ -547,14 +547,14 @@ export function SettingsForm({ settings }: SettingsFormProps) {
 
       {/* Details Form */}
       <form action={handleSubmit}>
-        <div className="bg-white border rounded-lg p-6 space-y-4">
-          <h2 className="text-lg font-medium">Community Details</h2>
+        <div className="bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-lg p-6 space-y-4">
+          <h2 className="text-lg font-medium text-gray-900 dark:text-neutral-100">Community Details</h2>
 
           {/* Community Name */}
           <div className="space-y-2">
             <label
               htmlFor="communityName"
-              className="text-sm font-medium text-foreground"
+              className="text-sm font-medium text-gray-700 dark:text-neutral-200"
             >
               Community Name <span className="text-destructive">*</span>
             </label>
@@ -566,10 +566,10 @@ export function SettingsForm({ settings }: SettingsFormProps) {
               maxLength={100}
               defaultValue={settings.communityName}
               placeholder="Enter community name"
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-3 py-2 border dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary"
               disabled={isPending}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-gray-500 dark:text-neutral-400">
               1-100 characters. This name appears in the sidebar and header.
             </p>
           </div>
@@ -578,7 +578,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
           <div className="space-y-2">
             <label
               htmlFor="communityDescription"
-              className="text-sm font-medium text-foreground"
+              className="text-sm font-medium text-gray-700 dark:text-neutral-200"
             >
               Description
             </label>
@@ -589,10 +589,10 @@ export function SettingsForm({ settings }: SettingsFormProps) {
               maxLength={1000}
               defaultValue={settings.communityDescription || ''}
               placeholder="Describe your community (optional)"
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+              className="w-full px-3 py-2 border dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
               disabled={isPending}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-gray-500 dark:text-neutral-400">
               Up to 1000 characters.
             </p>
           </div>

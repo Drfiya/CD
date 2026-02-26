@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* Tell Tailwind v4 to use class-based dark mode (matches next-themes) */
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark *));
 
 /* Custom theme tokens - replaces tailwind.config.js */
 @theme {
