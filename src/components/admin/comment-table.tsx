@@ -95,7 +95,7 @@ export function CommentTable({ comments }: CommentTableProps) {
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b bg-gray-50">
+            <tr className="border-b dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50">
               <th className="text-left py-3 px-4 font-medium text-sm">Author</th>
               <th className="text-left py-3 px-4 font-medium text-sm">Content</th>
               <th className="text-center py-3 px-4 font-medium text-sm">Likes</th>
@@ -106,7 +106,7 @@ export function CommentTable({ comments }: CommentTableProps) {
           </thead>
           <tbody>
             {comments.map((comment) => (
-              <tr key={comment.id} className="border-b hover:bg-gray-50">
+              <tr key={comment.id} className="border-b dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-800/50">
                 {/* Author */}
                 <td className="py-3 px-4">
                   <Link
@@ -122,7 +122,7 @@ export function CommentTable({ comments }: CommentTableProps) {
 
                 {/* Content */}
                 <td className="py-3 px-4">
-                  <span className="text-sm text-gray-700 line-clamp-2">
+                  <span className="text-sm text-gray-700 dark:text-neutral-300 line-clamp-2">
                     {truncate(comment.content)}
                   </span>
                 </td>
@@ -176,7 +176,7 @@ export function CommentTable({ comments }: CommentTableProps) {
                           variant="ghost"
                           size="sm"
                           onClick={() => setEditingComment(comment)}
-                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
                         >
                           Edit
                         </Button>
@@ -184,7 +184,7 @@ export function CommentTable({ comments }: CommentTableProps) {
                           variant="ghost"
                           size="sm"
                           onClick={() => setConfirmingId(comment.id)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/30"
                         >
                           Delete
                         </Button>

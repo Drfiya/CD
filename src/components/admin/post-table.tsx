@@ -109,7 +109,7 @@ export function PostTable({ posts }: PostTableProps) {
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b bg-gray-50">
+            <tr className="border-b dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50">
               <th className="text-left py-3 px-4 font-medium text-sm">Author</th>
               <th className="text-left py-3 px-4 font-medium text-sm">Preview</th>
               <th className="text-center py-3 px-4 font-medium text-sm">Likes</th>
@@ -120,7 +120,7 @@ export function PostTable({ posts }: PostTableProps) {
           </thead>
           <tbody>
             {posts.map((post) => (
-              <tr key={post.id} className="border-b hover:bg-gray-50">
+              <tr key={post.id} className="border-b dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-800/50">
                 {/* Author */}
                 <td className="py-3 px-4">
                   <Link
@@ -138,7 +138,7 @@ export function PostTable({ posts }: PostTableProps) {
                 <td className="py-3 px-4">
                   <Link
                     href={`/feed/${post.id}`}
-                    className="text-sm text-gray-700 hover:text-primary hover:underline line-clamp-2"
+                    className="text-sm text-gray-700 dark:text-neutral-300 hover:text-primary hover:underline line-clamp-2"
                   >
                     {extractPreview(post.content)}
                   </Link>
@@ -188,7 +188,7 @@ export function PostTable({ posts }: PostTableProps) {
                           variant="ghost"
                           size="sm"
                           onClick={() => setEditingPost(post)}
-                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
                         >
                           Edit
                         </Button>
@@ -196,7 +196,7 @@ export function PostTable({ posts }: PostTableProps) {
                           variant="ghost"
                           size="sm"
                           onClick={() => setConfirmingId(post.id)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/30"
                         >
                           Delete
                         </Button>

@@ -28,7 +28,7 @@ export default async function AdminSettingsPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Community Settings</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-neutral-100">Community Settings</h1>
         <p className="text-muted-foreground mt-1">
           Configure your community name, description, and branding
         </p>
