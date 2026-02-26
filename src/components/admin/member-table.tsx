@@ -159,7 +159,7 @@ export function MemberTable({ members, actorRole }: MemberTableProps) {
                           handleRoleChange(member.id, e.target.value as Role)
                         }
                         disabled={isPending}
-                        className="border rounded px-2 py-1 text-sm bg-white"
+                        className="border dark:border-neutral-600 rounded px-2 py-1 text-sm bg-white dark:bg-neutral-700 dark:text-neutral-100"
                       >
                         {ASSIGNABLE_ROLES.filter((r) =>
                           canAssignRole(actorRole, r.role)

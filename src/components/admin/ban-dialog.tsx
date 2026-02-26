@@ -57,7 +57,7 @@ export function BanDialog({
       />
 
       {/* Dialog */}
-      <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+      <div className="relative bg-white dark:bg-neutral-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
         <h2 className="text-lg font-semibold mb-4">
           Ban {userName || 'User'}
         </h2>
@@ -80,11 +80,10 @@ export function BanDialog({
                   key={d.days}
                   type="button"
                   onClick={() => setDuration(d.days)}
-                  className={`px-4 py-2 text-sm rounded-lg border transition-colors ${
-                    duration === d.days
+                  className={`px-4 py-2 text-sm rounded-lg border transition-colors ${duration === d.days
                       ? 'bg-primary text-white border-primary'
-                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                  }`}
+                      : 'bg-white dark:bg-neutral-700 text-gray-700 dark:text-neutral-300 border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-600'
+                    }`}
                 >
                   {d.label}
                 </button>

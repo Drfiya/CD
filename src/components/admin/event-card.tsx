@@ -42,7 +42,7 @@ export function EventCard({ event }: EventCardProps) {
   };
 
   return (
-    <div className="border rounded-lg p-4 bg-white hover:shadow-sm transition-shadow">
+    <div className="border dark:border-neutral-700 rounded-lg p-4 bg-white dark:bg-neutral-800 hover:shadow-sm transition-shadow">
       {/* Header with recurrence badge */}
       <div className="flex items-start justify-between gap-2 mb-2">
         <Link

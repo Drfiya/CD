@@ -85,7 +85,7 @@ export function AttachmentList({ attachments: initialAttachments, lessonId }: At
           {attachments.map((attachment) => (
             <li
               key={attachment.id}
-              className="flex items-center justify-between p-3 bg-white hover:bg-gray-50"
+              className="flex items-center justify-between p-3 bg-white dark:bg-neutral-800 hover:bg-gray-50 dark:hover:bg-neutral-700"
             >
               <div className="flex items-center gap-3 min-w-0">
                 {/* File type badge */}
@@ -125,11 +125,10 @@ export function AttachmentList({ attachments: initialAttachments, lessonId }: At
                   type="button"
                   onClick={() => handleDelete(attachment.id)}
                   disabled={deletingId === attachment.id}
-                  className={`px-2 py-1 text-xs rounded ${
-                    confirmDeleteId === attachment.id
+                  className={`px-2 py-1 text-xs rounded ${confirmDeleteId === attachment.id
                       ? 'bg-red-500 text-white hover:bg-red-600'
                       : 'text-gray-600 hover:text-red-600 hover:bg-red-50'
-                  } disabled:opacity-50`}
+                    } disabled:opacity-50`}
                 >
                   {deletingId === attachment.id
                     ? 'Deleting...'

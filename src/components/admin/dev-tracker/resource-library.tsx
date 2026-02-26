@@ -160,10 +160,10 @@ function DropZone({
                 onDragLeave={handleDragLeave}
                 onClick={() => inputRef.current?.click()}
                 className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${dragActive
-                        ? 'border-indigo-500 bg-indigo-50 scale-[1.01]'
-                        : uploading
-                            ? 'border-yellow-400 bg-yellow-50'
-                            : 'border-gray-300 bg-gray-50/50 hover:border-indigo-400 hover:bg-indigo-50/30'
+                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 scale-[1.01]'
+                    : uploading
+                        ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20'
+                        : 'border-gray-300 dark:border-neutral-600 bg-gray-50/50 dark:bg-neutral-800 hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10'
                     }`}
             >
                 <input
@@ -187,7 +187,7 @@ function DropZone({
                         <div className="text-3xl">
                             {dragActive ? '📥' : '📂'}
                         </div>
-                        <p className="text-sm font-medium text-gray-700">
+                        <p className="text-sm font-medium text-gray-700 dark:text-neutral-300">
                             {dragActive ? 'Drop files here' : 'Drag & drop files, or click to browse'}
                         </p>
                         <p className="text-xs text-gray-400">
@@ -241,7 +241,7 @@ function AddTextForm({
     };
 
     return (
-        <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+        <form onSubmit={handleSubmit} className="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg p-4 space-y-3">
             <div className="flex gap-2">
                 {(['PROMPT', 'LINK', 'NOTE'] as const).map((t) => (
                     <button
@@ -249,8 +249,8 @@ function AddTextForm({
                         type="button"
                         onClick={() => setType(t)}
                         className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${type === t
-                                ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
-                                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                            ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700'
+                            : 'bg-gray-100 dark:bg-neutral-700 text-gray-500 dark:text-neutral-400 hover:bg-gray-200 dark:hover:bg-neutral-600'
                             }`}
                     >
                         {getTypeIcon(t)} {t.charAt(0) + t.slice(1).toLowerCase()}
@@ -262,14 +262,14 @@ function AddTextForm({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Title"
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-neutral-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
             />
             <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder={type === 'LINK' ? 'https://…' : 'Content'}
                 rows={type === 'PROMPT' ? 4 : 2}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-neutral-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
             />
             <button
                 type="submit"
@@ -325,7 +325,7 @@ function ResourceCard({
     const isImage = resource.mimeType?.startsWith('image/');
 
     return (
-        <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
+        <div className="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg p-4 hover:shadow-sm transition-shadow">
             <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
                     <button
@@ -338,7 +338,7 @@ function ResourceCard({
                     </button>
                     <span className="text-base shrink-0">{icon}</span>
                     <h3
-                        className="text-sm font-medium text-gray-900 truncate cursor-pointer hover:text-indigo-600"
+                        className="text-sm font-medium text-gray-900 dark:text-neutral-100 truncate cursor-pointer hover:text-indigo-600"
                         onClick={() => setExpanded(!expanded)}
                     >
                         {resource.title}
@@ -376,7 +376,7 @@ function ResourceCard({
 
             {/* Meta */}
             <div className="flex items-center gap-2 mt-1 text-xs text-gray-400 flex-wrap">
-                <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 font-medium">
+                <span className="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-neutral-700 text-gray-500 dark:text-neutral-400 font-medium">
                     {resource.type}
                 </span>
                 {resource.createdBy.name && <span>by {resource.createdBy.name}</span>}
@@ -436,7 +436,7 @@ function ResourceCard({
                             {resource.content}
                         </a>
                     ) : (
-                        <pre className="text-xs text-gray-700 bg-gray-50 p-3 rounded-lg whitespace-pre-wrap max-h-64 overflow-y-auto">
+                        <pre className="text-xs text-gray-700 dark:text-neutral-300 bg-gray-50 dark:bg-neutral-700 p-3 rounded-lg whitespace-pre-wrap max-h-64 overflow-y-auto">
                             {resource.content}
                         </pre>
                     )}
@@ -477,10 +477,10 @@ export function ResourceLibrary({ initialResources, userId }: ResourceLibraryPro
         <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between flex-wrap gap-4">
-                <h2 className="text-lg font-semibold text-gray-900">Shared Resources</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">Shared Resources</h2>
                 <button
                     onClick={() => setShowTextForm(!showTextForm)}
-                    className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
                 >
                     {showTextForm ? 'Cancel' : '✏️ Add Text'}
                 </button>
@@ -493,14 +493,14 @@ export function ResourceLibrary({ initialResources, userId }: ResourceLibraryPro
             {showTextForm && <AddTextForm userId={userId} onAdded={handleRefresh} />}
 
             {/* Tabs */}
-            <div className="flex gap-1 border-b border-gray-200 overflow-x-auto">
+            <div className="flex gap-1 border-b border-gray-200 dark:border-neutral-700 overflow-x-auto">
                 {TABS.map(({ id, label }) => (
                     <button
                         key={id}
                         onClick={() => setActiveTab(id)}
                         className={`px-3 py-2 text-xs font-medium whitespace-nowrap border-b-2 transition-colors ${activeTab === id
-                                ? 'border-indigo-500 text-indigo-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                            ? 'border-indigo-500 text-indigo-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         {label}
@@ -515,7 +515,7 @@ export function ResourceLibrary({ initialResources, userId }: ResourceLibraryPro
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search resources…"
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-neutral-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
             />
 
             {/* Resource list */}

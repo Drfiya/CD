@@ -30,8 +30,8 @@ export function KanbanCard({ card, onEdit, onDelete }: KanbanCardProps) {
             ref={setNodeRef}
             style={style}
             className={`
-        group bg-white rounded-xl border border-gray-200 shadow-sm
-        hover:shadow-md hover:border-gray-300 transition-all duration-200
+        group bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 shadow-sm
+        hover:shadow-md hover:border-gray-300 dark:hover:border-neutral-600 transition-all duration-200
         ${isDragging ? 'opacity-50 shadow-lg scale-[1.02] rotate-1' : ''}
       `}
         >
@@ -41,10 +41,10 @@ export function KanbanCard({ card, onEdit, onDelete }: KanbanCardProps) {
                 {...listeners}
                 className="px-4 pt-3 pb-1 cursor-grab active:cursor-grabbing flex items-center gap-2"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-gray-300 group-hover:text-gray-400 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-gray-300 dark:text-neutral-600 group-hover:text-gray-400 dark:group-hover:text-neutral-500 transition-colors">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
                 </svg>
-                <span className="text-xs text-gray-300 group-hover:text-gray-400 transition-colors">Drag</span>
+                <span className="text-xs text-gray-300 dark:text-neutral-600 group-hover:text-gray-400 dark:group-hover:text-neutral-500 transition-colors">Drag</span>
             </div>
 
             {/* Image */}
@@ -63,9 +63,9 @@ export function KanbanCard({ card, onEdit, onDelete }: KanbanCardProps) {
 
             {/* Content */}
             <div className="px-4 py-3">
-                <h3 className="font-semibold text-gray-900 text-sm leading-snug">{card.title}</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-neutral-100 text-sm leading-snug">{card.title}</h3>
                 {card.description && (
-                    <p className="text-xs text-gray-500 mt-1.5 line-clamp-3 leading-relaxed">
+                    <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1.5 line-clamp-3 leading-relaxed">
                         {card.description}
                     </p>
                 )}
@@ -96,7 +96,7 @@ export function KanbanCard({ card, onEdit, onDelete }: KanbanCardProps) {
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                         onClick={() => onEdit(card)}
-                        className="p-1 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                        className="p-1 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
                         title="Edit"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
@@ -105,7 +105,7 @@ export function KanbanCard({ card, onEdit, onDelete }: KanbanCardProps) {
                     </button>
                     <button
                         onClick={() => onDelete(card.id)}
-                        className="p-1 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        className="p-1 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
                         title="Delete"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">

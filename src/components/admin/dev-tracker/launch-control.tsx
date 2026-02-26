@@ -94,7 +94,7 @@ function ScoreRing({ score, hasBlocker }: { score: number; hasBlocker: boolean }
             <div className={`w-32 h-32 rounded-full border-4 ${bgRing} flex items-center justify-center`}>
                 <div className={`text-4xl font-bold ${color}`}>{score}%</div>
             </div>
-            <p className="text-sm font-medium text-gray-600">Launch Readiness</p>
+            <p className="text-sm font-medium text-gray-600 dark:text-neutral-400">Launch Readiness</p>
             {hasBlocker && (
                 <span className="text-xs font-medium text-red-600 bg-red-50 px-3 py-1 rounded-full border border-red-200">
                     ⚠️ Blockers present — score capped at 80%
@@ -170,9 +170,9 @@ function AddItemForm({
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
                 placeholder="Add manual item…"
-                className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none"
+                className="flex-1 px-2 py-1 text-sm border border-gray-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-700 dark:text-neutral-100 focus:ring-1 focus:ring-indigo-500 outline-none"
             />
-            <label className="flex items-center gap-1 text-xs text-gray-500 cursor-pointer">
+            <label className="flex items-center gap-1 text-xs text-gray-500 dark:text-neutral-400 cursor-pointer">
                 <input
                     type="checkbox"
                     checked={blocker}
@@ -235,18 +235,18 @@ function CategorySection({
     const manualItems = items.filter((i) => !i.autoChecked);
 
     return (
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg p-4">
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                     <span className="text-lg">{emoji}</span>
-                    <h3 className="text-sm font-semibold text-gray-700">{label}</h3>
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-neutral-300">{label}</h3>
                 </div>
-                <span className="text-sm font-bold text-gray-600">{score}%</span>
+                <span className="text-sm font-bold text-gray-600 dark:text-neutral-300">{score}%</span>
             </div>
 
             {/* Progress bar */}
-            <div className="w-full h-1.5 bg-gray-100 rounded-full mb-4">
+            <div className="w-full h-1.5 bg-gray-100 dark:bg-neutral-700 rounded-full mb-4">
                 <div
                     className={`h-full rounded-full transition-all ${barColor}`}
                     style={{ width: `${score}%` }}
@@ -263,7 +263,7 @@ function CategorySection({
                                 {item.checked ? '✅' : '❌'}
                             </span>
                             <span
-                                className={`text-sm flex-1 ${item.checked ? 'text-gray-500' : 'text-gray-800 font-medium'
+                                className={`text-sm flex-1 ${item.checked ? 'text-gray-500 dark:text-neutral-500' : 'text-gray-800 dark:text-neutral-200 font-medium'
                                     }`}
                             >
                                 {item.label}
@@ -273,7 +273,7 @@ function CategorySection({
                                     blocker
                                 </span>
                             )}
-                            <span className="text-[10px] text-gray-300 px-1.5 py-0.5 rounded bg-gray-50">
+                            <span className="text-[10px] text-gray-300 dark:text-neutral-600 px-1.5 py-0.5 rounded bg-gray-50 dark:bg-neutral-700">
                                 auto
                             </span>
                         </div>
@@ -295,7 +295,7 @@ function CategorySection({
                                 className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 shrink-0"
                             />
                             <span
-                                className={`text-sm flex-1 ${item.checked ? 'text-gray-400 line-through' : 'text-gray-700'
+                                className={`text-sm flex-1 ${item.checked ? 'text-gray-400 dark:text-neutral-500 line-through' : 'text-gray-700 dark:text-neutral-300'
                                     }`}
                             >
                                 {item.label}
@@ -356,7 +356,7 @@ export function LaunchControl({ initialItems }: LaunchControlProps) {
             <div className="flex flex-col items-center gap-6 py-6">
                 <ScoreRing score={scores.overall} hasBlocker={scores.hasBlocker} />
 
-                <div className="flex items-center gap-6 text-sm text-gray-500">
+                <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-neutral-400">
                     <span>✅ {passedCount} passed</span>
                     <span>📋 {totalCount} total</span>
                     {blockerCount > 0 && (
@@ -388,7 +388,7 @@ export function LaunchControl({ initialItems }: LaunchControlProps) {
                     Weights: {CATEGORIES.map((c) => `${c.label} (${Math.round(c.weight * 100)}%)`).join(' · ')}
                 </p>
                 <p className="text-xs text-gray-400">
-                    <span className="bg-gray-50 px-1.5 py-0.5 rounded text-gray-500">auto</span> = detected by system scan ·
+                    <span className="bg-gray-50 dark:bg-neutral-700 px-1.5 py-0.5 rounded text-gray-500 dark:text-neutral-400">auto</span> = detected by system scan ·
                     ☑️ = manually toggled by you
                 </p>
             </div>

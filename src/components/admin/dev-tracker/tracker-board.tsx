@@ -54,7 +54,7 @@ function FreshnessDot({ freshness }: { freshness: string }) {
 
 function TopicBadge({ label }: { label: string }) {
     return (
-        <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 mr-1">
+        <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 mr-1">
             {label}
         </span>
     );
@@ -73,16 +73,16 @@ function GitHubCardUI({
         <div
             draggable
             onDragStart={(e) => onDragStart(e, card.branchName)}
-            className="bg-white border border-gray-200 rounded-lg p-3 cursor-grab active:cursor-grabbing
-                       hover:shadow-md hover:border-indigo-200 transition-all group"
+            className="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg p-3 cursor-grab active:cursor-grabbing
+                       hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-700 transition-all group"
         >
             {/* Title row */}
             <div className="flex items-start justify-between gap-1 mb-1">
                 <div className="flex items-center gap-1.5 min-w-0">
                     <FreshnessDot freshness={card.freshness} />
-                    <span className="text-xs font-semibold text-gray-800 truncate">{card.title}</span>
+                    <span className="text-xs font-semibold text-gray-800 dark:text-neutral-200 truncate">{card.title}</span>
                 </div>
-                <span className="text-[10px] text-gray-400 shrink-0">🔧</span>
+                <span className="text-[10px] text-gray-400 dark:text-neutral-500 shrink-0">🔧</span>
             </div>
 
             {/* Topic tag */}
@@ -91,7 +91,7 @@ function GitHubCardUI({
             )}
 
             {/* Meta row */}
-            <div className="flex items-center gap-2 text-[10px] text-gray-500">
+            <div className="flex items-center gap-2 text-[10px] text-gray-500 dark:text-neutral-400">
                 <span>{card.commitCount} commit{card.commitCount !== 1 ? 's' : ''}</span>
                 {card.prNumber && (
                     <span className="text-amber-600">PR #{card.prNumber}</span>
@@ -104,7 +104,7 @@ function GitHubCardUI({
                 {card.authors.map((a) => (
                     <span
                         key={a}
-                        className="w-5 h-5 rounded-full bg-gray-200 text-[9px] font-bold flex items-center justify-center text-gray-600"
+                        className="w-5 h-5 rounded-full bg-gray-200 dark:bg-neutral-600 text-[9px] font-bold flex items-center justify-center text-gray-600 dark:text-neutral-300"
                         title={a}
                     >
                         {a[0]}
@@ -130,8 +130,8 @@ function ManualCardUI({
         <div
             draggable
             onDragStart={(e) => onDragStart(e, card.id)}
-            className="bg-white border border-gray-200 rounded-lg p-3 cursor-grab active:cursor-grabbing
-                       hover:shadow-md hover:border-blue-200 transition-all group"
+            className="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg p-3 cursor-grab active:cursor-grabbing
+                       hover:shadow-md hover:border-blue-200 dark:hover:border-blue-700 transition-all group"
         >
             {/* Image */}
             {card.imageUrl && (
@@ -142,13 +142,13 @@ function ManualCardUI({
 
             {/* Title row */}
             <div className="flex items-start justify-between gap-1 mb-1">
-                <span className="text-xs font-semibold text-gray-800">{card.title}</span>
-                <span className="text-[10px] text-gray-400 shrink-0">📋</span>
+                <span className="text-xs font-semibold text-gray-800 dark:text-neutral-200">{card.title}</span>
+                <span className="text-[10px] text-gray-400 dark:text-neutral-500 shrink-0">📋</span>
             </div>
 
             {/* Description */}
             {card.description && (
-                <p className="text-[10px] text-gray-500 line-clamp-2 mb-1.5">{card.description}</p>
+                <p className="text-[10px] text-gray-500 dark:text-neutral-400 line-clamp-2 mb-1.5">{card.description}</p>
             )}
 
             {/* Footer */}
@@ -161,7 +161,7 @@ function ManualCardUI({
                             {card.createdBy.name[0]}
                         </span>
                     ) : null}
-                    <span className="text-[10px] text-gray-400">{card.createdBy.name}</span>
+                    <span className="text-[10px] text-gray-400 dark:text-neutral-500">{card.createdBy.name}</span>
                 </div>
                 <button
                     onClick={(e) => { e.stopPropagation(); onDelete(card.id); }}
@@ -216,16 +216,16 @@ function ColumnUI({
             {/* Column header */}
             <div className="flex items-center gap-2 mb-3">
                 <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
-                <span className="text-xs font-semibold text-gray-700">{label}</span>
-                <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">
+                <span className="text-xs font-semibold text-gray-700 dark:text-neutral-300">{label}</span>
+                <span className="text-[10px] text-gray-400 bg-gray-100 dark:bg-neutral-700 px-1.5 py-0.5 rounded-full">
                     {filteredCards.length}
                 </span>
             </div>
 
             {/* Cards */}
-            <div className="space-y-2 min-h-[80px] p-1 rounded-lg bg-gray-50/50">
+            <div className="space-y-2 min-h-[80px] p-1 rounded-lg bg-gray-50/50 dark:bg-neutral-800/50">
                 {filteredCards.length === 0 ? (
-                    <div className="text-center py-6 text-xs text-gray-400">
+                    <div className="text-center py-6 text-xs text-gray-400 dark:text-neutral-500">
                         Drag cards here
                     </div>
                 ) : (
@@ -268,9 +268,9 @@ function StatsHeader({ stats, manualCount }: { stats: TrackerStats; manualCount:
     return (
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {items.map(({ label, value, color }) => (
-                <div key={label} className="bg-gray-50 rounded-lg px-4 py-3">
-                    <div className="text-[10px] text-gray-500 font-medium">{label}</div>
-                    <div className={`text-xl font-bold ${color || 'text-gray-800'}`}>{value}</div>
+                <div key={label} className="bg-gray-50 dark:bg-neutral-800 rounded-lg px-4 py-3">
+                    <div className="text-[10px] text-gray-500 dark:text-neutral-400 font-medium">{label}</div>
+                    <div className={`text-xl font-bold ${color || 'text-gray-800 dark:text-neutral-200'}`}>{value}</div>
                 </div>
             ))}
         </div>
@@ -289,7 +289,7 @@ function TeamTimezones() {
     };
 
     return (
-        <div className="flex items-center gap-4 text-xs text-gray-500">
+        <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-neutral-400">
             <span className="font-medium">Build Tracker</span>
             <span>🇺🇸 {format('America/Chicago')}</span>
             <span>🇩🇪 {format('Europe/Berlin')}</span>
@@ -307,13 +307,13 @@ function AddTaskForm({ onSubmit, onCancel }: {
     const [description, setDescription] = useState('');
 
     return (
-        <div className="bg-white border border-blue-200 rounded-lg p-3 space-y-2">
+        <div className="bg-white dark:bg-neutral-800 border border-blue-200 dark:border-blue-800 rounded-lg p-3 space-y-2">
             <input
                 autoFocus
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Task title…"
-                className="w-full text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                className="w-full text-xs border border-gray-200 dark:border-neutral-600 rounded px-2 py-1.5 bg-white dark:bg-neutral-700 dark:text-neutral-100 focus:outline-none focus:ring-1 focus:ring-blue-400"
                 onKeyDown={(e) => {
                     if (e.key === 'Enter' && title.trim()) onSubmit(title.trim(), description.trim() || undefined);
                     if (e.key === 'Escape') onCancel();
@@ -324,7 +324,7 @@ function AddTaskForm({ onSubmit, onCancel }: {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Description (optional)…"
                 rows={2}
-                className="w-full text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400 resize-none"
+                className="w-full text-xs border border-gray-200 dark:border-neutral-600 rounded px-2 py-1.5 bg-white dark:bg-neutral-700 dark:text-neutral-100 focus:outline-none focus:ring-1 focus:ring-blue-400 resize-none"
             />
             <div className="flex gap-1.5 justify-end">
                 <button onClick={onCancel} className="text-[10px] text-gray-500 hover:text-gray-700 px-2 py-1">Cancel</button>
@@ -467,7 +467,7 @@ export function TrackerBoard({ initialData }: TrackerBoardProps) {
     if (!data) {
         return (
             <div className="text-center py-16 space-y-4">
-                <p className="text-sm text-gray-500">Click Sync to pull data from GitHub</p>
+                <p className="text-sm text-gray-500 dark:text-neutral-400">Click Sync to pull data from GitHub</p>
                 <button
                     onClick={handleSync}
                     disabled={isPending}
@@ -505,7 +505,7 @@ export function TrackerBoard({ initialData }: TrackerBoardProps) {
 
             {/* Filter tabs + Add task button */}
             <div className="flex items-center justify-between">
-                <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
+                <div className="flex gap-1 bg-gray-100 dark:bg-neutral-800 rounded-lg p-0.5">
                     {([
                         { key: 'all' as FilterTab, label: 'All', count: allCount },
                         { key: 'code' as FilterTab, label: '🔧 Code', count: codeCount },
@@ -515,8 +515,8 @@ export function TrackerBoard({ initialData }: TrackerBoardProps) {
                             key={key}
                             onClick={() => setFilter(key)}
                             className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${filter === key
-                                    ? 'bg-white text-gray-800 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-700'
+                                ? 'bg-white dark:bg-neutral-600 text-gray-800 dark:text-neutral-100 shadow-sm'
+                                : 'text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200'
                                 }`}
                         >
                             {label} <span className="text-gray-400 ml-0.5">({count})</span>
@@ -526,7 +526,7 @@ export function TrackerBoard({ initialData }: TrackerBoardProps) {
 
                 <button
                     onClick={() => setShowAddTask(true)}
-                    className="px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                    className="px-3 py-1.5 text-xs font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
                 >
                     + Add Task
                 </button>

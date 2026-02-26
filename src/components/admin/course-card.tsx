@@ -42,7 +42,7 @@ export function CourseCard({ course }: CourseCardProps) {
   };
 
   return (
-    <div className="border rounded-lg p-4 bg-white hover:shadow-sm transition-shadow">
+    <div className="border dark:border-neutral-700 rounded-lg p-4 bg-white dark:bg-neutral-800 hover:shadow-sm transition-shadow">
       {/* Header with status badge */}
       <div className="flex items-start justify-between gap-2 mb-2">
         <Link
@@ -52,11 +52,10 @@ export function CourseCard({ course }: CourseCardProps) {
           {course.title}
         </Link>
         <span
-          className={`px-2 py-0.5 text-xs font-medium rounded ${
-            course.status === 'PUBLISHED'
+          className={`px-2 py-0.5 text-xs font-medium rounded ${course.status === 'PUBLISHED'
               ? 'bg-green-100 text-green-800'
               : 'bg-yellow-100 text-yellow-800'
-          }`}
+            }`}
         >
           {course.status === 'PUBLISHED' ? 'Published' : 'Draft'}
         </span>

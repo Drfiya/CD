@@ -76,9 +76,8 @@ export function LessonEditor({ content, onChange }: LessonEditorProps) {
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleBold().run()}
-          className={`px-2 py-1 rounded hover:bg-gray-200 text-sm font-medium ${
-            editor.isActive('bold') ? 'bg-gray-200' : ''
-          }`}
+          className={`px-2 py-1 rounded hover:bg-gray-200 text-sm font-medium ${editor.isActive('bold') ? 'bg-gray-200' : ''
+            }`}
           aria-label="Bold"
           title="Bold"
         >
@@ -89,9 +88,8 @@ export function LessonEditor({ content, onChange }: LessonEditorProps) {
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={`px-2 py-1 rounded hover:bg-gray-200 text-sm ${
-            editor.isActive('italic') ? 'bg-gray-200 italic' : ''
-          }`}
+          className={`px-2 py-1 rounded hover:bg-gray-200 text-sm ${editor.isActive('italic') ? 'bg-gray-200 italic' : ''
+            }`}
           aria-label="Italic"
           title="Italic"
         >
@@ -105,9 +103,8 @@ export function LessonEditor({ content, onChange }: LessonEditorProps) {
           <button
             type="button"
             onClick={() => setShowHeadingMenu(!showHeadingMenu)}
-            className={`px-2 py-1 rounded hover:bg-gray-200 text-sm ${
-              editor.isActive('heading') ? 'bg-gray-200' : ''
-            }`}
+            className={`px-2 py-1 rounded hover:bg-gray-200 text-sm ${editor.isActive('heading') ? 'bg-gray-200' : ''
+              }`}
             aria-label="Heading"
             title="Heading"
           >
@@ -115,7 +112,7 @@ export function LessonEditor({ content, onChange }: LessonEditorProps) {
             <span className="text-xs ml-0.5">v</span>
           </button>
           {showHeadingMenu && (
-            <div className="absolute top-full left-0 mt-1 bg-white border rounded shadow-lg z-10 min-w-[80px]">
+            <div className="absolute top-full left-0 mt-1 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded shadow-lg z-10 min-w-[80px]">
               {[1, 2, 3].map((level) => (
                 <button
                   key={level}
@@ -128,9 +125,8 @@ export function LessonEditor({ content, onChange }: LessonEditorProps) {
                       .run();
                     setShowHeadingMenu(false);
                   }}
-                  className={`block w-full text-left px-3 py-1.5 hover:bg-gray-100 text-sm ${
-                    editor.isActive('heading', { level }) ? 'bg-gray-100' : ''
-                  }`}
+                  className={`block w-full text-left px-3 py-1.5 hover:bg-gray-100 text-sm ${editor.isActive('heading', { level }) ? 'bg-gray-100' : ''
+                    }`}
                 >
                   Heading {level}
                 </button>
@@ -155,9 +151,8 @@ export function LessonEditor({ content, onChange }: LessonEditorProps) {
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={`px-2 py-1 rounded hover:bg-gray-200 text-sm ${
-            editor.isActive('bulletList') ? 'bg-gray-200' : ''
-          }`}
+          className={`px-2 py-1 rounded hover:bg-gray-200 text-sm ${editor.isActive('bulletList') ? 'bg-gray-200' : ''
+            }`}
           aria-label="Bullet list"
           title="Bullet list"
         >
@@ -175,9 +170,8 @@ export function LessonEditor({ content, onChange }: LessonEditorProps) {
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={`px-2 py-1 rounded hover:bg-gray-200 text-sm ${
-            editor.isActive('orderedList') ? 'bg-gray-200' : ''
-          }`}
+          className={`px-2 py-1 rounded hover:bg-gray-200 text-sm ${editor.isActive('orderedList') ? 'bg-gray-200' : ''
+            }`}
           aria-label="Numbered list"
           title="Numbered list"
         >
@@ -197,9 +191,8 @@ export function LessonEditor({ content, onChange }: LessonEditorProps) {
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-          className={`px-2 py-1 rounded hover:bg-gray-200 text-sm font-mono ${
-            editor.isActive('codeBlock') ? 'bg-gray-200' : ''
-          }`}
+          className={`px-2 py-1 rounded hover:bg-gray-200 text-sm font-mono ${editor.isActive('codeBlock') ? 'bg-gray-200' : ''
+            }`}
           aria-label="Code block"
           title="Code block"
         >
@@ -210,9 +203,8 @@ export function LessonEditor({ content, onChange }: LessonEditorProps) {
         <button
           type="button"
           onClick={insertTable}
-          className={`px-2 py-1 rounded hover:bg-gray-200 text-sm ${
-            editor.isActive('table') ? 'bg-gray-200' : ''
-          }`}
+          className={`px-2 py-1 rounded hover:bg-gray-200 text-sm ${editor.isActive('table') ? 'bg-gray-200' : ''
+            }`}
           aria-label="Insert table"
           title="Insert table"
         >
@@ -229,9 +221,8 @@ export function LessonEditor({ content, onChange }: LessonEditorProps) {
         <button
           type="button"
           onClick={setLink}
-          className={`px-2 py-1 rounded hover:bg-gray-200 text-sm ${
-            editor.isActive('link') ? 'bg-gray-200' : ''
-          }`}
+          className={`px-2 py-1 rounded hover:bg-gray-200 text-sm ${editor.isActive('link') ? 'bg-gray-200' : ''
+            }`}
           aria-label="Insert link"
           title="Insert link"
         >

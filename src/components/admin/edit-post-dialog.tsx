@@ -95,7 +95,7 @@ export function EditPostDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
+      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl w-full max-w-2xl mx-4">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <h2 className="text-lg font-semibold">Edit Post</h2>

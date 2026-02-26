@@ -56,7 +56,7 @@ export function ModuleList({ modules, courseId }: ModuleListProps) {
           {modules.map((module) => (
             <div
               key={module.id}
-              className="flex items-center justify-between p-3 border rounded-lg bg-white"
+              className="flex items-center justify-between p-3 border dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800"
             >
               {editingId === module.id ? (
                 <div className="flex-1">
