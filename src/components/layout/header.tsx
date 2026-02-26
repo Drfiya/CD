@@ -26,8 +26,8 @@ export async function Header({ messages, showAdminLink }: HeaderProps) {
   return (
     <header className="border-b border-border bg-white dark:bg-neutral-900 transition-colors">
       <div className="max-w-7xl mx-auto px-4 flex items-center gap-2 lg:gap-4" style={{ height: `${headerHeight}px` }}>
-        {/* Left: Logo — overflow hidden prevents bleeding past the border */}
-        <div className="shrink-0 flex items-center overflow-hidden lg:min-w-[220px]">
+        {/* Left: Logo — flex-1 so center nav is truly centered */}
+        <div className="shrink-0 flex items-center overflow-hidden lg:flex-1">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             {settings.communityLogo ? (
               <ThemeLogo
@@ -56,8 +56,8 @@ export async function Header({ messages, showAdminLink }: HeaderProps) {
         {/* Center: Navigation links (desktop) + mobile hamburger */}
         <HeaderNav messages={messages} />
 
-        {/* Right: Action buttons */}
-        <div className="shrink-0 flex items-center gap-2 lg:min-w-[220px] lg:justify-end">
+        {/* Right: Action buttons — flex-1 + justify-end to mirror the left */}
+        <div className="shrink-0 flex items-center gap-2 lg:flex-1 lg:justify-end">
           {/* Language Selector — desktop only (available in hamburger on mobile) */}
           <div className="hidden lg:block">
             <LanguageSelector />
