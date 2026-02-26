@@ -9,6 +9,8 @@ import {
   updateCommunitySettings,
   uploadCommunityLogo,
   removeCommunityLogo,
+  uploadCommunityLogoDark,
+  removeCommunityLogoDark,
   updateLogoSize,
   type CommunitySettings,
 } from '@/lib/settings-actions';
@@ -22,13 +24,19 @@ export function SettingsForm({ settings }: SettingsFormProps) {
   const [isPending, startTransition] = useTransition();
   const [isUploadPending, startUploadTransition] = useTransition();
   const [isRemovePending, startRemoveTransition] = useTransition();
+  const [isDarkUploadPending, startDarkUploadTransition] = useTransition();
+  const [isDarkRemovePending, startDarkRemoveTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(
     settings.communityLogo
   );
+  const [darkLogoPreview, setDarkLogoPreview] = useState<string | null>(
+    settings.communityLogoDark
+  );
   const [logoSize, setLogoSize] = useState(settings.logoSize || 36);
   const [isSizePending, startSizeTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const darkFileInputRef = useRef<HTMLInputElement>(null);
   const sizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleLogoSizeChange = useCallback((newSize: number) => {
@@ -117,13 +125,63 @@ export function SettingsForm({ settings }: SettingsFormProps) {
     });
   };
 
-  const anyPending = isPending || isUploadPending || isRemovePending || isSizePending;
+  const handleDarkLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const previewUrl = URL.createObjectURL(file);
+    setDarkLogoPreview(previewUrl);
+
+    const formData = new FormData();
+    formData.append('logo', file);
+
+    startDarkUploadTransition(async () => {
+      const result = await uploadCommunityLogoDark(formData);
+
+      if ('error' in result && result.error) {
+        setDarkLogoPreview(settings.communityLogoDark);
+        const errorMsg =
+          typeof result.error === 'string'
+            ? result.error
+            : Object.values(result.error as Record<string, string[]>).flat()[0] ||
+            'Upload failed';
+        toast.error(errorMsg);
+        return;
+      }
+
+      toast.success('Dark mode logo uploaded successfully');
+      if (result.url) {
+        setDarkLogoPreview(result.url);
+      }
+      router.refresh();
+    });
+  };
+
+  const handleDarkLogoRemove = () => {
+    startDarkRemoveTransition(async () => {
+      const result = await removeCommunityLogoDark();
+
+      if ('error' in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      setDarkLogoPreview(null);
+      toast.success('Dark mode logo removed');
+      router.refresh();
+    });
+  };
+
+  const anyPending = isPending || isUploadPending || isRemovePending || isDarkUploadPending || isDarkRemovePending || isSizePending;
 
   return (
     <div className="space-y-6">
-      {/* Logo Section */}
+      {/* Light Logo Section */}
       <div className="bg-white border rounded-lg p-6">
-        <h2 className="text-lg font-medium mb-4">Community Logo</h2>
+        <h2 className="text-lg font-medium mb-1">Community Logo</h2>
+        <p className="text-xs text-muted-foreground mb-4">
+          This logo is shown on light backgrounds (light mode header, landing page).
+        </p>
         <div className="flex items-start gap-6">
           {/* Logo Preview */}
           <div className="flex-shrink-0">
@@ -180,50 +238,151 @@ export function SettingsForm({ settings }: SettingsFormProps) {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Logo Size Slider - only visible when logo is uploaded */}
-        {logoPreview && (
-          <div className="mt-5 pt-5 border-t">
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-foreground">
-                Logo Size
-              </label>
-              <span className="text-xs text-muted-foreground tabular-nums">
-                {logoSize}px
-              </span>
+      {/* Dark Mode Logo Section */}
+      <div className="bg-white border rounded-lg p-6">
+        <h2 className="text-lg font-medium mb-1">Dark Mode Logo</h2>
+        <p className="text-xs text-muted-foreground mb-4">
+          This logo is shown on dark backgrounds (dark mode header). If not set, the light logo is used.
+        </p>
+        <div className="flex items-start gap-6">
+          {/* Dark Logo Preview */}
+          <div className="flex-shrink-0">
+            {darkLogoPreview ? (
+              <Image
+                src={darkLogoPreview}
+                alt="Dark mode logo"
+                width={300}
+                height={167}
+                unoptimized
+                className="h-24 w-auto max-w-[180px] rounded-lg object-contain border bg-neutral-900 p-1"
+              />
+            ) : (
+              <div className="h-24 w-32 rounded-lg bg-neutral-800 flex items-center justify-center border border-neutral-700">
+                <span className="text-neutral-400 text-sm">No logo</span>
+              </div>
+            )}
+          </div>
+
+          {/* Upload/Remove Buttons */}
+          <div className="flex-1 space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Upload a logo optimized for dark backgrounds.
+              Max file size: 2MB. Supports JPEG, PNG, WebP, and SVG.
+            </p>
+            <div className="flex gap-3">
+              <input
+                ref={darkFileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                onChange={handleDarkLogoUpload}
+                className="hidden"
+                disabled={anyPending}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => darkFileInputRef.current?.click()}
+                disabled={anyPending}
+              >
+                {isDarkUploadPending ? 'Uploading...' : 'Upload Dark Logo'}
+              </Button>
+              {darkLogoPreview && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleDarkLogoRemove}
+                  disabled={anyPending}
+                  className="text-destructive hover:text-destructive"
+                >
+                  {isDarkRemovePending ? 'Removing...' : 'Remove'}
+                </Button>
+              )}
             </div>
-            <input
-              type="range"
-              min={20}
-              max={80}
-              step={1}
-              value={logoSize}
-              onChange={(e) => handleLogoSizeChange(Number(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
-              disabled={anyPending}
-            />
-            <div className="flex justify-between text-xs text-muted-foreground mt-1">
-              <span>Klein</span>
-              <span>Groß</span>
-            </div>
-            {/* Live preview at current size */}
-            <div className="mt-3 p-3 bg-gray-50 rounded-lg border">
-              <p className="text-xs text-muted-foreground mb-2">Preview:</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Logo Size Slider - visible when at least one logo is uploaded */}
+      {(logoPreview || darkLogoPreview) && (
+        <div className="bg-white border rounded-lg p-6">
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-sm font-medium text-foreground">
+              Logo Size
+            </label>
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {logoSize}px
+            </span>
+          </div>
+          <input
+            type="range"
+            min={20}
+            max={80}
+            step={1}
+            value={logoSize}
+            onChange={(e) => handleLogoSizeChange(Number(e.target.value))}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
+            disabled={anyPending}
+          />
+          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+            <span>Klein</span>
+            <span>Groß</span>
+          </div>
+
+          {/* Side-by-side preview */}
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            {/* Light preview */}
+            <div className="p-3 bg-gray-50 rounded-lg border">
+              <p className="text-xs text-muted-foreground mb-2">Light Mode:</p>
               <div className="flex items-center h-16">
-                <Image
-                  src={logoPreview}
-                  alt="Logo size preview"
-                  width={300}
-                  height={167}
-                  unoptimized
-                  className="w-auto object-contain"
-                  style={{ height: `${logoSize}px` }}
-                />
+                {logoPreview ? (
+                  <Image
+                    src={logoPreview}
+                    alt="Light logo preview"
+                    width={300}
+                    height={167}
+                    unoptimized
+                    className="w-auto object-contain"
+                    style={{ height: `${logoSize}px` }}
+                  />
+                ) : (
+                  <span className="text-xs text-muted-foreground italic">No light logo</span>
+                )}
+              </div>
+            </div>
+            {/* Dark preview */}
+            <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-700">
+              <p className="text-xs text-neutral-400 mb-2">Dark Mode:</p>
+              <div className="flex items-center h-16">
+                {darkLogoPreview ? (
+                  <Image
+                    src={darkLogoPreview}
+                    alt="Dark logo preview"
+                    width={300}
+                    height={167}
+                    unoptimized
+                    className="w-auto object-contain"
+                    style={{ height: `${logoSize}px` }}
+                  />
+                ) : logoPreview ? (
+                  <Image
+                    src={logoPreview}
+                    alt="Fallback logo preview"
+                    width={300}
+                    height={167}
+                    unoptimized
+                    className="w-auto object-contain opacity-50"
+                    style={{ height: `${logoSize}px` }}
+                  />
+                ) : (
+                  <span className="text-xs text-neutral-500 italic">No logo</span>
+                )}
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Details Form */}
       <form action={handleSubmit}>

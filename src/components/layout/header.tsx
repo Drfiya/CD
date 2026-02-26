@@ -5,6 +5,7 @@ import { SearchButton } from '@/components/search/search-button';
 import { NotificationBell } from '@/components/layout/notification-bell';
 import { LanguageSelector } from '@/components/translation/LanguageSelector';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
+import { ThemeLogo } from '@/components/layout/ThemeLogo';
 import { HeaderNav } from '@/components/layout/header-nav';
 import { getCommunitySettings } from '@/lib/settings-actions';
 import type { Messages } from '@/lib/i18n/messages/en';
@@ -29,12 +30,12 @@ export async function Header({ messages, showAdminLink }: HeaderProps) {
         <div className="shrink-0 flex items-center overflow-hidden lg:min-w-[220px]">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             {settings.communityLogo ? (
-              <Image
-                src={settings.communityLogo}
+              <ThemeLogo
+                lightSrc={settings.communityLogo}
+                darkSrc={settings.communityLogoDark}
                 alt={`${settings.communityName} logo`}
                 width={180}
                 height={100}
-                unoptimized
                 className="w-auto object-contain"
                 style={{ height: `${effectiveLogoHeight}px`, maxWidth: '180px' }}
               />
@@ -50,6 +51,7 @@ export async function Header({ messages, showAdminLink }: HeaderProps) {
             )}
           </Link>
         </div>
+
 
         {/* Center: Navigation links (desktop) + mobile hamburger */}
         <HeaderNav messages={messages} />

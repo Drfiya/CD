@@ -5,6 +5,7 @@ import { NavLink } from './nav-link';
 import { SidebarUserMenu } from '@/components/auth/sidebar-user-menu';
 import { getCommunitySettings } from '@/lib/settings-actions';
 import { canModerateContent } from '@/lib/permissions';
+import { ThemeLogo } from '@/components/layout/ThemeLogo';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -29,12 +30,12 @@ export async function Sidebar() {
       {/* Logo/Brand */}
       <div className="h-16 flex items-center px-6 border-b border-border gap-3">
         {settings.communityLogo && (
-          <Image
-            src={settings.communityLogo}
+          <ThemeLogo
+            lightSrc={settings.communityLogo}
+            darkSrc={settings.communityLogoDark}
             alt={`${settings.communityName} logo`}
             width={180}
             height={100}
-            unoptimized
             className="w-auto object-contain"
             style={{ height: `${settings.logoSize || 36}px`, maxWidth: '140px' }}
           />

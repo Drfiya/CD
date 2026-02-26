@@ -344,7 +344,8 @@ model CommunitySettings {
   id                    String   @id @default("singleton")
   communityName         String   @default("Community")
   communityDescription  String?  @db.Text
-  communityLogo         String?  // Logo URL (local or remote)
+  communityLogo         String?  // Logo URL for light mode
+  communityLogoDark     String?  // Logo URL for dark mode
   logoSize              Int      @default(36) // Logo display height in pixels (20-80)
   welcomeMessage        String?  @db.Text
   registrationOpen      Boolean  @default(true)

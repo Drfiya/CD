@@ -13,6 +13,7 @@ import { translateUITexts } from '@/lib/translation/ui';
  * Community settings type returned by getCommunitySettings.
  */
 export type CommunitySettings = {
+  communityLogoDark: string | null;
   id: string;
   communityName: string;
   communityDescription: string | null;
@@ -60,6 +61,7 @@ export async function getCommunitySettings(): Promise<CommunitySettings> {
       communityName: true,
       communityDescription: true,
       communityLogo: true,
+      communityLogoDark: true,
       logoSize: true,
       landingHeadline: true,
       landingSubheadline: true,
@@ -307,6 +309,136 @@ export async function removeCommunityLogo(): Promise<{ success?: boolean; error?
 
   revalidatePath('/admin/settings');
   revalidatePath('/', 'layout'); // Revalidate layout for sidebar/header
+
+  return { success: true };
+}
+
+/**
+ * Upload dark mode community logo.
+ * Stores logo in Supabase Storage for reliable serving on Vercel.
+ * Only callable by admin+ roles.
+ */
+export async function uploadCommunityLogoDark(
+  formData: FormData
+): Promise<{ success?: boolean; url?: string; error?: string | Record<string, string[]> }> {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return { error: 'Not authenticated' };
+  }
+
+  if (!canEditSettings(session.user.role)) {
+    return { error: 'Permission denied' };
+  }
+
+  const file = formData.get('logo');
+
+  if (!(file instanceof File)) {
+    return { error: 'No file provided' };
+  }
+
+  const validatedFields = logoSchema.safeParse({ file });
+
+  if (!validatedFields.success) {
+    return { error: validatedFields.error.flatten().fieldErrors };
+  }
+
+  // Upload to Supabase Storage
+  const { createClient } = await import('@/lib/supabase/server');
+  const supabase = await createClient();
+
+  const ext = file.name.split('.').pop() || 'png';
+  const filename = `community-logo-dark-${Date.now()}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('community-assets')
+    .upload(filename, file, {
+      upsert: true,
+      contentType: file.type,
+    });
+
+  if (uploadError) {
+    if (uploadError.message?.includes('not found') || uploadError.message?.includes('Bucket')) {
+      return { error: 'Storage bucket "community-assets" not configured. Please create it in Supabase Storage.' };
+    }
+    return { error: `Upload failed: ${uploadError.message}` };
+  }
+
+  const { data: urlData } = supabase.storage
+    .from('community-assets')
+    .getPublicUrl(filename);
+
+  const publicUrl = urlData.publicUrl;
+
+  const currentSettings = await getCommunitySettings();
+
+  await db.communitySettings.upsert({
+    where: { id: 'singleton' },
+    update: {
+      communityLogoDark: publicUrl,
+    },
+    create: {
+      id: 'singleton',
+      communityName: 'Community',
+      communityLogoDark: publicUrl,
+    },
+  });
+
+  await logAuditEvent(session.user.id, 'UPDATE_SETTINGS', {
+    targetId: 'singleton',
+    targetType: 'SETTINGS',
+    details: {
+      action: 'dark_logo_upload',
+      previousLogo: currentSettings.communityLogoDark,
+      newLogo: publicUrl,
+    },
+  });
+
+  revalidatePath('/admin/settings');
+  revalidatePath('/', 'layout');
+
+  return { success: true, url: publicUrl };
+}
+
+/**
+ * Remove dark mode community logo.
+ * Only callable by admin+ roles.
+ */
+export async function removeCommunityLogoDark(): Promise<{ success?: boolean; error?: string }> {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return { error: 'Not authenticated' };
+  }
+
+  if (!canEditSettings(session.user.role)) {
+    return { error: 'Permission denied' };
+  }
+
+  const currentSettings = await getCommunitySettings();
+
+  if (!currentSettings.communityLogoDark) {
+    return { success: true };
+  }
+
+  await db.communitySettings.update({
+    where: { id: 'singleton' },
+    data: {
+      communityLogoDark: null,
+    },
+  });
+
+  await logAuditEvent(session.user.id, 'UPDATE_SETTINGS', {
+    targetId: 'singleton',
+    targetType: 'SETTINGS',
+    details: {
+      action: 'dark_logo_remove',
+      previousLogo: currentSettings.communityLogoDark,
+    },
+  });
+
+  revalidatePath('/admin/settings');
+  revalidatePath('/', 'layout');
 
   return { success: true };
 }
