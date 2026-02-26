@@ -125,12 +125,9 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                 <div className="flex items-center justify-end px-4 py-3 border-t border-gray-100 dark:border-neutral-700">
                     <button
                         type="button"
-                        className="inline-flex items-center gap-2 px-5 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-sm font-semibold tracking-wide rounded-full transition-colors shadow-md"
+                        className="inline-flex items-center px-5 py-2 bg-white dark:bg-neutral-800 border-2 border-red-500 text-red-600 text-sm font-semibold tracking-wide rounded-full transition-colors hover:bg-red-600 hover:text-white active:bg-red-700"
                     >
                         Post
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 -rotate-45">
-                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                        </svg>
                     </button>
                 </div>
             </div>
