@@ -12,6 +12,9 @@ import {
   uploadCommunityLogoDark,
   removeCommunityLogoDark,
   updateLogoSize,
+  uploadSidebarBanner,
+  removeSidebarBanner,
+  updateSidebarBannerSettings,
   type CommunitySettings,
 } from '@/lib/settings-actions';
 
@@ -38,6 +41,13 @@ export function SettingsForm({ settings }: SettingsFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const darkFileInputRef = useRef<HTMLInputElement>(null);
   const sizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bannerFileInputRef = useRef<HTMLInputElement>(null);
+  const [isBannerUploadPending, startBannerUploadTransition] = useTransition();
+  const [isBannerRemovePending, startBannerRemoveTransition] = useTransition();
+  const [isBannerSettingsPending, startBannerSettingsTransition] = useTransition();
+  const [bannerPreview, setBannerPreview] = useState<string | null>(settings.sidebarBannerImage);
+  const [bannerUrl, setBannerUrl] = useState(settings.sidebarBannerUrl || '');
+  const [bannerEnabled, setBannerEnabled] = useState(settings.sidebarBannerEnabled);
 
   const handleLogoSizeChange = useCallback((newSize: number) => {
     setLogoSize(newSize);
@@ -172,7 +182,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
     });
   };
 
-  const anyPending = isPending || isUploadPending || isRemovePending || isDarkUploadPending || isDarkRemovePending || isSizePending;
+  const anyPending = isPending || isUploadPending || isRemovePending || isDarkUploadPending || isDarkRemovePending || isSizePending || isBannerUploadPending || isBannerRemovePending || isBannerSettingsPending;
 
   return (
     <div className="space-y-6">
@@ -383,6 +393,157 @@ export function SettingsForm({ settings }: SettingsFormProps) {
           </div>
         </div>
       )}
+
+      {/* Sidebar Banner Section */}
+      <div className="bg-white border rounded-lg p-6 space-y-4">
+        <h2 className="text-lg font-medium">Sidebar Banner</h2>
+        <p className="text-sm text-muted-foreground">Upload a banner image (9:16 format recommended, e.g. 1080×1920px) that appears below the categories in the feed sidebar.</p>
+
+        {/* Banner Preview */}
+        {bannerPreview && (
+          <div className="relative w-48 mx-auto">
+            <div className="aspect-[9/16] rounded-xl overflow-hidden border border-gray-200 dark:border-neutral-700">
+              <img
+                src={bannerPreview}
+                alt="Sidebar banner preview"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Upload / Remove */}
+        <div className="flex items-center gap-3">
+          <input
+            ref={bannerFileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (!file) return;
+              startBannerUploadTransition(async () => {
+                const formData = new FormData();
+                formData.append('banner', file);
+                const result = await uploadSidebarBanner(formData);
+                if ('error' in result && result.error) {
+                  toast.error(typeof result.error === 'string' ? result.error : 'Upload failed');
+                } else if (result.url) {
+                  setBannerPreview(result.url);
+                  setBannerEnabled(true);
+                  toast.success('Banner uploaded!');
+                  router.refresh();
+                }
+              });
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            disabled={anyPending}
+            onClick={() => bannerFileInputRef.current?.click()}
+          >
+            {isBannerUploadPending ? 'Uploading...' : bannerPreview ? 'Replace Banner' : 'Upload Banner'}
+          </Button>
+          {bannerPreview && (
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={anyPending}
+              onClick={() => {
+                startBannerRemoveTransition(async () => {
+                  const result = await removeSidebarBanner();
+                  if (result.error) {
+                    toast.error(result.error);
+                  } else {
+                    setBannerPreview(null);
+                    setBannerEnabled(false);
+                    setBannerUrl('');
+                    toast.success('Banner removed');
+                    router.refresh();
+                  }
+                });
+              }}
+            >
+              {isBannerRemovePending ? 'Removing...' : 'Remove'}
+            </Button>
+          )}
+        </div>
+
+        {/* Banner URL */}
+        {bannerPreview && (
+          <div className="space-y-2">
+            <label htmlFor="bannerUrl" className="text-sm font-medium text-foreground">
+              Link URL (optional)
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="bannerUrl"
+                type="url"
+                value={bannerUrl}
+                onChange={(e) => setBannerUrl(e.target.value)}
+                placeholder="https://example.com"
+                className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                disabled={anyPending}
+                onClick={() => {
+                  startBannerSettingsTransition(async () => {
+                    const result = await updateSidebarBannerSettings({ sidebarBannerUrl: bannerUrl || null });
+                    if (result.error) {
+                      toast.error(result.error);
+                    } else {
+                      toast.success('Link saved');
+                      router.refresh();
+                    }
+                  });
+                }}
+              >
+                {isBannerSettingsPending ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              When set, clicking the banner opens this URL.
+            </p>
+          </div>
+        )}
+
+        {/* Enable/Disable Toggle */}
+        {bannerPreview && (
+          <div className="flex items-center justify-between pt-2">
+            <span className="text-sm font-medium text-foreground">Show banner on feed page</span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={bannerEnabled}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${bannerEnabled ? 'bg-green-500' : 'bg-gray-300 dark:bg-neutral-600'
+                }`}
+              onClick={() => {
+                const newValue = !bannerEnabled;
+                setBannerEnabled(newValue);
+                startBannerSettingsTransition(async () => {
+                  const result = await updateSidebarBannerSettings({ sidebarBannerEnabled: newValue });
+                  if (result.error) {
+                    toast.error(result.error);
+                    setBannerEnabled(!newValue);
+                  } else {
+                    toast.success(newValue ? 'Banner enabled' : 'Banner disabled');
+                    router.refresh();
+                  }
+                });
+              }}
+              disabled={anyPending}
+            >
+              <span
+                className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${bannerEnabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+              />
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Details Form */}
       <form action={handleSubmit}>

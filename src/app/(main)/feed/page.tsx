@@ -9,6 +9,7 @@ import { RightSidebar } from '@/components/feed/right-sidebar';
 import { CreatePostModal } from '@/components/feed/create-post-modal';
 import { translatePostsForUser } from '@/lib/translation';
 import { translateUIText, translateObjects } from '@/lib/translation/ui';
+import { getCommunitySettings } from '@/lib/settings-actions';
 
 const POSTS_PER_PAGE = 10;
 
@@ -102,6 +103,9 @@ async function FeedContent({ searchParams }: FeedPageProps) {
     noPosts: await translateUIText('No posts yet. Be the first to share something!', 'en', userLanguage, 'message'),
   };
 
+  // Get community settings for sidebar banner
+  const communitySettings = await getCommunitySettings();
+
   return (
     <div className="flex gap-6 max-w-7xl mx-auto">
       {/* Left sidebar - Categories */}
@@ -109,6 +113,9 @@ async function FeedContent({ searchParams }: FeedPageProps) {
         categories={translatedCategories}
         activeCategory={category}
         translatedUI={translatedUI}
+        sidebarBannerImage={communitySettings.sidebarBannerImage}
+        sidebarBannerUrl={communitySettings.sidebarBannerUrl}
+        sidebarBannerEnabled={communitySettings.sidebarBannerEnabled}
       />
 
       {/* Center - Posts feed */}

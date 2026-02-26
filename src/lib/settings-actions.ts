@@ -19,6 +19,10 @@ export type CommunitySettings = {
   communityDescription: string | null;
   communityLogo: string | null;
   logoSize: number;
+  // Sidebar banner fields
+  sidebarBannerImage: string | null;
+  sidebarBannerUrl: string | null;
+  sidebarBannerEnabled: boolean;
   // Landing page fields
   landingHeadline: string | null;
   landingSubheadline: string | null;
@@ -63,6 +67,9 @@ export async function getCommunitySettings(): Promise<CommunitySettings> {
       communityLogo: true,
       communityLogoDark: true,
       logoSize: true,
+      sidebarBannerImage: true,
+      sidebarBannerUrl: true,
+      sidebarBannerEnabled: true,
       landingHeadline: true,
       landingSubheadline: true,
       landingDescription: true,
@@ -587,3 +594,162 @@ export async function autoTranslateLanding(
     return { error: 'Translation failed. Please try again.' };
   }
 }
+
+/**
+ * Upload sidebar banner image.
+ * Stores image in Supabase Storage.
+ * Only callable by admin+ roles.
+ */
+export async function uploadSidebarBanner(
+  formData: FormData
+): Promise<{ success?: boolean; url?: string; error?: string | Record<string, string[]> }> {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return { error: 'Not authenticated' };
+  }
+
+  if (!canEditSettings(session.user.role)) {
+    return { error: 'Permission denied' };
+  }
+
+  const file = formData.get('banner');
+
+  if (!(file instanceof File)) {
+    return { error: 'No file provided' };
+  }
+
+  const validatedFields = logoSchema.safeParse({ file });
+
+  if (!validatedFields.success) {
+    return { error: validatedFields.error.flatten().fieldErrors };
+  }
+
+  // Upload to Supabase Storage
+  const { createClient } = await import('@/lib/supabase/server');
+  const supabase = await createClient();
+
+  const ext = file.name.split('.').pop() || 'png';
+  const filename = `sidebar-banner-${Date.now()}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('community-assets')
+    .upload(filename, file, {
+      upsert: true,
+      contentType: file.type,
+    });
+
+  if (uploadError) {
+    if (uploadError.message?.includes('not found') || uploadError.message?.includes('Bucket')) {
+      return { error: 'Storage bucket "community-assets" not configured. Please create it in Supabase Storage.' };
+    }
+    return { error: `Upload failed: ${uploadError.message}` };
+  }
+
+  const { data: urlData } = supabase.storage
+    .from('community-assets')
+    .getPublicUrl(filename);
+
+  const publicUrl = urlData.publicUrl;
+
+  await db.communitySettings.upsert({
+    where: { id: 'singleton' },
+    update: {
+      sidebarBannerImage: publicUrl,
+      sidebarBannerEnabled: true, // Auto-enable on upload
+    },
+    create: {
+      id: 'singleton',
+      communityName: 'Community',
+      sidebarBannerImage: publicUrl,
+      sidebarBannerEnabled: true,
+    },
+  });
+
+  await logAuditEvent(session.user.id, 'UPDATE_SETTINGS', {
+    targetId: 'singleton',
+    targetType: 'SETTINGS',
+    details: {
+      action: 'sidebar_banner_upload',
+      newBanner: publicUrl,
+    },
+  });
+
+  revalidatePath('/admin/settings');
+  revalidatePath('/feed');
+
+  return { success: true, url: publicUrl };
+}
+
+/**
+ * Remove sidebar banner image.
+ * Only callable by admin+ roles.
+ */
+export async function removeSidebarBanner(): Promise<{ success?: boolean; error?: string }> {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return { error: 'Not authenticated' };
+  }
+
+  if (!canEditSettings(session.user.role)) {
+    return { error: 'Permission denied' };
+  }
+
+  await db.communitySettings.update({
+    where: { id: 'singleton' },
+    data: {
+      sidebarBannerImage: null,
+      sidebarBannerEnabled: false,
+    },
+  });
+
+  await logAuditEvent(session.user.id, 'UPDATE_SETTINGS', {
+    targetId: 'singleton',
+    targetType: 'SETTINGS',
+    details: { action: 'sidebar_banner_remove' },
+  });
+
+  revalidatePath('/admin/settings');
+  revalidatePath('/feed');
+
+  return { success: true };
+}
+
+/**
+ * Update sidebar banner settings (URL and enabled state).
+ * Only callable by admin+ roles.
+ */
+export async function updateSidebarBannerSettings(
+  data: { sidebarBannerUrl?: string | null; sidebarBannerEnabled?: boolean }
+): Promise<{ success?: boolean; error?: string }> {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return { error: 'Not authenticated' };
+  }
+
+  if (!canEditSettings(session.user.role)) {
+    return { error: 'Permission denied' };
+  }
+
+  await db.communitySettings.update({
+    where: { id: 'singleton' },
+    data: {
+      ...(data.sidebarBannerUrl !== undefined && { sidebarBannerUrl: data.sidebarBannerUrl || null }),
+      ...(data.sidebarBannerEnabled !== undefined && { sidebarBannerEnabled: data.sidebarBannerEnabled }),
+    },
+  });
+
+  await logAuditEvent(session.user.id, 'UPDATE_SETTINGS', {
+    targetId: 'singleton',
+    targetType: 'SETTINGS',
+    details: { action: 'sidebar_banner_settings_update', ...data },
+  });
+
+  revalidatePath('/admin/settings');
+  revalidatePath('/feed');
+
+  return { success: true };
+}
+

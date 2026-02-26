@@ -18,9 +18,12 @@ interface CategoriesSidebarProps {
     categories: Category[];
     activeCategory: string | null;
     translatedUI: TranslatedUI;
+    sidebarBannerImage?: string | null;
+    sidebarBannerUrl?: string | null;
+    sidebarBannerEnabled?: boolean;
 }
 
-export function CategoriesSidebar({ categories, activeCategory, translatedUI }: CategoriesSidebarProps) {
+export function CategoriesSidebar({ categories, activeCategory, translatedUI, sidebarBannerImage, sidebarBannerUrl, sidebarBannerEnabled }: CategoriesSidebarProps) {
     const searchParams = useSearchParams();
 
     // Build URL with category filter
@@ -35,8 +38,10 @@ export function CategoriesSidebar({ categories, activeCategory, translatedUI }: 
         return `/feed?${params.toString()}`;
     };
 
+    const showBanner = sidebarBannerEnabled && sidebarBannerImage;
+
     return (
-        <aside className="hidden lg:block w-64 shrink-0">
+        <aside className="hidden lg:block w-64 shrink-0 space-y-4">
             <div className="bg-white dark:bg-neutral-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-neutral-700">
                 <h2 className="text-base font-semibold text-gray-900 dark:text-neutral-100 mb-4">{translatedUI.categoriesTitle}</h2>
 
@@ -77,6 +82,27 @@ export function CategoriesSidebar({ categories, activeCategory, translatedUI }: 
                     ))}
                 </nav>
             </div>
+
+            {/* Sidebar Banner */}
+            {showBanner && (
+                <div className="rounded-xl overflow-hidden shadow-sm border border-gray-100 dark:border-neutral-700">
+                    {sidebarBannerUrl ? (
+                        <a href={sidebarBannerUrl} target="_blank" rel="noopener noreferrer" className="block">
+                            <img
+                                src={sidebarBannerImage}
+                                alt="Banner"
+                                className="w-full aspect-[9/16] object-cover"
+                            />
+                        </a>
+                    ) : (
+                        <img
+                            src={sidebarBannerImage}
+                            alt="Banner"
+                            className="w-full aspect-[9/16] object-cover"
+                        />
+                    )}
+                </div>
+            )}
         </aside>
     );
 }

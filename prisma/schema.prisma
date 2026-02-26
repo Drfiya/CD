@@ -364,6 +364,11 @@ model CommunitySettings {
   landingTestimonials   Json     @default("[]") // Array of {name, text, role}
   landingTranslations   Json     @default("{}") // Per-language overrides: { "de": { headline, subheadline, description, benefits, videoUrls }, ... }
 
+  // Sidebar banner fields
+  sidebarBannerImage    String?  // Banner image URL (uploaded to storage)
+  sidebarBannerUrl      String?  // Optional click-through URL
+  sidebarBannerEnabled  Boolean  @default(false) // Toggle banner visibility
+
   updatedAt             DateTime @updatedAt
 }
 
