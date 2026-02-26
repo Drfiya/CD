@@ -49,7 +49,7 @@ export function UserMenu({ messages, showAdminLink }: UserMenuProps) {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center p-0.5 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
       >
-        <div className="h-9 w-9 rounded-lg bg-red-600 text-white flex items-center justify-center text-sm font-medium">
+        <div className="h-9 w-9 rounded-lg bg-neutral-700 dark:bg-neutral-200 text-white dark:text-neutral-800 flex items-center justify-center text-sm font-medium">
           {initials}
         </div>
       </button>
