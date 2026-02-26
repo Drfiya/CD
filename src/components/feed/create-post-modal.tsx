@@ -176,10 +176,11 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                                                     className={`
                             px-4 py-1.5 rounded-full text-sm font-medium border transition-all
                             ${isSelected
-                                                            ? `${style.bg} ${style.text} ${style.border}`
+                                                            ? 'text-white border-transparent'
                                                             : 'bg-white dark:bg-neutral-700 text-gray-600 dark:text-neutral-300 border-gray-200 dark:border-neutral-600 hover:border-gray-300'
                                                         }
                           `}
+                                                    style={isSelected ? { backgroundColor: '#D94A4A' } : undefined}
                                                 >
                                                     {category.name}
                                                 </button>
@@ -197,14 +198,14 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                                         onChange={(e) => setTitle(e.target.value)}
                                         placeholder="Enter a title for your post (optional)"
                                         maxLength={200}
-                                        className="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-lg text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300 transition-colors"
+                                        className="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-600 rounded-lg text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-gray-900/10 dark:focus:ring-neutral-500/30 focus:border-gray-300 dark:focus:border-neutral-500 transition-colors"
                                     />
                                 </div>
 
                                 {/* Content */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Content *</label>
-                                    <div className="border border-gray-200 dark:border-neutral-700 rounded-lg">
+                                    <div className="border border-gray-200 dark:border-neutral-600 rounded-lg">
                                         <PostEditor
                                             onChange={(json) => setContent(json)}
                                             placeholder="What would you like to share?"
@@ -314,7 +315,10 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                                     <button
                                         type="submit"
                                         disabled={isSubmitting || !content || hasPendingVideo}
-                                        className="px-5 py-2 rounded-full text-sm font-medium text-white bg-gray-900 dark:bg-blue-600 hover:bg-gray-800 dark:hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        className="px-5 py-2 rounded-full text-sm font-semibold tracking-wide text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                                        style={{ backgroundColor: '#D94A4A' }}
+                                        onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.backgroundColor = '#C43E3E'; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#D94A4A'; }}
                                     >
                                         {isSubmitting ? 'Posting...' : 'Post'}
                                     </button>
