@@ -125,8 +125,8 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                 <div className="flex items-center justify-end px-4 py-3 border-t border-gray-100 dark:border-neutral-700">
                     <button
                         type="button"
-                        className="inline-flex items-center px-5 py-2 bg-white dark:bg-neutral-800 text-gray-800 dark:text-neutral-200 text-sm font-semibold tracking-wide rounded-full border border-gray-200 dark:border-neutral-600 transition-colors hover:bg-gray-50 dark:hover:bg-neutral-700"
-                        style={{ borderBottom: '2.5px solid #D94A4A' }}
+                        className="inline-flex items-center px-5 py-2 bg-white dark:bg-neutral-800 text-gray-800 dark:text-neutral-200 text-sm font-semibold tracking-wide rounded-full transition-colors hover:bg-gray-50 dark:hover:bg-neutral-700"
+                        style={{ border: '2px solid #D94A4A' }}
                     >
                         Post
                     </button>
