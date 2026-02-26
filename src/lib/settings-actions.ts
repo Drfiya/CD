@@ -178,7 +178,7 @@ export async function updateLogoSize(
 
 /**
  * Upload community logo.
- * Stores logo locally in /public/ for reliable serving.
+ * Stores logo in Supabase Storage for reliable serving on Vercel.
  * Only callable by admin+ roles.
  */
 export async function uploadCommunityLogo(
@@ -206,30 +206,33 @@ export async function uploadCommunityLogo(
     return { error: validatedFields.error.flatten().fieldErrors };
   }
 
-  // Write logo to /public/ locally
+  // Upload to Supabase Storage (works on Vercel's read-only filesystem)
+  const { createClient } = await import('@/lib/supabase/server');
+  const supabase = await createClient();
+
   const ext = file.name.split('.').pop() || 'png';
-  const filename = `community-logo.${ext}`;
-  const { writeFile, unlink } = await import('fs/promises');
-  const { existsSync } = await import('fs');
-  const { join } = await import('path');
+  const filename = `community-logo-${Date.now()}.${ext}`;
 
-  const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
-  const publicDir = join(process.cwd(), 'public');
-  const filepath = join(publicDir, filename);
+  const { error: uploadError } = await supabase.storage
+    .from('community-assets')
+    .upload(filename, file, {
+      upsert: true,
+      contentType: file.type,
+    });
 
-  // Remove old logos with different extensions
-  const extensions = ['png', 'jpg', 'jpeg', 'webp', 'svg'];
-  for (const e of extensions) {
-    const oldPath = join(publicDir, `community-logo.${e}`);
-    if (e !== ext && existsSync(oldPath)) {
-      await unlink(oldPath).catch(() => { });
+  if (uploadError) {
+    // If the bucket doesn't exist, provide a helpful error
+    if (uploadError.message?.includes('not found') || uploadError.message?.includes('Bucket')) {
+      return { error: 'Storage bucket "community-assets" not configured. Please create it in Supabase Storage.' };
     }
+    return { error: `Upload failed: ${uploadError.message}` };
   }
 
-  await writeFile(filepath, buffer);
+  const { data: urlData } = supabase.storage
+    .from('community-assets')
+    .getPublicUrl(filename);
 
-  const publicUrl = `/${filename}?v=${Date.now()}`;
+  const publicUrl = urlData.publicUrl;
 
   // Get current settings for audit log
   const currentSettings = await getCommunitySettings();

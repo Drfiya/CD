@@ -17,38 +17,27 @@ interface HeaderProps {
 export async function Header({ messages, showAdminLink }: HeaderProps) {
   const settings = await getCommunitySettings();
 
-  // Constrain logo height to fit within the header (h-14 = 56px, with vertical padding)
-  const effectiveLogoHeight = Math.min(settings.logoSize || 36, 40);
+  // Use the admin-configured logo size directly
+  const effectiveLogoHeight = settings.logoSize || 36;
+  // Header height adapts: logo height + 16px vertical padding
+  const headerHeight = Math.max(56, effectiveLogoHeight + 16);
 
   return (
     <header className="border-b border-border bg-white dark:bg-neutral-900 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-2 lg:gap-4">
+      <div className="max-w-7xl mx-auto px-4 flex items-center gap-2 lg:gap-4" style={{ height: `${headerHeight}px` }}>
         {/* Left: Logo — overflow hidden prevents bleeding past the border */}
         <div className="shrink-0 flex items-center overflow-hidden lg:min-w-[220px]">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             {settings.communityLogo ? (
-              <>
-                {/* Light mode logo (white background) */}
-                <Image
-                  src="/community-logo-light.png"
-                  alt={`${settings.communityName} logo`}
-                  width={180}
-                  height={100}
-                  unoptimized
-                  className="w-auto object-contain dark:hidden"
-                  style={{ height: `${effectiveLogoHeight}px`, maxWidth: '180px' }}
-                />
-                {/* Dark mode logo (dark background) */}
-                <Image
-                  src={settings.communityLogo}
-                  alt={`${settings.communityName} logo`}
-                  width={180}
-                  height={100}
-                  unoptimized
-                  className="w-auto object-contain hidden dark:block"
-                  style={{ height: `${effectiveLogoHeight}px`, maxWidth: '180px' }}
-                />
-              </>
+              <Image
+                src={settings.communityLogo}
+                alt={`${settings.communityName} logo`}
+                width={180}
+                height={100}
+                unoptimized
+                className="w-auto object-contain"
+                style={{ height: `${effectiveLogoHeight}px`, maxWidth: '180px' }}
+              />
             ) : (
               <>
                 <div className="w-9 h-8 lg:h-9 rounded-md bg-gray-200 dark:bg-neutral-700 flex items-center justify-center text-sm font-bold text-gray-600 dark:text-neutral-300">

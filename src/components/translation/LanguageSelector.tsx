@@ -81,7 +81,7 @@ export function LanguageSelector({ dropdownAlign = 'right' }: LanguageSelectorPr
                 aria-haspopup="listbox"
             >
                 <GlobeIcon className={`w-4 h-4 ${isTranslating ? 'animate-pulse text-blue-500' : ''}`} />
-                <span className="hidden sm:inline" data-no-translate>
+                <span className="hidden sm:inline" data-no-translate suppressHydrationWarning>
                     {currentDisplayName}
                 </span>
                 <svg
