@@ -98,7 +98,7 @@ export function EnrolledCourseCard({ course, ui }: EnrolledCourseCardProps) {
           style={{ color: '#D94A4A' }}
         >
           {isComplete
-            ? '✓ ' + ui.completed
+            ? ui.completed
             : course.nextLessonId
               ? ui.continueLearning + ' →'
               : ui.startCourse + ' →'}

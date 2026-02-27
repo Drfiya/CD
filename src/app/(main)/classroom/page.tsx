@@ -128,10 +128,8 @@ export default async function ClassroomPage({ searchParams }: ClassroomPageProps
           <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-100 dark:border-neutral-700 p-6">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: '#D94A4A' }}>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-6 h-6">
-                  <path d="M11.7 2.805a.75.75 0 0 1 .6 0A60.65 60.65 0 0 1 22.83 8.72a.75.75 0 0 1-.231 1.337 49.948 49.948 0 0 0-9.902 3.912l-.003.002-.34.18a.75.75 0 0 1-.707 0A50.88 50.88 0 0 0 7.5 12.173v-.224a.36.36 0 0 1 .172-.311 54.615 54.615 0 0 1 4.653-2.52.75.75 0 0 0-.65-1.352 56.123 56.123 0 0 0-4.78 2.589 1.858 1.858 0 0 0-.859 1.228 49.803 49.803 0 0 0-4.634-1.527.75.75 0 0 1-.231-1.337A60.653 60.653 0 0 1 11.7 2.805Z" />
-                  <path d="M13.06 15.473a48.45 48.45 0 0 1 7.666-3.282c.134 1.414.22 2.843.255 4.284a.75.75 0 0 1-.46.711 47.87 47.87 0 0 0-8.105 4.342.75.75 0 0 1-.832 0 47.87 47.87 0 0 0-8.104-4.342.75.75 0 0 1-.461-.71c.035-1.442.121-2.87.255-4.286a48.4 48.4 0 0 1 7.667 3.282 49.85 49.85 0 0 1 2.12-1.998Z" />
-                  <path d="M6.303 14.105A63.292 63.292 0 0 1 5 15.862v2.354a.75.75 0 0 1-1.5 0v-2.354a65.329 65.329 0 0 0-1.455-1.95A1.5 1.5 0 0 1 3.757 11.5h.49a1.5 1.5 0 0 1 1.056 2.605Z" />
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="white" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" />
                 </svg>
               </div>
               <div>
@@ -197,7 +195,11 @@ async function AllCoursesSection({ ui, userLanguage }: { ui: ClassroomUI; userLa
 
   return (
     <section className="space-y-4">
-      <SectionHeader title={ui.availableCourses} icon="📖" />
+      <SectionHeader title={ui.availableCourses} icon={
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+        </svg>
+      } />
       <CourseCatalogGrid
         courses={translatedCourses}
         ui={{
@@ -267,7 +269,11 @@ async function LoggedInContent({
     <>
       {showEnrolled && enrolledCourses.length > 0 && (
         <section className="space-y-4">
-          <SectionHeader title={ui.myCourses} icon="🎓" />
+          <SectionHeader title={ui.myCourses} icon={
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" />
+            </svg>
+          } />
           <EnrolledCoursesGrid
             courses={enrolledCourses}
             ui={{
@@ -301,7 +307,11 @@ async function LoggedInContent({
 
       {showAvailable && (
         <section className="space-y-4">
-          <SectionHeader title={ui.availableCourses} icon="📖" />
+          <SectionHeader title={ui.availableCourses} icon={
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+            </svg>
+          } />
           <CourseCatalogGrid
             courses={activeFilter === 'available' ? availableCourses : availableCourses}
             ui={{
@@ -317,10 +327,10 @@ async function LoggedInContent({
   );
 }
 
-function SectionHeader({ title, icon }: { title: string; icon: string }) {
+function SectionHeader({ title, icon }: { title: string; icon: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-lg">{icon}</span>
+    <div className="flex items-center gap-2 text-gray-600 dark:text-neutral-400">
+      {icon}
       <h2 className="text-base font-semibold text-gray-900 dark:text-neutral-100">{title}</h2>
     </div>
   );
