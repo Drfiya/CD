@@ -18,6 +18,7 @@ import React, {
     useMemo,
     ReactNode
 } from 'react';
+import { useRouter } from 'next/navigation';
 import { SUPPORTED_LANGUAGES, getBaseLanguage, isLanguageSupported, type LanguageCode } from '@/lib/translation/client/language-codes';
 
 const STORAGE_KEY = 'preferred_language';
@@ -83,6 +84,7 @@ export function TranslationProvider({
     children,
     initialLanguage
 }: TranslationProviderProps) {
+    const router = useRouter();
     const [currentLanguage, setCurrentLanguage] = useState(() =>
         getInitialLanguage(initialLanguage)
     );
@@ -133,8 +135,21 @@ export function TranslationProvider({
             syncToProfile(normalized);
             // Trigger retranslation when language changes
             setTranslationVersion(v => v + 1);
+
+            // Set server-side cookie so getUserLanguage() picks it up on next SSR
+            fetch('/api/set-language', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ language: normalized }),
+            }).then(() => {
+                // Re-render server components (layout, nav labels, etc.)
+                router.refresh();
+            }).catch(() => {
+                // Still refresh even if cookie-set fails
+                router.refresh();
+            });
         }
-    }, [currentLanguage, syncToProfile]);
+    }, [currentLanguage, syncToProfile, router]);
 
     const triggerRetranslation = useCallback(() => {
         setTranslationVersion(v => v + 1);
