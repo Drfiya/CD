@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
 import { LevelBadge } from '@/components/gamification/level-badge';
 
 interface MemberCardProps {
@@ -10,6 +9,7 @@ interface MemberCardProps {
     image: string | null;
     bio: string | null;
     level: number;
+    points: number;
   };
 }
 
@@ -23,55 +23,52 @@ function getInitials(name: string | null): string {
     .slice(0, 2);
 }
 
-function truncateBio(bio: string | null, maxLength: number = 100): string {
-  if (!bio) return '';
-  if (bio.length <= maxLength) return bio;
-  return bio.slice(0, maxLength).trim() + '...';
-}
-
 export function MemberCard({ member }: MemberCardProps) {
   const initials = getInitials(member.name);
-  const truncatedBio = truncateBio(member.bio);
 
   return (
     <Link
       href={`/members/${member.id}`}
-      className={cn(
-        'block border border-border rounded-lg p-4',
-        'hover:shadow-md transition-shadow',
-        'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
-      )}
+      className="block bg-white dark:bg-neutral-800 border border-gray-100 dark:border-neutral-700 rounded-xl p-5 hover:shadow-md dark:hover:border-neutral-500 transition-all group"
     >
-      <div className="flex items-start gap-3">
-        <div className="relative h-12 w-12 flex-shrink-0">
+      <div className="flex flex-col items-center text-center">
+        {/* Avatar */}
+        <div className="relative w-16 h-16 mb-3">
           {member.image ? (
             <Image
               src={member.image}
               alt={member.name || 'Member'}
               fill
               unoptimized
-              className="rounded-full object-cover"
-              sizes="48px"
+              className="rounded-full object-cover ring-2 ring-gray-100 dark:ring-neutral-600 group-hover:ring-gray-200 dark:group-hover:ring-neutral-500 transition-all"
+              sizes="64px"
             />
           ) : (
-            <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-medium">
+            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-neutral-700 ring-2 ring-gray-100 dark:ring-neutral-600 flex items-center justify-center text-lg font-semibold text-gray-500 dark:text-neutral-300">
               {initials}
             </div>
           )}
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <p className="font-medium text-foreground truncate">
-              {member.name || 'Anonymous'}
-            </p>
-            <LevelBadge level={member.level} size="sm" />
-          </div>
-          {truncatedBio && (
-            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-              {truncatedBio}
-            </p>
-          )}
+
+        {/* Name */}
+        <p className="font-semibold text-gray-900 dark:text-neutral-100 truncate w-full group-hover:text-[#D94A4A] transition-colors">
+          {member.name || 'Anonymous'}
+        </p>
+
+        {/* Level + Points */}
+        <div className="flex items-center gap-2 mt-1.5">
+          <LevelBadge level={member.level} size="sm" />
+          <span className="text-xs text-gray-500 dark:text-neutral-400">
+            {member.points} pts
+          </span>
         </div>
+
+        {/* Bio */}
+        {member.bio && (
+          <p className="text-xs text-gray-500 dark:text-neutral-400 mt-2 line-clamp-2 leading-relaxed">
+            {member.bio}
+          </p>
+        )}
       </div>
     </Link>
   );
