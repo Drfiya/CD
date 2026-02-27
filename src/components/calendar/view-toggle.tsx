@@ -7,13 +7,13 @@ interface ViewToggleProps {
 
 export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
   return (
-    <div className="inline-flex rounded-md shadow-sm">
+    <div className="inline-flex rounded-lg shadow-sm">
       <button
         type="button"
         onClick={() => onViewChange('calendar')}
-        className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-l-md border ${view === 'calendar'
-            ? 'bg-red-50 text-red-700 border-red-200'
-            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+        className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-l-lg border ${view === 'calendar'
+          ? 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800'
+          : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-neutral-300 border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700'
           } transition-colors`}
         aria-pressed={view === 'calendar'}
       >
@@ -38,9 +38,9 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
       <button
         type="button"
         onClick={() => onViewChange('list')}
-        className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-r-md border-t border-r border-b -ml-px ${view === 'list'
-            ? 'bg-red-50 text-red-700 border-red-200'
-            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+        className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-r-lg border-t border-r border-b -ml-px ${view === 'list'
+          ? 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800'
+          : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-neutral-300 border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700'
           } transition-colors`}
         aria-pressed={view === 'list'}
       >

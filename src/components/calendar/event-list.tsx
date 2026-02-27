@@ -22,14 +22,14 @@ type DateGroup = {
 export function EventList({ events }: EventListProps) {
   if (events.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-500">
+      <div className="text-center py-12 text-gray-500 dark:text-neutral-500">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
           strokeWidth={1.5}
           stroke="currentColor"
-          className="w-12 h-12 mx-auto mb-3 text-gray-300"
+          className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-neutral-600"
         >
           <path
             strokeLinecap="round"
@@ -94,7 +94,7 @@ export function EventList({ events }: EventListProps) {
     <div className="space-y-6">
       {groups.map((group) => (
         <div key={group.label}>
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-gray-500 dark:text-neutral-400 uppercase tracking-wider mb-3">
             {group.label}
           </h3>
           <div className="space-y-3">

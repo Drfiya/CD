@@ -35,13 +35,13 @@ export function CalendarGrid({ events, currentMonth }: CalendarGridProps) {
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
-      <div className="grid grid-cols-7 gap-px bg-gray-200">
+    <div className="bg-white dark:bg-neutral-800 border border-gray-100 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
+      <div className="grid grid-cols-7 gap-px bg-gray-200 dark:bg-neutral-700">
         {/* Header row */}
         {weekDays.map((day) => (
           <div
             key={day}
-            className="bg-gray-50 p-2 text-center text-sm font-medium text-gray-500"
+            className="bg-gray-50 dark:bg-neutral-800 p-2 text-center text-sm font-medium text-gray-500 dark:text-neutral-400"
           >
             {day}
           </div>

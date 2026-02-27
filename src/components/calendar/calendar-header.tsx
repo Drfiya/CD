@@ -25,14 +25,14 @@ export function CalendarHeader({
 
   return (
     <div className="flex items-center justify-between mb-4">
-      <h2 className="text-xl font-semibold">
+      <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">
         {format(currentMonth, 'MMMM yyyy')}
       </h2>
 
       <div className="flex items-center gap-3 ml-6">
         <button
           onClick={handleToday}
-          className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+          className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-600 rounded-md hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
         >
           Today
         </button>
@@ -40,7 +40,7 @@ export function CalendarHeader({
         <div className="flex items-center">
           <button
             onClick={handlePreviousMonth}
-            className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+            className="p-1.5 text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-100 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-md transition-colors"
             aria-label="Previous month"
           >
             <svg
@@ -61,7 +61,7 @@ export function CalendarHeader({
 
           <button
             onClick={handleNextMonth}
-            className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+            className="p-1.5 text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-100 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-md transition-colors"
             aria-label="Next month"
           >
             <svg

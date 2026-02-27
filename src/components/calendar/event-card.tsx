@@ -15,12 +15,12 @@ export function EventCard({ occurrence }: EventCardProps) {
   return (
     <Link
       href={`/events/${event.id}`}
-      className="block bg-white border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all"
+      className="block bg-white dark:bg-neutral-800 border border-gray-100 dark:border-neutral-700 rounded-xl p-4 hover:border-gray-300 dark:hover:border-neutral-500 hover:shadow-sm transition-all"
     >
       <div className="flex gap-4">
         {/* Cover image thumbnail */}
         {event.coverImage && (
-          <div className="flex-shrink-0 w-24 h-24 relative rounded-md overflow-hidden bg-gray-100">
+          <div className="flex-shrink-0 w-24 h-24 relative rounded-lg overflow-hidden bg-gray-100 dark:bg-neutral-700">
             <Image
               src={event.coverImage}
               alt={event.title}
@@ -34,11 +34,11 @@ export function EventCard({ occurrence }: EventCardProps) {
         <div className="flex-1 min-w-0">
           {/* Title and badges */}
           <div className="flex items-start gap-2 mb-2">
-            <h3 className="font-semibold text-gray-900 truncate flex-1">
+            <h3 className="font-semibold text-gray-900 dark:text-neutral-100 truncate flex-1">
               {event.title}
             </h3>
             {event.recurrence !== 'NONE' && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 flex-shrink-0">
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 flex-shrink-0">
                 {event.recurrence === 'WEEKLY' ? 'Weekly' : 'Monthly'}
               </span>
             )}
@@ -51,7 +51,7 @@ export function EventCard({ occurrence }: EventCardProps) {
 
           {/* Location */}
           {event.location && (
-            <div className="flex items-center gap-1.5 text-sm text-gray-600">
+            <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-neutral-400">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -74,7 +74,7 @@ export function EventCard({ occurrence }: EventCardProps) {
               <span className="truncate">
                 {event.locationUrl ? (
                   <span
-                    className="text-blue-600 hover:underline"
+                    className="text-blue-600 dark:text-blue-400 hover:underline"
                     onClick={(e) => {
                       e.preventDefault();
                       window.open(event.locationUrl!, '_blank');

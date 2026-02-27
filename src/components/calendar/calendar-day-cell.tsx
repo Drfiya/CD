@@ -20,7 +20,9 @@ export function CalendarDayCell({
 
   return (
     <div
-      className={`bg-white min-h-[100px] p-1 ${!isCurrentMonth ? 'bg-gray-50 text-gray-400' : ''
+      className={`min-h-[100px] p-1 ${isCurrentMonth
+          ? 'bg-white dark:bg-neutral-800'
+          : 'bg-gray-50 dark:bg-neutral-900/50'
         }`}
     >
       {/* Day number */}
@@ -28,8 +30,8 @@ export function CalendarDayCell({
         className={`w-7 h-7 flex items-center justify-center text-sm mb-1 ${isDayToday
             ? 'bg-red-600 text-white rounded-full font-semibold'
             : isCurrentMonth
-              ? 'text-gray-900'
-              : 'text-gray-400'
+              ? 'text-gray-900 dark:text-neutral-200'
+              : 'text-gray-400 dark:text-neutral-600'
           }`}
       >
         {format(day, 'd')}
@@ -40,7 +42,7 @@ export function CalendarDayCell({
         {events.slice(0, maxEventsToShow).map((occurrence, index) => (
           <div
             key={`${occurrence.event.id}-${index}`}
-            className="text-xs px-1.5 py-0.5 bg-red-100 text-red-800 rounded truncate cursor-pointer hover:bg-red-200 transition-colors"
+            className="text-xs px-1.5 py-0.5 bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300 rounded truncate cursor-pointer hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors"
             title={occurrence.event.title}
           >
             {occurrence.event.title}
@@ -48,7 +50,7 @@ export function CalendarDayCell({
         ))}
 
         {events.length > maxEventsToShow && (
-          <div className="text-xs text-gray-500 px-1.5">
+          <div className="text-xs text-gray-500 dark:text-neutral-500 px-1.5">
             +{events.length - maxEventsToShow} more
           </div>
         )}
