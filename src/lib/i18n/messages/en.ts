@@ -8,7 +8,7 @@ export const en: Messages = {
         classroom: 'Classroom',
         calendar: 'Calendar',
         members: 'Members',
-        leaderboards: 'Leaderboards',
+        leaderboards: 'Top Learners',
         settings: 'Settings',
     },
 
