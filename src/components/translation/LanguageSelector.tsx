@@ -75,7 +75,7 @@ export function LanguageSelector({ dropdownAlign = 'right' }: LanguageSelectorPr
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 hover:text-gray-900 dark:hover:text-neutral-100 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
                 aria-label="Select language"
                 aria-expanded={isOpen}
                 aria-haspopup="listbox"
@@ -107,14 +107,14 @@ export function LanguageSelector({ dropdownAlign = 'right' }: LanguageSelectorPr
                                 setLanguage(code);
                                 setIsOpen(false);
                             }}
-                            className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center justify-between ${code === currentLanguage ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                            className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-neutral-700 flex items-center justify-between ${code === currentLanguage ? 'bg-blue-50 dark:bg-neutral-700 text-blue-700 dark:text-blue-400 font-medium' : 'text-gray-700 dark:text-neutral-200'
                                 }`}
                             role="option"
                             aria-selected={code === currentLanguage}
                         >
                             <span className="flex flex-col">
                                 <span data-no-translate>{info.nativeName}</span>
-                                <span className="text-xs text-gray-500" data-no-translate>{info.name}</span>
+                                <span className="text-xs text-gray-500 dark:text-neutral-400" data-no-translate>{info.name}</span>
                             </span>
                             {code === currentLanguage && (
                                 <svg
