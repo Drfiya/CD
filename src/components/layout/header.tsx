@@ -57,11 +57,15 @@ export async function Header({ messages, showAdminLink }: HeaderProps) {
         <HeaderNav messages={messages} />
 
         {/* Right: Action buttons — flex-1 + justify-end to mirror the left */}
-        <div className="shrink-0 flex items-center gap-3 lg:flex-1 lg:justify-end">
-          {/* Language Selector */}
-          <LanguageSelector />
-          {/* Theme toggle */}
-          <ThemeToggle />
+        <div className="shrink-0 flex items-center gap-2 lg:flex-1 lg:justify-end">
+          {/* Language Selector — desktop only (available in hamburger on mobile) */}
+          <div className="hidden lg:block">
+            <LanguageSelector />
+          </div>
+          {/* Theme toggle — desktop only (available in hamburger on mobile) */}
+          <div className="hidden lg:block">
+            <ThemeToggle />
+          </div>
           {/* Search button */}
           <SearchButton placeholder={messages.search.placeholder} />
           {/* Notification bell with dropdown */}
