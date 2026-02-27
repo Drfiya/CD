@@ -87,7 +87,7 @@ export function CategoriesSidebar({ categories, activeCategory, translatedUI, si
             {showBanner && (
                 <div className="rounded-xl overflow-hidden shadow-sm border border-gray-100 dark:border-neutral-700">
                     {sidebarBannerUrl ? (
-                        <a href={sidebarBannerUrl} target="_blank" rel="noopener noreferrer" className="block">
+                        <a href={sidebarBannerUrl} className="block">
                             <img
                                 src={sidebarBannerImage}
                                 alt="Banner"
