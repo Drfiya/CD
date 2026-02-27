@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 export function ForgotPasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const {
     register,
@@ -21,14 +22,25 @@ export function ForgotPasswordForm() {
 
   const onSubmit = async (data: ForgotPasswordInput) => {
     setIsLoading(true);
+    setError(null);
 
-    const formData = new FormData();
-    formData.append('email', data.email);
+    try {
+      const formData = new FormData();
+      formData.append('email', data.email);
 
-    await requestPasswordReset(formData);
+      const result = await requestPasswordReset(formData);
 
-    setIsLoading(false);
-    setIsSuccess(true);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+
+      setIsSuccess(true);
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isSuccess) {
@@ -46,6 +58,11 @@ export function ForgotPasswordForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {error && (
+        <div className="p-3 bg-red-100 text-red-700 rounded text-sm">
+          {error}
+        </div>
+      )}
       <div>
         <label htmlFor="email" className="block text-sm font-medium mb-1">
           Email

@@ -49,7 +49,7 @@ export async function sendPasswordResetEmail(email: string) {
     const resend = getResendClient();
     if (!resend) return { success: true };
     await resend.emails.send({
-      from: 'Community <onboarding@resend.dev>', // Use Resend's test domain
+      from: 'Science Experts <miller@scienceexperts.ai>',
       to: email,
       subject: 'Reset your password',
       html: `
