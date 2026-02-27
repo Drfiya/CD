@@ -179,6 +179,7 @@ export async function getEnrolledCoursesWithProgress(userId: string) {
       courseId: enrollment.course.id,
       title: enrollment.course.title,
       description: enrollment.course.description,
+      coverImage: enrollment.course.coverImage,
       status: enrollment.course.status,
       enrolledAt: enrollment.enrolledAt,
       progressPercent,
