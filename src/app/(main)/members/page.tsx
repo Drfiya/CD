@@ -55,7 +55,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
     filtersTitle: 'Filters',
     allMembers: 'All Members',
     levelPrefix: 'Level',
-    topLearners: 'Top Members',
+    topLearners: 'Top Learners',
     viewAll: 'View all',
     level: 'Level',
     learningProgress: 'Community Stats',
