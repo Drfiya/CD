@@ -144,7 +144,7 @@ export function HeaderNav({ messages }: HeaderNavProps) {
             </div>
 
             {/* Mobile: hamburger button */}
-            <div className="flex lg:hidden flex-1 items-center">
+            <div className="flex lg:hidden flex-1 items-center ml-4">
                 <button
                     className="flex items-center justify-center p-2 rounded-lg text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors"
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -187,11 +187,7 @@ export function HeaderNav({ messages }: HeaderNavProps) {
                             );
                         })}
 
-                        {/* Language & Theme controls — hidden in header on mobile, shown here */}
-                        <div className="border-t border-gray-200 dark:border-neutral-700 pt-2 mt-2 flex items-center justify-between px-4 pb-1">
-                            <LanguageSelector dropdownAlign="left" />
-                            <ThemeToggle />
-                        </div>
+
                     </div>
                 </div>
             )}

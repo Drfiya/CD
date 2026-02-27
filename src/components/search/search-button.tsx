@@ -68,7 +68,7 @@ export function SearchButton({ placeholder }: SearchButtonProps) {
             {/* Search icon button — rounded square */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-500 dark:text-neutral-400 bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors"
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-gray-500 dark:text-neutral-400 bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors"
                 aria-label="Search"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
@@ -78,7 +78,7 @@ export function SearchButton({ placeholder }: SearchButtonProps) {
 
             {/* Expandable search overlay */}
             {isOpen && (
-                <div className="absolute right-0 top-full mt-2 z-50">
+                <div className="absolute left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-0 top-full mt-2 z-50">
                     <form onSubmit={handleSubmit} className="flex items-center">
                         <input
                             ref={inputRef}
@@ -86,7 +86,7 @@ export function SearchButton({ placeholder }: SearchButtonProps) {
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder={placeholder || 'Search...'}
-                            className="w-72 px-4 py-2.5 text-sm rounded-lg bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 border border-gray-200 dark:border-neutral-700 shadow-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors"
+                            className="w-72 px-4 py-2.5 text-sm rounded-xl bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 border-2 border-[#D94A4A] shadow-lg focus:ring-2 focus:ring-[#D94A4A]/30 focus:outline-none transition-colors"
                         />
                     </form>
                 </div>
