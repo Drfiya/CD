@@ -29,7 +29,6 @@ import type { KanbanStatus } from '@/generated/prisma/client';
 
 const COLUMNS = [
     { id: 'todo', label: 'To Do', color: '#3b82f6' },
-    { id: 'in_progress', label: 'In Progress', color: '#eab308' },
     { id: 'done', label: 'Done', color: '#22c55e' },
 ] as const;
 
@@ -446,7 +445,7 @@ export function TrackerBoard({ initialData }: TrackerBoardProps) {
 
     // --- Group cards by column ---
     const cardsByColumn: Record<string, UnifiedCardData[]> = {
-        todo: [], in_progress: [], done: [],
+        todo: [], done: [],
     };
     if (data) {
         for (const card of data.cards) {
@@ -487,7 +486,7 @@ export function TrackerBoard({ initialData }: TrackerBoardProps) {
             return {
                 ...prev,
                 cards: prev.cards.map((c) =>
-                    c.id === cardId ? { ...c, column: targetColumn as 'todo' | 'in_progress' | 'done' } : c
+                    c.id === cardId ? { ...c, column: targetColumn as 'todo' | 'done' } : c
                 ),
             };
         });
@@ -497,14 +496,12 @@ export function TrackerBoard({ initialData }: TrackerBoardProps) {
             try {
                 if (card.source === 'github') {
                     // Map unified column back to DevTrackerCard column
-                    const devCol = targetColumn === 'todo' ? 'active'
-                        : targetColumn === 'in_progress' ? 'pr_open'
-                            : 'merged';
+                    const devCol = targetColumn === 'todo' ? 'active' : 'merged';
                     await updateCardColumn(cardId, devCol);
                 } else {
                     // Map unified column back to KanbanStatus
                     const statusMap: Record<string, KanbanStatus> = {
-                        todo: 'TODO', in_progress: 'IN_PROGRESS', done: 'DONE',
+                        todo: 'TODO', done: 'DONE',
                     };
                     await moveKanbanCard(cardId, statusMap[targetColumn], 0);
                 }

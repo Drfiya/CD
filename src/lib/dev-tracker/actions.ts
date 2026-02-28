@@ -75,14 +75,14 @@ export type UnifiedCardData =
         source: 'github';
         id: string;            // branchName as id
         title: string;
-        column: 'todo' | 'in_progress' | 'done';
+        column: 'todo' | 'done';
         card: TrackerCard;     // full GitHub card data
     }
     | {
         source: 'manual';
         id: string;            // KanbanCard.id
         title: string;
-        column: 'todo' | 'in_progress' | 'done';
+        column: 'todo' | 'done';
         description: string | null;
         imageUrl: string | null;
         position: number;
@@ -98,10 +98,8 @@ export interface UnifiedBoardData {
 }
 
 /** Map DevTrackerCard columns → unified columns. */
-function mapGitHubColumn(col: string): 'todo' | 'in_progress' | 'done' {
+function mapGitHubColumn(col: string): 'todo' | 'done' {
     switch (col) {
-        case 'active': return 'todo';
-        case 'pr_open': return 'in_progress';
         case 'merged': return 'done';
         case 'follow_up': return 'done';
         default: return 'todo';
@@ -109,10 +107,8 @@ function mapGitHubColumn(col: string): 'todo' | 'in_progress' | 'done' {
 }
 
 /** Map KanbanCard status → unified columns. */
-function mapKanbanStatus(status: KanbanStatus): 'todo' | 'in_progress' | 'done' {
+function mapKanbanStatus(status: KanbanStatus): 'todo' | 'done' {
     switch (status) {
-        case 'TODO': return 'todo';
-        case 'IN_PROGRESS': return 'in_progress';
         case 'DONE': return 'done';
         default: return 'todo';
     }
