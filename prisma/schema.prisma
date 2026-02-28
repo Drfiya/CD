@@ -5,46 +5,37 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // Connection URL configured in prisma.config.ts
 }
 
-// Foundation User model - expanded in later phases
 model User {
-  id             String    @id @default(cuid())
-  email          String    @unique
-  name           String?
-  image          String?
-  hashedPassword String?
-  bio            String?   @db.VarChar(500)
-  points         Int       @default(0)
-  level          Int       @default(1)
-  role           String    @default("member") // member, moderator, admin, owner
-  languageCode   String    @default("en")     // User's preferred language
-  stripeCustomerId String?  @unique           // Stripe Customer ID
-
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-
-  // Full-text search vector (auto-generated from name + bio)
-  searchVector   Unsupported("tsvector")?
-
-  posts          Post[]
-  comments       Comment[]
-  postLikes      PostLike[]
-  commentLikes   CommentLike[]
-  enrollments    Enrollment[]
-  lessonProgress LessonProgress[]
-  events         Event[]
-  pointsEvents   PointsEvent[]
-  bans           Ban[]      @relation("UserBans")
-  bannedUsers    Ban[]      @relation("BannedByUser")
-  auditLogs      AuditLog[]
-  membership     Membership?
-  kanbanCards    KanbanCard[]
-  devResources   DevTrackerResource[]
-  featureIdeas        FeatureIdea[]        @relation("FeatureIdeaAuthor")
-  featureIdeaUpvotes  FeatureIdeaUpvote[]  @relation("FeatureIdeaUpvotes")
-  featureIdeaComments FeatureIdeaComment[] @relation("FeatureIdeaComments")
+  id               String                   @id @default(cuid())
+  email            String                   @unique
+  name             String?
+  image            String?
+  hashedPassword   String?
+  bio              String?                  @db.VarChar(500)
+  points           Int                      @default(0)
+  level            Int                      @default(1)
+  role             String                   @default("member")
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  searchVector     Unsupported("tsvector")? @default(dbgenerated("(setweight(to_tsvector('english'::regconfig, COALESCE(name, ''::text)), 'A'::\"char\") || setweight(to_tsvector('english'::regconfig, (COALESCE(bio, ''::character varying))::text), 'B'::\"char\"))"))
+  languageCode     String?                  @default("en") @db.VarChar(10)
+  jobDescription   String?                  @db.VarChar(100)
+  stripeCustomerId String?                  @unique
+  auditLogs        AuditLog[]
+  bannedUsers      Ban[]                    @relation("BannedByUser")
+  bans             Ban[]                    @relation("UserBans")
+  comments         Comment[]
+  commentLikes     CommentLike[]
+  devResources     DevTrackerResource[]
+  enrollments      Enrollment[]
+  events           Event[]
+  lessonProgress   LessonProgress[]
+  membership       Membership?
+  pointsEvents     PointsEvent[]
+  posts            Post[]
+  postLikes        PostLike[]
 
   @@index([email])
   @@index([points])
@@ -54,36 +45,30 @@ model User {
 model Category {
   id        String   @id @default(cuid())
   name      String   @unique
-  color     String   // hex color, e.g., "#6366f1"
-
-  posts     Post[]
-
+  color     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  posts     Post[]
 }
 
 model Post {
-  id         String    @id @default(cuid())
-  title      String?   @db.VarChar(200) // Optional post title
-  content    Json      // Tiptap JSON document
-  plainText  String?   @db.Text // Extracted text for full-text search
-  embeds     Json      @default("[]") // Array of VideoEmbed objects
-  authorId   String
-  author     User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  categoryId String?
-  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-
-  comments   Comment[]
-  likes      PostLike[]
-
-  languageCode String?   // Detected language of the post
-  contentHash  String?   // SHA-256 hash of content for cache invalidation
-
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-
-  // Full-text search vector (auto-generated from plainText)
-  searchVector Unsupported("tsvector")?
+  id           String                   @id @default(cuid())
+  content      Json
+  plainText    String?
+  embeds       Json                     @default("[]")
+  authorId     String
+  categoryId   String?
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+  searchVector Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(\"plainText\", ''::text))"))
+  title        String?                  @db.VarChar(200)
+  languageCode String?                  @db.VarChar(10)
+  contentHash  String?                  @db.VarChar(64)
+  gifs         Json                     @default("[]")
+  comments     Comment[]
+  author       User                     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category     Category?                @relation(fields: [categoryId], references: [id])
+  likes        PostLike[]
 
   @@index([authorId])
   @@index([categoryId])
@@ -92,20 +77,17 @@ model Post {
 }
 
 model Comment {
-  id        String   @id @default(cuid())
-  content   String   @db.VarChar(2000) // plain text, no Tiptap
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  postId    String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-
-  likes     CommentLike[]
-
-  languageCode String?  // Detected language of the comment
-  contentHash  String?  // SHA-256 hash of content for cache invalidation
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String        @id @default(cuid())
+  content      String        @db.VarChar(2000)
+  authorId     String
+  postId       String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  contentHash  String?
+  languageCode String?
+  author       User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  likes        CommentLike[]
 
   @@index([postId])
   @@index([authorId])
@@ -115,11 +97,10 @@ model Comment {
 model PostLike {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   postId    String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-
   createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
   @@index([postId])
@@ -129,11 +110,10 @@ model PostLike {
 model CommentLike {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   commentId String
-  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
-
   createdAt DateTime @default(now())
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, commentId])
   @@index([commentId])
@@ -151,30 +131,19 @@ model PasswordResetToken {
   @@index([token])
 }
 
-// Classroom models - Phase 06
-enum CourseStatus {
-  DRAFT
-  PUBLISHED
-}
-
 model Course {
-  id          String       @id @default(cuid())
-  title       String
-  description String?      @db.Text
-  coverImage  String?      // Supabase storage URL for course image
-  status      CourseStatus @default(DRAFT)
-
-  modules     Module[]
-  enrollments Enrollment[]
-
-  languageCode String?      // Detected language of the course
-  contentHash  String?      // SHA-256 hash of content for cache invalidation
-
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-
-  // Full-text search vector (auto-generated from title + description)
-  searchVector Unsupported("tsvector")?
+  id           String                   @id @default(cuid())
+  title        String
+  description  String?
+  status       CourseStatus             @default(DRAFT)
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+  searchVector Unsupported("tsvector")? @default(dbgenerated("(setweight(to_tsvector('english'::regconfig, COALESCE(title, ''::text)), 'A'::\"char\") || setweight(to_tsvector('english'::regconfig, COALESCE(description, ''::text)), 'B'::\"char\"))"))
+  languageCode String?                  @db.VarChar(10)
+  contentHash  String?                  @db.VarChar(64)
+  coverImage   String?
+  enrollments  Enrollment[]
+  modules      Module[]
 
   @@index([status])
   @@index([searchVector], type: Gin)
@@ -183,43 +152,32 @@ model Course {
 model Module {
   id        String   @id @default(cuid())
   title     String
-  position  Int      // For ordering within course
+  position  Int
   courseId  String
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-
-  lessons   Lesson[]
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  lessons   Lesson[]
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@index([courseId])
   @@index([courseId, position])
 }
 
-// Lesson models - Phase 06-02
-enum LessonStatus {
-  DRAFT
-  PUBLISHED
-}
-
 model Lesson {
-  id        String       @id @default(cuid())
-  title     String
-  position  Int          // For ordering within module
-  status    LessonStatus @default(DRAFT)
-  videoUrl  String?      // Optional video embed at top
-  content   Json         // Tiptap JSON document
-  moduleId  String
-  module    Module       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-
-  attachments Attachment[]
-  progress    LessonProgress[]
-
-  languageCode String?      // Detected language of the lesson
-  contentHash  String?      // SHA-256 hash of content for cache invalidation
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String           @id @default(cuid())
+  title        String
+  position     Int
+  status       LessonStatus     @default(DRAFT)
+  videoUrl     String?
+  content      Json
+  moduleId     String
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  languageCode String?          @db.VarChar(10)
+  contentHash  String?          @db.VarChar(64)
+  attachments  Attachment[]
+  module       Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress     LessonProgress[]
 
   @@index([moduleId])
   @@index([moduleId, position])
@@ -227,26 +185,24 @@ model Lesson {
 
 model Attachment {
   id        String   @id @default(cuid())
-  name      String   // Original filename
-  url       String   // Supabase storage URL
-  size      Int      // File size in bytes
+  name      String
+  url       String
+  size      Int
   mimeType  String
   lessonId  String
-  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-
   createdAt DateTime @default(now())
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
   @@index([lessonId])
 }
 
-// Classroom Experience models - Phase 07
 model Enrollment {
   id         String   @id @default(cuid())
   userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   courseId   String
-  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   enrolledAt DateTime @default(now())
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
   @@index([userId])
@@ -256,86 +212,73 @@ model Enrollment {
 model LessonProgress {
   id          String   @id @default(cuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   lessonId    String
-  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   completedAt DateTime @default(now())
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lessonId])
   @@index([userId])
   @@index([lessonId])
 }
 
-// Events Calendar - Phase 08
-enum RecurrenceType {
-  NONE
-  WEEKLY
-  MONTHLY
-}
-
 model Event {
   id            String         @id @default(cuid())
   title         String         @db.VarChar(200)
-  description   Json           // Tiptap JSON document
+  description   Json
   startTime     DateTime       @db.Timestamptz(3)
   endTime       DateTime       @db.Timestamptz(3)
   location      String?        @db.VarChar(200)
   locationUrl   String?        @db.VarChar(500)
-  coverImage    String?        // Supabase storage URL
+  coverImage    String?
   recurrence    RecurrenceType @default(NONE)
   recurrenceEnd DateTime?      @db.Timestamptz(3)
-
   createdById   String
-  createdBy     User           @relation(fields: [createdById], references: [id])
-
-  languageCode  String?        // Detected language of the event
-  contentHash   String?        // SHA-256 hash of content for cache invalidation
-
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  languageCode  String?        @db.VarChar(10)
+  contentHash   String?        @db.VarChar(64)
+  createdBy     User           @relation(fields: [createdById], references: [id])
 
   @@index([startTime])
   @@index([createdById])
 }
 
-// Gamification - Phase 09
 model PointsEvent {
   id        String   @id @default(cuid())
   userId    String
   amount    Int
-  action    String   // "POST_CREATED", "COMMENT_CREATED", "LIKE_RECEIVED", "LESSON_COMPLETED"
+  action    String
   createdAt DateTime @default(now())
-
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
   @@index([createdAt])
 }
 
-// Admin & Moderation - Phase 10
 model Ban {
-  id        String    @id @default(cuid())
-  userId    String
-  user      User      @relation("UserBans", fields: [userId], references: [id], onDelete: Cascade)
-  reason    String    @db.VarChar(500)
-  expiresAt DateTime? @db.Timestamptz(3) // null = permanent
+  id         String    @id @default(cuid())
+  userId     String
+  reason     String    @db.VarChar(500)
+  expiresAt  DateTime? @db.Timestamptz(3)
   bannedById String
-  bannedBy  User      @relation("BannedByUser", fields: [bannedById], references: [id])
-  createdAt DateTime  @default(now())
+  createdAt  DateTime  @default(now())
+  bannedBy   User      @relation("BannedByUser", fields: [bannedById], references: [id])
+  user       User      @relation("UserBans", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
 }
 
 model AuditLog {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  action    String   // "BAN_USER", "UNBAN_USER", "DELETE_POST", "DELETE_COMMENT", "CHANGE_ROLE", etc.
-  targetId  String?  // ID of affected resource (user, post, comment)
-  targetType String? // "USER", "POST", "COMMENT"
-  details   Json?    // Additional context (old role, new role, reason, etc.)
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  userId     String
+  action     String
+  targetId   String?
+  targetType String?
+  details    Json?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([action])
@@ -344,246 +287,209 @@ model AuditLog {
 }
 
 model CommunitySettings {
-  id                    String   @id @default("singleton")
-  communityName         String   @default("Community")
-  communityDescription  String?  @db.Text
-  communityLogo         String?  // Logo URL for light mode
-  communityLogoDark     String?  // Logo URL for dark mode
-  logoSize              Int      @default(36) // Logo display height in pixels (20-80)
-  welcomeMessage        String?  @db.Text
-  registrationOpen      Boolean  @default(true)
-  postingEnabled        Boolean  @default(true)
-  commentsEnabled       Boolean  @default(true)
-
-  // Landing Page fields
-  landingHeadline       String?  @db.Text      // Main headline
-  landingSubheadline    String?  @db.Text      // Short subtitle
-  landingDescription    String?  @db.Text      // Description text (auto-translated)
-  landingVideoUrls      Json     @default("[]") // Array of video URLs (YouTube/Vimeo/Loom)
-  landingBenefits       Json     @default("[]") // Array of benefit strings
-  landingPriceUsd       Int      @default(89)   // Price in USD
-  landingPriceEur       Int      @default(89)   // Price in EUR
-  landingCtaText        String?  @db.VarChar(100) // CTA button text
-  landingTestimonials   Json     @default("[]") // Array of {name, text, role}
-  landingTranslations   Json     @default("{}") // Per-language overrides: { "de": { headline, subheadline, description, benefits, videoUrls }, ... }
-
-  // Sidebar banner fields
-  sidebarBannerImage    String?  // Banner image URL (uploaded to storage)
-  sidebarBannerUrl      String?  // Optional click-through URL
-  sidebarBannerEnabled  Boolean  @default(false) // Toggle banner visibility
-
-  updatedAt             DateTime @updatedAt
-}
-
-// Payments - Phase 11
-enum MembershipStatus {
-  ACTIVE
-  EXPIRED
-  CANCELLED
+  id                   String   @id @default("singleton")
+  communityName        String   @default("Community")
+  communityDescription String?
+  communityLogo        String?
+  welcomeMessage       String?
+  registrationOpen     Boolean  @default(true)
+  postingEnabled       Boolean  @default(true)
+  commentsEnabled      Boolean  @default(true)
+  updatedAt            DateTime @updatedAt
+  logoSize             Int      @default(36)
+  landingPriceUsd      Int      @default(89)
+  landingPriceEur      Int      @default(89)
+  landingVideoUrls     Json     @default("[]")
+  landingBenefits      Json     @default("[]")
+  landingTestimonials  Json     @default("[]")
+  landingTranslations  Json     @default("{}")
+  landingHeadline      String?
+  landingSubheadline   String?
+  landingDescription   String?
+  landingCtaText       String?  @db.VarChar(100)
+  communityLogoDark    String?
+  sidebarBannerImage   String?
+  sidebarBannerUrl     String?
+  sidebarBannerEnabled Boolean  @default(false)
 }
 
 model Membership {
-  id        String           @id @default(cuid())
-  userId    String           @unique
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status    MembershipStatus @default(ACTIVE)
-  planName  String           @default("Community Membership")
-  paidAt    DateTime         @default(now())
-  expiresAt DateTime?        // null = no expiration
-
-  // Stripe integration
-  stripeCustomerId     String?  @unique
-  stripeSubscriptionId String?  @unique
+  id                   String           @id @default(cuid())
+  userId               String           @unique
+  status               MembershipStatus @default(ACTIVE)
+  planName             String           @default("Community Membership")
+  paidAt               DateTime         @default(now())
+  expiresAt            DateTime?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  stripeCustomerId     String?          @unique
+  stripeSubscriptionId String?          @unique
   stripePriceId        String?
-
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  user                 User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
 }
 
-// Translation Cache - Multi-language support
 model Translation {
   id                String   @id @default(cuid())
-  entityType        String   // "Post", "Comment", "Course", "Lesson", "Event"
-  entityId          String   // ID of the translated entity
-  fieldName         String   // "plainText", "title", "content", "description"
-  sourceLanguage    String   // ISO 639-1 code (e.g., "en", "de")
-  sourceHash        String   // SHA-256 hash of source content
-  targetLanguage    String   // ISO 639-1 code for translation target
-  translatedContent String   @db.Text
-  modelProvider     String   // "deepl"
-  modelVersion      String   // API version or model identifier
-  confidenceScore   Float?   // Optional confidence/quality score
-
+  entityType        String
+  entityId          String
+  fieldName         String
+  sourceLanguage    String
+  sourceHash        String
+  targetLanguage    String
+  translatedContent String
+  modelProvider     String
+  modelVersion      String
+  confidenceScore   Float?
   createdAt         DateTime @default(now())
 
   @@unique([entityType, entityId, fieldName, targetLanguage])
   @@index([entityType, entityId, targetLanguage])
 }
 
-// Admin Kanban Board
-enum KanbanStatus {
-  TODO
-  IN_PROGRESS
-  DONE
-}
-
 model KanbanCard {
   id          String       @id @default(cuid())
   title       String       @db.VarChar(200)
-  description String?      @db.Text
-  imageUrl    String?      // Optional cover image URL
+  description String?
+  imageUrl    String?
   status      KanbanStatus @default(TODO)
   position    Int          @default(0)
   createdById String
-  createdBy   User         @relation(fields: [createdById], references: [id])
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  createdAt   DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime     @default(now()) @updatedAt @db.Timestamptz(3)
 
   @@index([status, position])
   @@index([createdById])
 }
 
-// Dev Tracker — Branch/feature card metadata (replaces localStorage)
 model DevTrackerCard {
-  id              String   @id @default(cuid())
-  branchName      String   @unique           // Git branch name — the primary key from GitHub
-  column          String   @default("active") // active, pr_open, merged, follow_up
-  priority        String?                     // high, medium, low
-  assignee        String?                     // canonical team member name
-  platformTag     String?                     // detected topic / feature area
-  flagged         Boolean  @default(false)
-  notes           String?  @db.Text
-  lastSyncedAt    DateTime?
-
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id           String    @id @default(dbgenerated("(gen_random_uuid())::text"))
+  branchName   String    @unique
+  column       String    @default("active")
+  priority     String?
+  assignee     String?
+  platformTag  String?
+  flagged      Boolean   @default(false)
+  notes        String?
+  lastSyncedAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @default(now()) @updatedAt
 
   @@index([column])
   @@index([flagged])
 }
 
-// Dev Tracker — Shared resources (prompts, links, notes, files)
-enum DevResourceType {
-  PROMPT
-  LINK
-  NOTE
-  FILE
-}
-
 model DevTrackerResource {
-  id          String          @id @default(cuid())
+  id          String          @id @default(dbgenerated("(gen_random_uuid())::text"))
   type        DevResourceType
   title       String          @db.VarChar(200)
-  content     String          @db.Text          // Text content for PROMPT/LINK/NOTE, description for FILE
+  content     String
   starred     Boolean         @default(false)
   useCount    Int             @default(0)
   createdById String
-  createdBy   User            @relation(fields: [createdById], references: [id])
-
-  // File upload fields (only populated when type = FILE)
-  fileUrl     String?                            // Supabase storage URL
-  fileName    String?         @db.VarChar(255)   // Original filename
-  fileSize    Int?                               // Size in bytes
-  mimeType    String?         @db.VarChar(100)   // MIME type
-
   createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  updatedAt   DateTime        @default(now()) @updatedAt
+  fileUrl     String?
+  fileName    String?         @db.VarChar(255)
+  fileSize    Int?
+  mimeType    String?         @db.VarChar(100)
+  createdBy   User            @relation(fields: [createdById], references: [id])
 
   @@index([type])
   @@index([starred])
   @@index([createdById])
 }
 
-// Dev Tracker — Launch readiness checklist
 model LaunchChecklistItem {
-  id          String   @id @default(cuid())
-  category    String                          // technical, content, legal, payments, testing, operations
+  id          String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  category    String
   label       String   @db.VarChar(300)
   checked     Boolean  @default(false)
-  autoChecked Boolean  @default(false)        // true = system-verified, false = manual checkbox
-  blocker     Boolean  @default(false)        // blocks launch if unchecked
+  autoChecked Boolean  @default(false)
+  blocker     Boolean  @default(false)
   position    Int      @default(0)
-
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  updatedAt   DateTime @default(now()) @updatedAt
+  key         String?
 
   @@index([category])
   @@index([blocker])
 }
 
-// AI Tools — Admin-managed tool links for sidebar & overview page
 model AiTool {
   id           String   @id @default(cuid())
   name         String   @db.VarChar(200)
   url          String   @db.VarChar(500)
-  description  String?  @db.Text
+  description  String?
   active       Boolean  @default(true)
   openInNewTab Boolean  @default(true)
   position     Int      @default(0)
-
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   @@index([active, position])
 }
 
-// Feature Ideas — Admin idea board
-enum FeatureIdeaStatus {
-  NEW
-  UNDER_REVIEW
-  APPROVED
-  IN_PROGRESS
-  COMPLETED
-  DECLINED
+model FeedReport {
+  id             String   @id
+  userId         String
+  videoId        String
+  jobDescription String
+  language       String
+  reportContent  String
+  createdAt      DateTime @default(now())
+
+  @@unique([userId, videoId])
+  @@index([userId])
+  @@index([videoId])
 }
 
-model FeatureIdea {
-  id          String             @id @default(cuid())
-  title       String             @db.VarChar(200)
-  description String             @db.Text
-  status      FeatureIdeaStatus  @default(NEW)
-  priority    String?            // "low", "medium", "high"
-  tags        String[]           @default([])
+model FeedVideo {
+  id          String   @id
+  youtubeUrl  String
+  youtubeId   String
+  title       String   @db.VarChar(300)
+  description String?
+  addedById   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
 
-  authorId    String
-  author      User               @relation("FeatureIdeaAuthor", fields: [authorId], references: [id], onDelete: Cascade)
-
-  upvotes     FeatureIdeaUpvote[]
-  comments    FeatureIdeaComment[]
-
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
-
-  @@index([status])
-  @@index([authorId])
   @@index([createdAt(sort: Desc)])
 }
 
-model FeatureIdeaUpvote {
-  id        String      @id @default(cuid())
-  userId    String
-  user      User        @relation("FeatureIdeaUpvotes", fields: [userId], references: [id], onDelete: Cascade)
-  ideaId    String
-  idea      FeatureIdea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
-  createdAt DateTime    @default(now())
-
-  @@unique([userId, ideaId])
-  @@index([ideaId])
-  @@index([userId])
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
 }
 
-model FeatureIdeaComment {
-  id        String      @id @default(cuid())
-  content   String      @db.Text
-  authorId  String
-  author    User        @relation("FeatureIdeaComments", fields: [authorId], references: [id], onDelete: Cascade)
-  ideaId    String
-  idea      FeatureIdea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
-  createdAt DateTime    @default(now())
+enum LessonStatus {
+  DRAFT
+  PUBLISHED
+}
 
-  @@index([ideaId])
-  @@index([authorId])
+enum RecurrenceType {
+  NONE
+  WEEKLY
+  MONTHLY
+}
+
+enum MembershipStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum KanbanStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum DevResourceType {
+  PROMPT
+  LINK
+  NOTE
+  FILE
 }

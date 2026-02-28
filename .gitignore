@@ -57,3 +57,4 @@ hooks/dist/
 src/generated/
 ._*
 transparent-black-small.png
+.env*.local
