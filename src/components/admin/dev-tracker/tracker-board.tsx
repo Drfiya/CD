@@ -13,6 +13,7 @@ import {
     updateCardColumn,
     type UnifiedBoardData,
     type UnifiedCardData,
+    type RecentCommit,
     getUnifiedBoard,
 } from '@/lib/dev-tracker/actions';
 import {
@@ -33,6 +34,20 @@ const COLUMNS = [
 ] as const;
 
 type FilterTab = 'all' | 'code' | 'tasks';
+
+// --- Relative time helper ---
+
+function timeAgo(dateStr: string): string {
+    const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+    if (seconds < 60) return 'just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d ago`;
+    return `${Math.floor(days / 7)}w ago`;
+}
 
 // --- GitHub card freshness badge ---
 
@@ -57,6 +72,64 @@ function TopicBadge({ label }: { label: string }) {
         <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 mr-1">
             {label}
         </span>
+    );
+}
+
+// --- Recent Activity Feed ---
+
+function RecentActivity({ commits }: { commits: RecentCommit[] }) {
+    if (commits.length === 0) return null;
+
+    // Normalize author names
+    const normalizeAuthor = (name: string) => {
+        const lower = name.toLowerCase();
+        if (lower.includes('lutfiya') || lower === 'drfiya') return 'Lutfiya';
+        if (lower.includes('chris') || lower === 'chriss54') return 'Chris';
+        return name.split(' ')[0]; // first name only
+    };
+
+    return (
+        <div className="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl p-4">
+            <h3 className="text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-3 flex items-center gap-1.5">
+                <span className="text-base">⚡</span> Recent Activity
+            </h3>
+            <div className="space-y-0">
+                {commits.map((commit, i) => {
+                    const author = normalizeAuthor(commit.authorName);
+                    const initial = author[0]?.toUpperCase() || '?';
+                    const isLast = i === commits.length - 1;
+                    return (
+                        <div key={commit.sha} className="flex items-start gap-3 relative">
+                            {/* Timeline line */}
+                            {!isLast && (
+                                <div className="absolute left-[11px] top-[24px] w-px h-[calc(100%-8px)] bg-gray-200 dark:bg-neutral-700" />
+                            )}
+                            {/* Author avatar */}
+                            <span className="w-[22px] h-[22px] rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-[10px] font-bold flex items-center justify-center text-indigo-700 dark:text-indigo-300 shrink-0 z-10 mt-0.5">
+                                {initial}
+                            </span>
+                            {/* Content */}
+                            <div className={`flex-1 min-w-0 pb-3 ${!isLast ? 'border-b-0' : ''}`}>
+                                <div className="flex items-baseline justify-between gap-2">
+                                    <p className="text-xs text-gray-800 dark:text-neutral-200 truncate">
+                                        {commit.message}
+                                    </p>
+                                    <span className="text-[10px] text-gray-400 dark:text-neutral-500 shrink-0">
+                                        {timeAgo(commit.date)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-[10px] text-gray-400 dark:text-neutral-500">{author}</span>
+                                    <code className="text-[10px] text-gray-400 dark:text-neutral-500 font-mono">
+                                        {commit.sha.substring(0, 7)}
+                                    </code>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
     );
 }
 
@@ -93,6 +166,9 @@ function GitHubCardUI({
             {/* Meta row */}
             <div className="flex items-center gap-2 text-[10px] text-gray-500 dark:text-neutral-400">
                 <span>{card.commitCount} commit{card.commitCount !== 1 ? 's' : ''}</span>
+                {card.lastCommitDate && (
+                    <span className="text-gray-400 dark:text-neutral-500">{timeAgo(card.lastCommitDate)}</span>
+                )}
                 {card.prNumber && (
                     <span className="text-amber-600">PR #{card.prNumber}</span>
                 )}
@@ -502,6 +578,11 @@ export function TrackerBoard({ initialData }: TrackerBoardProps) {
 
             {/* Stats */}
             <StatsHeader stats={data.stats} manualCount={manualCount} />
+
+            {/* Recent Activity */}
+            {data.recentCommits && data.recentCommits.length > 0 && (
+                <RecentActivity commits={data.recentCommits} />
+            )}
 
             {/* Filter tabs + Add task button */}
             <div className="flex items-center justify-between">

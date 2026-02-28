@@ -6,17 +6,25 @@
  */
 
 import db from '@/lib/db';
-import { fullSync } from './github-api';
+import { fullSync, type GitHubCommit } from './github-api';
 import { buildCards, computeStats, type TrackerCard, type TrackerStats, type CardMetadata } from './sync';
 import { revalidatePath } from 'next/cache';
 import type { KanbanStatus } from '@/generated/prisma/client';
 
 // --- Sync ---
 
+export interface RecentCommit {
+    sha: string;
+    message: string;
+    authorName: string;
+    date: string;
+}
+
 export interface SyncResponse {
     cards: TrackerCard[];
     stats: TrackerStats;
     syncedAt: string;
+    recentCommits: RecentCommit[];
 }
 
 /**
@@ -42,10 +50,20 @@ export async function syncDevTracker(): Promise<SyncResponse> {
     const cards = buildCards(branches, commitsByBranch, pullRequests, dbMetaByBranch);
     const stats = computeStats(cards);
 
+    // Extract the 10 most recent main-branch commits for the activity feed
+    const mainCommits = commitsByBranch['main'] || commitsByBranch['master'] || [];
+    const recentCommits: RecentCommit[] = mainCommits.slice(0, 10).map((c: GitHubCommit) => ({
+        sha: c.sha,
+        message: c.commit.message.split('\n')[0], // first line only
+        authorName: c.commit.author.name,
+        date: c.commit.author.date,
+    }));
+
     return {
         cards,
         stats,
         syncedAt: new Date().toISOString(),
+        recentCommits,
     };
 }
 
@@ -76,6 +94,7 @@ export interface UnifiedBoardData {
     cards: UnifiedCardData[];
     stats: TrackerStats;
     syncedAt: string;
+    recentCommits: RecentCommit[];
 }
 
 /** Map DevTrackerCard columns → unified columns. */
@@ -146,6 +165,7 @@ export async function getUnifiedBoard(): Promise<UnifiedBoardData> {
         cards: unifiedCards,
         stats: syncData.stats,
         syncedAt: syncData.syncedAt,
+        recentCommits: syncData.recentCommits,
     };
 }
 
