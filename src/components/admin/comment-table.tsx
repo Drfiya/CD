@@ -92,16 +92,16 @@ export function CommentTable({ comments }: CommentTableProps) {
 
   return (
     <>
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
+      <div className="overflow-hidden">
+        <table className="w-full border-collapse table-fixed">
           <thead>
             <tr className="border-b dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50">
-              <th className="text-left py-3 px-4 font-medium text-sm">Author</th>
+              <th className="text-left py-3 px-4 font-medium text-sm w-[140px]">Author</th>
               <th className="text-left py-3 px-4 font-medium text-sm">Content</th>
-              <th className="text-center py-3 px-4 font-medium text-sm">Likes</th>
-              <th className="text-left py-3 px-4 font-medium text-sm">Post</th>
-              <th className="text-left py-3 px-4 font-medium text-sm">Created</th>
-              <th className="text-right py-3 px-4 font-medium text-sm">Actions</th>
+              <th className="text-center py-3 px-4 font-medium text-sm w-[60px]">Likes</th>
+              <th className="text-left py-3 px-4 font-medium text-sm w-[80px]">Post</th>
+              <th className="text-left py-3 px-4 font-medium text-sm w-[100px]">Created</th>
+              <th className="text-right py-3 px-4 font-medium text-sm w-[140px]">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -122,8 +122,8 @@ export function CommentTable({ comments }: CommentTableProps) {
 
                 {/* Content */}
                 <td className="py-3 px-4">
-                  <span className="text-sm text-gray-700 dark:text-neutral-300 line-clamp-2">
-                    {truncate(comment.content)}
+                  <span className="text-sm text-gray-700 dark:text-neutral-300 line-clamp-2 break-words">
+                    {comment.content}
                   </span>
                 </td>
 
