@@ -22,7 +22,7 @@ export function RegistrationWizard() {
     setError(null);
   };
 
-  const handlePaymentComplete = async () => {
+  const handlePaymentComplete = async (promoCode?: string) => {
     if (!accountData) return;
 
     setIsProcessing(true);
@@ -47,6 +47,7 @@ export function RegistrationWizard() {
         body: JSON.stringify({
           userId: result.userId,
           email: accountData.email,
+          promoCode, // Pass promo code for server-side resolution
         }),
       });
 

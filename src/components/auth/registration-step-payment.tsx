@@ -1,9 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
 interface RegistrationStepPaymentProps {
-  onComplete: () => void;
+  onComplete: (promoCode?: string) => void;
   onBack: () => void;
   isProcessing: boolean;
 }
@@ -13,6 +14,9 @@ export function RegistrationStepPayment({
   onBack,
   isProcessing,
 }: RegistrationStepPaymentProps) {
+  const [promoCode, setPromoCode] = useState('');
+  const [showPromo, setShowPromo] = useState(false);
+
   return (
     <div className="space-y-6">
       {/* Plan Card */}
@@ -59,6 +63,30 @@ export function RegistrationStepPayment({
         </li>
       </ul>
 
+      {/* Promo code */}
+      <div className="text-center">
+        {!showPromo ? (
+          <button
+            type="button"
+            onClick={() => setShowPromo(true)}
+            className="text-sm text-purple-600 hover:text-purple-800 underline"
+          >
+            Have a promo code?
+          </button>
+        ) : (
+          <div className="flex gap-2 items-center">
+            <input
+              type="text"
+              value={promoCode}
+              onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+              placeholder="Enter promo code"
+              className="flex-1 border rounded-md px-3 py-2 text-sm uppercase tracking-wider"
+              disabled={isProcessing}
+            />
+          </div>
+        )}
+      </div>
+
       {/* Stripe trust badge */}
       <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -80,7 +108,7 @@ export function RegistrationStepPayment({
         </Button>
         <Button
           type="button"
-          onClick={onComplete}
+          onClick={() => onComplete(promoCode || undefined)}
           disabled={isProcessing}
           className="flex-1"
         >

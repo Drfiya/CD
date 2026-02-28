@@ -1,20 +1,46 @@
 import { NextResponse } from 'next/server';
 import { getStripe } from '@/lib/stripe';
 import db from '@/lib/db';
+import type Stripe from 'stripe';
+
+/**
+ * Resolve a customer-facing promo code string (e.g. "ALPHA100") to a Stripe
+ * promotion_code ID. Returns null if the code is missing, invalid, or inactive.
+ */
+async function resolvePromoCode(
+    stripe: Stripe,
+    code: string | undefined
+): Promise<string | null> {
+    if (!code || typeof code !== 'string') return null;
+
+    try {
+        const result = await stripe.promotionCodes.list({
+            code: code.trim(),
+            active: true,
+            limit: 1,
+        });
+        return result.data[0]?.id ?? null;
+    } catch {
+        console.warn(`Failed to resolve promo code "${code}"`);
+        return null;
+    }
+}
 
 /**
  * POST /api/stripe/checkout
  * Creates a Stripe Checkout Session for subscription.
- * 
+ *
  * Supports two flows:
  * 1. New registration: receives { userId, email } — user was just created
  * 2. Existing user paywall: uses session auth to identify user
+ *
+ * Optional: pass { promoCode: "ALPHA100" } to pre-apply a discount server-side.
  */
 export async function POST(req: Request) {
     try {
         const stripe = getStripe();
         const body = await req.json();
-        const { userId, email } = body;
+        const { userId, email, promoCode } = body;
 
         if (!userId) {
             return NextResponse.json({ error: 'userId is required' }, { status: 400 });
@@ -41,7 +67,6 @@ export async function POST(req: Request) {
             });
             stripeCustomerId = customer.id;
 
-            // Store the Stripe customer ID on the user record
             await db.user.update({
                 where: { id: userId },
                 data: { stripeCustomerId },
@@ -55,8 +80,12 @@ export async function POST(req: Request) {
 
         const origin = req.headers.get('origin') || 'http://localhost:3000';
 
-        // Create Stripe Checkout session for subscription
-        const checkoutSession = await stripe.checkout.sessions.create({
+        // If a promo code was provided, resolve it server-side.
+        // This bypasses Stripe Checkout UI restrictions (e.g. 100% off codes).
+        const resolvedPromoId = await resolvePromoCode(stripe, promoCode);
+
+        // Build checkout session params
+        const params: Stripe.Checkout.SessionCreateParams = {
             customer: stripeCustomerId,
             mode: 'subscription',
             line_items: [{ price: priceId, quantity: 1 }],
@@ -66,7 +95,17 @@ export async function POST(req: Request) {
             subscription_data: {
                 metadata: { userId },
             },
-        });
+        };
+
+        if (resolvedPromoId) {
+            // Apply the resolved promo code server-side
+            params.discounts = [{ promotion_code: resolvedPromoId }];
+        } else {
+            // No pre-applied code — let users enter one manually at checkout
+            params.allow_promotion_codes = true;
+        }
+
+        const checkoutSession = await stripe.checkout.sessions.create(params);
 
         return NextResponse.json({ url: checkoutSession.url });
     } catch (error) {
