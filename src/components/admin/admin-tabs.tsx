@@ -54,6 +54,11 @@ const tabs: Tab[] = [
     canAccess: (role) => canEditSettings(role),
   },
   {
+    href: '/admin/feature-ideas',
+    label: 'Feature Ideas',
+    canAccess: (role) => canEditSettings(role),
+  },
+  {
     href: '/admin/settings',
     label: 'Settings',
     canAccess: (role) => canEditSettings(role),
