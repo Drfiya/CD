@@ -100,7 +100,7 @@ export function CommentTable({ comments }: CommentTableProps) {
               <th className="text-left py-3 px-4 font-medium text-sm">Content</th>
               <th className="text-center py-3 px-4 font-medium text-sm w-[60px]">Likes</th>
               <th className="text-left py-3 px-4 font-medium text-sm w-[80px]">Post</th>
-              <th className="text-left py-3 px-4 font-medium text-sm w-[100px]">Created</th>
+              <th className="text-left py-3 px-4 font-medium text-sm w-[130px]">Created</th>
               <th className="text-right py-3 px-4 font-medium text-sm w-[140px]">Actions</th>
             </tr>
           </thead>
@@ -143,7 +143,7 @@ export function CommentTable({ comments }: CommentTableProps) {
                 </td>
 
                 {/* Created */}
-                <td className="py-3 px-4 text-sm text-muted-foreground whitespace-nowrap">
+                <td className="py-3 px-4 text-sm text-muted-foreground">
                   {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
                 </td>
 
