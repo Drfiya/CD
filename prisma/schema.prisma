@@ -34,8 +34,12 @@ model User {
   lessonProgress   LessonProgress[]
   membership       Membership?
   pointsEvents     PointsEvent[]
-  posts            Post[]
-  postLikes        PostLike[]
+  posts              Post[]
+  postLikes          PostLike[]
+  featureIdeas       FeatureIdea[]        @relation("FeatureIdeaAuthor")
+  featureIdeaUpvotes FeatureIdeaUpvote[]  @relation("FeatureIdeaUpvotes")
+  featureIdeaComments FeatureIdeaComment[] @relation("FeatureIdeaComments")
+  kanbanCards        KanbanCard[]
 
   @@index([email])
   @@index([points])
@@ -357,6 +361,7 @@ model KanbanCard {
   status      KanbanStatus @default(TODO)
   position    Int          @default(0)
   createdById String
+  createdBy   User         @relation(fields: [createdById], references: [id], onDelete: Cascade)
   createdAt   DateTime     @default(now()) @db.Timestamptz(3)
   updatedAt   DateTime     @default(now()) @updatedAt @db.Timestamptz(3)
 
@@ -492,4 +497,58 @@ enum DevResourceType {
   LINK
   NOTE
   FILE
+}
+
+enum FeatureIdeaStatus {
+  NEW
+  UNDER_REVIEW
+  APPROVED
+  IN_PROGRESS
+  COMPLETED
+  DECLINED
+}
+
+model FeatureIdea {
+  id          String             @id @default(cuid())
+  title       String             @db.VarChar(200)
+  description String             @db.Text
+  status      FeatureIdeaStatus  @default(NEW)
+  priority    String?
+  tags        String[]           @default([])
+  authorId    String
+  author      User               @relation("FeatureIdeaAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  upvotes     FeatureIdeaUpvote[]
+  comments    FeatureIdeaComment[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([status])
+  @@index([authorId])
+  @@index([createdAt(sort: Desc)])
+}
+
+model FeatureIdeaUpvote {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation("FeatureIdeaUpvotes", fields: [userId], references: [id], onDelete: Cascade)
+  ideaId    String
+  idea      FeatureIdea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+
+  @@unique([userId, ideaId])
+  @@index([ideaId])
+  @@index([userId])
+}
+
+model FeatureIdeaComment {
+  id        String      @id @default(cuid())
+  content   String      @db.Text
+  authorId  String
+  author    User        @relation("FeatureIdeaComments", fields: [authorId], references: [id], onDelete: Cascade)
+  ideaId    String
+  idea      FeatureIdea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+
+  @@index([ideaId])
+  @@index([authorId])
 }
