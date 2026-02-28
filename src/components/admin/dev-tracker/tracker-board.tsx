@@ -78,6 +78,8 @@ function TopicBadge({ label }: { label: string }) {
 // --- Recent Activity Feed ---
 
 function RecentActivity({ commits }: { commits: RecentCommit[] }) {
+    const [collapsed, setCollapsed] = useState(false);
+
     if (commits.length === 0) return null;
 
     // Normalize author names
@@ -90,45 +92,59 @@ function RecentActivity({ commits }: { commits: RecentCommit[] }) {
 
     return (
         <div className="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl p-4">
-            <h3 className="text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-3 flex items-center gap-1.5">
-                <span className="text-base">⚡</span> Recent Activity
-            </h3>
-            <div className="space-y-0">
-                {commits.map((commit, i) => {
-                    const author = normalizeAuthor(commit.authorName);
-                    const initial = author[0]?.toUpperCase() || '?';
-                    const isLast = i === commits.length - 1;
-                    return (
-                        <div key={commit.sha} className="flex items-start gap-3 relative">
-                            {/* Timeline line */}
-                            {!isLast && (
-                                <div className="absolute left-[11px] top-[24px] w-px h-[calc(100%-8px)] bg-gray-200 dark:bg-neutral-700" />
-                            )}
-                            {/* Author avatar */}
-                            <span className="w-[22px] h-[22px] rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-[10px] font-bold flex items-center justify-center text-indigo-700 dark:text-indigo-300 shrink-0 z-10 mt-0.5">
-                                {initial}
-                            </span>
-                            {/* Content */}
-                            <div className={`flex-1 min-w-0 pb-3 ${!isLast ? 'border-b-0' : ''}`}>
-                                <div className="flex items-baseline justify-between gap-2">
-                                    <p className="text-xs text-gray-800 dark:text-neutral-200 truncate">
-                                        {commit.message}
-                                    </p>
-                                    <span className="text-[10px] text-gray-400 dark:text-neutral-500 shrink-0">
-                                        {timeAgo(commit.date)}
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-2 mt-0.5">
-                                    <span className="text-[10px] text-gray-400 dark:text-neutral-500">{author}</span>
-                                    <code className="text-[10px] text-gray-400 dark:text-neutral-500 font-mono">
-                                        {commit.sha.substring(0, 7)}
-                                    </code>
+            <button
+                onClick={() => setCollapsed(!collapsed)}
+                className="w-full flex items-center justify-between text-xs font-semibold text-gray-700 dark:text-neutral-300 hover:text-gray-900 dark:hover:text-neutral-100 transition-colors"
+            >
+                <span className="flex items-center gap-1.5">
+                    <span className="text-base">⚡</span> Recent Activity
+                    <span className="text-[10px] font-normal text-gray-400 dark:text-neutral-500">({commits.length})</span>
+                </span>
+                <svg
+                    className={`w-4 h-4 text-gray-400 transition-transform ${collapsed ? '' : 'rotate-180'}`}
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+            {!collapsed && (
+                <div className="space-y-0 mt-3">
+                    {commits.map((commit, i) => {
+                        const author = normalizeAuthor(commit.authorName);
+                        const initial = author[0]?.toUpperCase() || '?';
+                        const isLast = i === commits.length - 1;
+                        return (
+                            <div key={commit.sha} className="flex items-start gap-3 relative">
+                                {/* Timeline line */}
+                                {!isLast && (
+                                    <div className="absolute left-[11px] top-[24px] w-px h-[calc(100%-8px)] bg-gray-200 dark:bg-neutral-700" />
+                                )}
+                                {/* Author avatar */}
+                                <span className="w-[22px] h-[22px] rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-[10px] font-bold flex items-center justify-center text-indigo-700 dark:text-indigo-300 shrink-0 z-10 mt-0.5">
+                                    {initial}
+                                </span>
+                                {/* Content */}
+                                <div className={`flex-1 min-w-0 pb-3 ${!isLast ? 'border-b-0' : ''}`}>
+                                    <div className="flex items-baseline justify-between gap-2">
+                                        <p className="text-xs text-gray-800 dark:text-neutral-200 truncate">
+                                            {commit.message}
+                                        </p>
+                                        <span className="text-[10px] text-gray-400 dark:text-neutral-500 shrink-0">
+                                            {timeAgo(commit.date)}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <span className="text-[10px] text-gray-400 dark:text-neutral-500">{author}</span>
+                                        <code className="text-[10px] text-gray-400 dark:text-neutral-500 font-mono">
+                                            {commit.sha.substring(0, 7)}
+                                        </code>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    );
-                })}
-            </div>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 }
