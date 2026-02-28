@@ -41,7 +41,7 @@ export function CategoriesSidebar({ categories, activeCategory, translatedUI, si
     const showBanner = sidebarBannerEnabled && sidebarBannerImage;
 
     return (
-        <aside className="hidden lg:block w-64 shrink-0 space-y-4">
+        <aside className="hidden lg:flex lg:flex-col w-64 shrink-0 gap-4">
             <div className="bg-white dark:bg-neutral-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-neutral-700">
                 <h2 className="text-base font-semibold text-gray-900 dark:text-neutral-100 mb-4">{translatedUI.categoriesTitle}</h2>
 

@@ -98,6 +98,7 @@ async function FeedContent({ searchParams }: FeedPageProps) {
     members: await translateUIText('Members', 'en', userLanguage, 'sidebar'),
     leaderboard: await translateUIText('Top Learners', 'en', userLanguage, 'sidebar'),
     viewAll: await translateUIText('View all', 'en', userLanguage, 'sidebar'),
+    aiToolsTitle: await translateUIText('AI Tools', 'en', userLanguage, 'sidebar'),
     level: await translateUIText('Level', 'en', userLanguage, 'gamification'),
     writeSomething: await translateUIText('Write something...', 'en', userLanguage, 'placeholder'),
     noPosts: await translateUIText('No posts yet. Be the first to share something!', 'en', userLanguage, 'message'),

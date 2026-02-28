@@ -37,6 +37,7 @@ interface ClassroomUI {
   learningProgress: string;
   topLearners: string;
   viewAll: string;
+  aiToolsTitle: string;
   level: string;
   coursesEnrolled: string;
   coursesCompleted: string;
@@ -74,6 +75,7 @@ export default async function ClassroomPage({ searchParams }: ClassroomPageProps
     learningProgress: 'My Progress',
     topLearners: 'Top Learners',
     viewAll: 'View all',
+    aiToolsTitle: 'AI Tools',
     level: 'Level',
     coursesEnrolled: 'Enrolled',
     coursesCompleted: 'Completed',
@@ -169,6 +171,7 @@ export default async function ClassroomPage({ searchParams }: ClassroomPageProps
             learningProgress: ui.learningProgress,
             topLearners: ui.topLearners,
             viewAll: ui.viewAll,
+            aiToolsTitle: ui.aiToolsTitle,
             level: ui.level,
             coursesEnrolled: ui.coursesEnrolled,
             coursesCompleted: ui.coursesCompleted,

@@ -8,6 +8,7 @@ export const en: Messages = {
         classroom: 'Classroom',
         calendar: 'Calendar',
         members: 'Members',
+        aiTools: 'AI Tools',
         leaderboards: 'Top Learners',
         settings: 'Settings',
     },
@@ -76,6 +77,7 @@ export interface Messages {
         classroom: string;
         calendar: string;
         members: string;
+        aiTools: string;
         leaderboards: string;
         settings: string;
     };

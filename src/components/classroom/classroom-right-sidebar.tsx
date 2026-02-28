@@ -1,11 +1,14 @@
 import db from '@/lib/db';
 import { Avatar } from '@/components/ui/avatar';
 import Link from 'next/link';
+import { AiToolsSidebar } from '@/components/feed/ai-tools-sidebar';
+import { getActiveAiTools } from '@/lib/ai-tool-actions';
 
 interface ClassroomRightSidebarUI {
     learningProgress: string;
     topLearners: string;
     viewAll: string;
+    aiToolsTitle: string;
     level: string;
     coursesEnrolled: string;
     coursesCompleted: string;
@@ -18,12 +21,15 @@ interface ClassroomRightSidebarProps {
 }
 
 export async function ClassroomRightSidebar({ translatedUI, userId }: ClassroomRightSidebarProps) {
-    // Fetch top learners (users who completed the most lessons)
-    const topLearners = await db.user.findMany({
-        take: 5,
-        orderBy: { points: 'desc' },
-        select: { id: true, name: true, image: true, points: true, level: true },
-    });
+    // Fetch top learners and active AI tools
+    const [topLearners, aiTools] = await Promise.all([
+        db.user.findMany({
+            take: 3,
+            orderBy: { points: 'desc' },
+            select: { id: true, name: true, image: true, points: true, level: true },
+        }),
+        getActiveAiTools(),
+    ]);
 
     // If logged in, get learning stats
     let stats = { enrolled: 0, completed: 0, lessonsCompleted: 0 };
@@ -37,7 +43,7 @@ export async function ClassroomRightSidebar({ translatedUI, userId }: ClassroomR
     }
 
     return (
-        <aside className="hidden lg:block w-72 shrink-0 space-y-4">
+        <aside className="hidden lg:flex lg:flex-col w-72 shrink-0 gap-4">
             {/* Learning Stats (only for logged-in users) */}
             {userId && (
                 <div className="bg-white dark:bg-neutral-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-neutral-700">
@@ -62,7 +68,7 @@ export async function ClassroomRightSidebar({ translatedUI, userId }: ClassroomR
                 </div>
             )}
 
-            {/* Top Learners / Leaderboard */}
+            {/* Top Learners / Leaderboard — Top 3 */}
             <div className="bg-white dark:bg-neutral-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-neutral-700">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
@@ -94,6 +100,9 @@ export async function ClassroomRightSidebar({ translatedUI, userId }: ClassroomR
                     ))}
                 </div>
             </div>
+
+            {/* AI Tools */}
+            <AiToolsSidebar title={translatedUI.aiToolsTitle} viewAllLabel={translatedUI.viewAll} tools={aiTools} />
         </aside>
     );
 }

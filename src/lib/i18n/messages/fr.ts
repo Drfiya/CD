@@ -7,9 +7,10 @@ export const fr: Messages = {
     // Navigation
     nav: {
         community: 'Communauté',
-        classroom: 'Salle de classe',
+        classroom: 'Cours',
         calendar: 'Calendrier',
         members: 'Membres',
+        aiTools: 'Outils IA',
         leaderboards: 'Top Apprenants',
         settings: 'Paramètres',
     },

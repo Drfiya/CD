@@ -6,10 +6,11 @@ import type { Messages } from './en';
 export const de: Messages = {
     // Navigation
     nav: {
-        community: 'Gemeinschaft',
-        classroom: 'Klassenzimmer',
+        community: 'Community',
+        classroom: 'Kurse',
         calendar: 'Kalender',
         members: 'Mitglieder',
+        aiTools: 'KI-Tools',
         leaderboards: 'Top-Lernende',
         settings: 'Einstellungen',
     },

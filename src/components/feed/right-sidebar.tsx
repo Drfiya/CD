@@ -1,11 +1,14 @@
 import Link from 'next/link';
 import db from '@/lib/db';
 import { Avatar } from '@/components/ui/avatar';
+import { AiToolsSidebar } from '@/components/feed/ai-tools-sidebar';
+import { getActiveAiTools } from '@/lib/ai-tool-actions';
 
 interface TranslatedUI {
     members: string;
     leaderboard: string;
     viewAll: string;
+    aiToolsTitle: string;
     level: string;
 }
 
@@ -14,18 +17,19 @@ interface RightSidebarProps {
 }
 
 export async function RightSidebar({ translatedUI }: RightSidebarProps) {
-    // Fetch member count and top leaderboard users
-    const [memberCount, topUsers] = await Promise.all([
+    // Fetch member count, top users, and active AI tools
+    const [memberCount, topUsers, aiTools] = await Promise.all([
         db.user.count(),
         db.user.findMany({
-            take: 5,
+            take: 3,
             orderBy: { points: 'desc' },
             select: { id: true, name: true, image: true, points: true, level: true },
         }),
+        getActiveAiTools(),
     ]);
 
     return (
-        <aside className="hidden lg:block w-72 shrink-0 space-y-4">
+        <aside className="hidden lg:flex lg:flex-col w-72 shrink-0 gap-4">
             {/* Members count */}
             <div className="bg-white dark:bg-neutral-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-neutral-700">
                 <div className="flex items-center gap-3">
@@ -41,7 +45,7 @@ export async function RightSidebar({ translatedUI }: RightSidebarProps) {
                 </div>
             </div>
 
-            {/* Leaderboard preview */}
+            {/* Leaderboard preview — Top 3 */}
             <div className="bg-white dark:bg-neutral-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-neutral-700">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
@@ -50,7 +54,7 @@ export async function RightSidebar({ translatedUI }: RightSidebarProps) {
                         </svg>
                         <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100">{translatedUI.leaderboard}</h3>
                     </div>
-                    <Link href="/leaderboard" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                    <Link href="/leaderboard" className="text-sm font-medium hover:underline" style={{ color: '#D94A4A' }}>
                         {translatedUI.viewAll}
                     </Link>
                 </div>
@@ -73,6 +77,9 @@ export async function RightSidebar({ translatedUI }: RightSidebarProps) {
                     ))}
                 </div>
             </div>
+
+            {/* AI Tools */}
+            <AiToolsSidebar title={translatedUI.aiToolsTitle} viewAllLabel={translatedUI.viewAll} tools={aiTools} />
         </aside>
     );
 }

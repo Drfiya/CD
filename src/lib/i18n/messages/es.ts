@@ -10,6 +10,7 @@ export const es: Messages = {
         classroom: 'Aula',
         calendar: 'Calendario',
         members: 'Miembros',
+        aiTools: 'IA Tools',
         leaderboards: 'Top Aprendices',
         settings: 'Configuración',
     },
