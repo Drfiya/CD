@@ -114,6 +114,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
   }));
 
   const embeds = (post.embeds as unknown as VideoEmbed[]) || [];
+  const gifs = (post.gifs as unknown as string[]) || [];
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -187,6 +188,22 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
               {embeds.map((embed, i) => (
                 <div key={`${embed.service}-${embed.id}-${i}`} className="rounded-lg overflow-hidden">
                   <VideoEmbedPlayer embed={embed} />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* GIF attachments */}
+          {gifs.length > 0 && (
+            <div className="mt-4 space-y-3">
+              {gifs.map((gifUrl, i) => (
+                <div key={`gif-${i}`} className="rounded-lg overflow-hidden">
+                  <img
+                    src={gifUrl}
+                    alt={`GIF ${i + 1}`}
+                    className="w-full rounded-lg"
+                    loading="lazy"
+                  />
                 </div>
               ))}
             </div>

@@ -21,13 +21,14 @@ export async function createPost(formData: FormData) {
     title: formData.get('title'),
     content: formData.get('content'),
     embeds: formData.get('embeds'),
+    gifs: formData.get('gifs'),
   });
 
   if (!validatedFields.success) {
     return { error: validatedFields.error.flatten().fieldErrors };
   }
 
-  const { title, content, embeds } = validatedFields.data;
+  const { title, content, embeds, gifs } = validatedFields.data;
   const categoryId = formData.get('categoryId') as string | null;
 
   // Extract plain text for full-text search indexing
@@ -42,6 +43,7 @@ export async function createPost(formData: FormData) {
       title,
       content: content as Prisma.InputJsonValue,
       embeds: embeds as Prisma.InputJsonValue,
+      gifs: gifs as Prisma.InputJsonValue,
       plainText,
       languageCode,
       contentHash,
@@ -82,13 +84,14 @@ export async function updatePost(postId: string, formData: FormData) {
   const validatedFields = postSchema.safeParse({
     content: formData.get('content'),
     embeds: formData.get('embeds'),
+    gifs: formData.get('gifs'),
   });
 
   if (!validatedFields.success) {
     return { error: validatedFields.error.flatten().fieldErrors };
   }
 
-  const { content, embeds } = validatedFields.data;
+  const { content, embeds, gifs } = validatedFields.data;
 
   // Extract plain text for full-text search indexing
   const plainText = extractPlainText(content);
@@ -102,6 +105,7 @@ export async function updatePost(postId: string, formData: FormData) {
     data: {
       content: content as Prisma.InputJsonValue,
       embeds: embeds as Prisma.InputJsonValue,
+      gifs: gifs as Prisma.InputJsonValue,
       plainText,
       languageCode,
       contentHash,
