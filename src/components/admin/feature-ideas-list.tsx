@@ -84,8 +84,8 @@ export function FeatureIdeasList({ ideas, currentFilter, currentSort }: FeatureI
                     <button
                         onClick={() => updateFilter()}
                         className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${!currentFilter
-                                ? 'bg-gray-900 dark:bg-neutral-100 text-white dark:text-neutral-900'
-                                : 'bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-neutral-600'
+                            ? 'bg-gray-900 dark:bg-neutral-100 text-white dark:text-neutral-900'
+                            : 'bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-neutral-600'
                             }`}
                     >
                         All
@@ -95,8 +95,8 @@ export function FeatureIdeasList({ ideas, currentFilter, currentSort }: FeatureI
                             key={s}
                             onClick={() => updateFilter(s)}
                             className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${currentFilter === s
-                                    ? 'bg-gray-900 dark:bg-neutral-100 text-white dark:text-neutral-900'
-                                    : 'bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-neutral-600'
+                                ? 'bg-gray-900 dark:bg-neutral-100 text-white dark:text-neutral-900'
+                                : 'bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-neutral-600'
                                 }`}
                         >
                             {STATUS_CONFIG[s].label}
@@ -158,8 +158,8 @@ export function FeatureIdeasList({ ideas, currentFilter, currentSort }: FeatureI
                                             onClick={() => handleUpvote(idea.id)}
                                             disabled={isPending}
                                             className={`w-10 h-10 rounded-lg border flex items-center justify-center transition-colors ${idea.hasUpvoted
-                                                    ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 text-red-500'
-                                                    : 'border-gray-200 dark:border-neutral-600 hover:border-gray-300 dark:hover:border-neutral-500 text-gray-400 dark:text-neutral-500'
+                                                ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 text-red-500'
+                                                : 'border-gray-200 dark:border-neutral-600 hover:border-gray-300 dark:hover:border-neutral-500 text-gray-400 dark:text-neutral-500'
                                                 }`}
                                         >
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
@@ -185,8 +185,8 @@ export function FeatureIdeasList({ ideas, currentFilter, currentSort }: FeatureI
                                             </span>
                                             {idea.priority && (
                                                 <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${idea.priority === 'high' ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' :
-                                                        idea.priority === 'medium' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' :
-                                                            'bg-gray-100 dark:bg-neutral-700 text-gray-500 dark:text-neutral-400'
+                                                    idea.priority === 'medium' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' :
+                                                        'bg-gray-100 dark:bg-neutral-700 text-gray-500 dark:text-neutral-400'
                                                     }`}>
                                                     {idea.priority.charAt(0).toUpperCase() + idea.priority.slice(1)}
                                                 </span>
@@ -199,7 +199,7 @@ export function FeatureIdeasList({ ideas, currentFilter, currentSort }: FeatureI
 
                                         <div className="flex items-center gap-4 text-xs text-gray-400 dark:text-neutral-500">
                                             <div className="flex items-center gap-1.5">
-                                                <Avatar src={idea.author.image} name={idea.author.name} size="xs" />
+                                                <Avatar src={idea.author.image} name={idea.author.name} size="sm" />
                                                 <span>{idea.author.name}</span>
                                             </div>
                                             <span>{new Date(idea.createdAt).toLocaleDateString()}</span>

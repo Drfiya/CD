@@ -5,7 +5,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { canEditSettings } from '@/lib/permissions';
 import db from '@/lib/db';
-import type { FeatureIdeaStatus } from '@/generated/prisma';
+import type { FeatureIdeaStatus } from '@/generated/prisma/client';
 
 async function requireAdmin() {
     const session = await getServerSession(authOptions);

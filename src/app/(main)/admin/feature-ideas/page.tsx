@@ -5,7 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { canEditSettings } from '@/lib/permissions';
 import { getFeatureIdeas } from '@/lib/feature-idea-actions';
 import { FeatureIdeasList } from '@/components/admin/feature-ideas-list';
-import type { FeatureIdeaStatus } from '@/generated/prisma';
+import type { FeatureIdeaStatus } from '@/generated/prisma/client';
 
 export const metadata: Metadata = {
     title: 'Feature Ideas | Admin',

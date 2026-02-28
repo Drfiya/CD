@@ -146,8 +146,8 @@ export function FeatureIdeaDetail({ idea }: FeatureIdeaDetailProps) {
                             onClick={handleUpvote}
                             disabled={isPending}
                             className={`w-12 h-12 rounded-lg border flex items-center justify-center transition-colors ${idea.hasUpvoted
-                                    ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 text-red-500'
-                                    : 'border-gray-200 dark:border-neutral-600 hover:border-gray-300 dark:hover:border-neutral-500 text-gray-400 dark:text-neutral-500'
+                                ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 text-red-500'
+                                : 'border-gray-200 dark:border-neutral-600 hover:border-gray-300 dark:hover:border-neutral-500 text-gray-400 dark:text-neutral-500'
                                 }`}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
@@ -167,8 +167,8 @@ export function FeatureIdeaDetail({ idea }: FeatureIdeaDetailProps) {
                             </span>
                             {idea.priority && (
                                 <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${idea.priority === 'high' ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' :
-                                        idea.priority === 'medium' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' :
-                                            'bg-gray-100 dark:bg-neutral-700 text-gray-500 dark:text-neutral-400'
+                                    idea.priority === 'medium' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' :
+                                        'bg-gray-100 dark:bg-neutral-700 text-gray-500 dark:text-neutral-400'
                                     }`}>
                                     {idea.priority.charAt(0).toUpperCase() + idea.priority.slice(1)} Priority
                                 </span>
@@ -177,7 +177,7 @@ export function FeatureIdeaDetail({ idea }: FeatureIdeaDetailProps) {
 
                         <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-neutral-400 mb-4">
                             <div className="flex items-center gap-1.5">
-                                <Avatar src={idea.author.image} name={idea.author.name} size="xs" />
+                                <Avatar src={idea.author.image} name={idea.author.name} size="sm" />
                                 <span>{idea.author.name}</span>
                             </div>
                             <span>•</span>
