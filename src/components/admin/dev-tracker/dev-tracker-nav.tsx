@@ -29,7 +29,7 @@ export function DevTrackerNav() {
                         key={href}
                         href={href}
                         className={`px-3 py-2 text-xs font-medium rounded-t-lg border-b-2 transition-colors ${isActive
-                            ? 'border-primary text-primary bg-red-50/50 dark:bg-red-900/10'
+                            ? 'border-primary text-primary bg-gray-100 dark:bg-neutral-700/60'
                             : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-200'
                             }`}
                     >
