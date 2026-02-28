@@ -563,7 +563,7 @@ export function TrackerBoard({ initialData }: TrackerBoardProps) {
                 <button
                     onClick={handleSync}
                     disabled={isPending}
-                    className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                    className="px-4 py-2 bg-gray-900 dark:bg-neutral-200 text-white dark:text-neutral-900 text-sm rounded-lg hover:bg-gray-800 dark:hover:bg-neutral-300 disabled:opacity-50"
                 >
                     {isPending ? '⏳ Syncing…' : '🔄 Initial Sync'}
                 </button>
@@ -585,7 +585,7 @@ export function TrackerBoard({ initialData }: TrackerBoardProps) {
                     <button
                         onClick={handleSync}
                         disabled={isPending}
-                        className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-1"
+                        className="px-3 py-1.5 bg-gray-900 dark:bg-neutral-200 text-white dark:text-neutral-900 text-xs font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-neutral-300 disabled:opacity-50 flex items-center gap-1"
                     >
                         {isPending ? '⏳' : '🔄'} Sync
                     </button>
