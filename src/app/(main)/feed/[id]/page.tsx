@@ -7,8 +7,9 @@ import db from '@/lib/db';
 import { Avatar } from '@/components/ui/avatar';
 import { LevelBadge } from '@/components/gamification/level-badge';
 import { LikeButton } from '@/components/feed/like-button';
-import { DeletePostButton } from '@/components/feed/delete-post-button';
+import { PostMenu } from '@/components/feed/post-menu';
 import { CommentSection } from '@/components/feed/comment-section';
+import { PostDetailContent } from '@/components/feed/post-detail-content';
 import { generateHTML } from '@tiptap/html';
 import StarterKit from '@tiptap/starter-kit';
 import { VideoEmbedPlayer } from '@/components/video/video-embed';
@@ -81,6 +82,10 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
     }))?.languageCode || 'en'
     : 'en';
 
+  // Save originals before translation
+  const originalTitle = post.title;
+  const originalLanguage = post.languageCode || 'en';
+
   // Translate post and comments to user's preferred language
   const translatedPost = await translatePostForUser({
     id: post.id,
@@ -115,6 +120,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
 
   const embeds = (post.embeds as unknown as VideoEmbed[]) || [];
   const gifs = (post.gifs as unknown as string[]) || [];
+  const originalContentHtml = renderContent(post.content);
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -138,7 +144,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
       {/* Post card */}
       <article className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-5">
-          {/* Header: Avatar, Name, Time, Category, Bell, Menu */}
+          {/* Header: Avatar, Name, Time, Category, Menu */}
           <div className="flex items-start justify-between mb-4">
             <Link href={`/members/${post.author.id}`} className="flex items-center gap-3 group">
               <div className="relative">
@@ -161,25 +167,17 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
               </div>
             </Link>
 
-            <div className="flex items-center gap-2">
-              {/* Three-dot menu */}
-              <button className="text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
-                </svg>
-              </button>
-            </div>
+            <PostMenu postId={post.id} isAuthor={isAuthor} />
           </div>
 
-          {/* Post title */}
-          {(translatedPost.title || post.title) && (
-            <h1 className="text-xl font-bold text-gray-900 mb-2">{translatedPost.title || post.title}</h1>
-          )}
-
-          {/* Post content */}
-          <div
-            className="prose prose-sm max-w-none text-gray-700"
-            dangerouslySetInnerHTML={{ __html: renderContent(post.content) }}
+          {/* Post content with Trues toggle */}
+          <PostDetailContent
+            translatedTitle={translatedPost.title}
+            originalTitle={originalTitle}
+            translatedPlainText={translatedPost.plainText}
+            originalContent={originalContentHtml}
+            originalLanguage={translatedPost._originalLanguage || originalLanguage}
+            userLanguage={userLanguage}
           />
 
           {/* Video embeds */}
@@ -241,18 +239,6 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
             </div>
           </div>
 
-          {/* Author actions */}
-          {isAuthor && (
-            <div className="flex items-center gap-4">
-              <Link
-                href={`/feed/${id}/edit`}
-                className="text-sm text-blue-600 hover:text-blue-700 hover:underline font-medium"
-              >
-                Edit Post
-              </Link>
-              <DeletePostButton postId={id} />
-            </div>
-          )}
         </div>
 
         {/* Comment input section - inside the card */}

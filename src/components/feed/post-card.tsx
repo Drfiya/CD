@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
@@ -8,6 +9,8 @@ import StarterKit from '@tiptap/starter-kit';
 import { Avatar } from '@/components/ui/avatar';
 import { VideoEmbedPlayer } from '@/components/video/video-embed';
 import { LikeButton } from '@/components/feed/like-button';
+import { PostMenu } from '@/components/feed/post-menu';
+import { getLanguageName } from '@/lib/translation/constants';
 import type { PostWithAuthor } from '@/types/post';
 import type { VideoEmbed } from '@/lib/video-utils';
 
@@ -19,8 +22,12 @@ interface PostCardProps {
   commentCount?: number;
   isLiked?: boolean;
   category?: { id: string; name: string; color: string } | null;
-  translatedPlainText?: string; // For displaying translated content
-  userLanguage?: string; // User's preferred language to determine if translation applies
+  translatedPlainText?: string;
+  translatedTitle?: string;
+  originalPlainText?: string;
+  originalTitle?: string;
+  originalLanguage?: string;
+  userLanguage?: string;
 }
 
 function renderContent(content: unknown): string {
@@ -41,19 +48,34 @@ export function PostCard({
   commentCount = 0,
   isLiked = false,
   translatedPlainText,
+  translatedTitle,
+  originalPlainText,
+  originalTitle,
+  originalLanguage,
   userLanguage,
 }: PostCardProps) {
+  const [showOriginal, setShowOriginal] = useState(false);
+
   // Prisma Json fields need cast through unknown for type safety
   const embeds = (post.embeds as unknown as VideoEmbed[]) || [];
   const gifs = (post.gifs as unknown as string[]) || [];
 
-  // Show translated plain text when:
-  // 1. translatedPlainText is provided
-  // 2. User's language differs from post's original language
-  const postLanguage = (post as { languageCode?: string }).languageCode || 'en';
-  const shouldShowTranslated = !!translatedPlainText &&
+  // Determine if this post was translated
+  const postLanguage = originalLanguage || (post as { languageCode?: string }).languageCode || 'en';
+  const isTranslated = !!translatedPlainText &&
     !!userLanguage &&
     postLanguage !== userLanguage;
+
+  // Determine which text to display
+  const displayTitle = isTranslated && !showOriginal
+    ? (translatedTitle || post.title)
+    : (originalTitle || post.title);
+
+  const displayPlainText = isTranslated && !showOriginal
+    ? translatedPlainText
+    : originalPlainText;
+
+  const shouldShowPlainText = isTranslated && displayPlainText;
 
   return (
     <article className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-100 dark:border-neutral-700 overflow-hidden">
@@ -73,24 +95,18 @@ export function PostCard({
           </Link>
 
           {/* Three-dot menu */}
-          {showActions && (
-            <button className="text-gray-400 hover:text-gray-600 dark:hover:text-neutral-300 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
-              </svg>
-            </button>
-          )}
+          <PostMenu postId={post.id} isAuthor={!!currentUserId && currentUserId === post.authorId} />
         </div>
 
         {/* Post title (if present) */}
-        {post.title && (
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-2">{post.title}</h3>
+        {displayTitle && (
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-2">{displayTitle}</h3>
         )}
 
         {/* Post content - show translated plain text or original rich content */}
-        {shouldShowTranslated ? (
+        {shouldShowPlainText ? (
           <div className="prose prose-sm max-w-none text-gray-700 dark:text-neutral-300 whitespace-pre-wrap">
-            {translatedPlainText}
+            {displayPlainText}
           </div>
         ) : (
           <div
@@ -127,7 +143,7 @@ export function PostCard({
         )}
       </div>
 
-      {/* Footer: Like & Comment counts */}
+      {/* Footer: Like, Comment, Trues */}
       <div className="px-5 py-3 border-t border-gray-100 dark:border-neutral-700 flex items-center gap-6">
         {/* Like button */}
         <LikeButton
@@ -159,20 +175,25 @@ export function PostCard({
           <span className="text-sm">{commentCount}</span>
         </Link>
 
-        {/* Edit link for author */}
-        {showActions && currentUserId === post.authorId && (
-          <>
-            <div className="flex-1" />
-            <Link
-              href={`/feed/${post.id}/edit`}
-              className="text-sm text-gray-500 hover:text-gray-700"
-            >
-              Edit
-            </Link>
-          </>
+        {/* Trues button - only shown when translation exists */}
+        {isTranslated && (
+          <button
+            onClick={() => setShowOriginal(!showOriginal)}
+            className="flex items-center gap-1 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            title={
+              showOriginal
+                ? 'Show translation'
+                : `Show original (${getLanguageName(postLanguage)})`
+            }
+          >
+            <span className="text-sm">🌐</span>
+            <span className="text-sm">
+              {showOriginal ? 'Translated' : 'Trues'}
+            </span>
+          </button>
         )}
+
       </div>
     </article>
   );
 }
-

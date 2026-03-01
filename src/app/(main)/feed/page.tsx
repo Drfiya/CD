@@ -79,10 +79,18 @@ async function FeedContent({ searchParams }: FeedPageProps) {
     commentCount: post._count.comments,
   }));
 
+  // Save original text before translation (for Trues toggle)
+  const originalTexts = new Map(
+    postsWithLikeStatus.map((post) => [
+      post.id,
+      { plainText: post.plainText, title: post.title },
+    ])
+  );
+
   // Translate posts to user's preferred language (server-side)
   const translatedPosts = await translatePostsForUser(postsWithLikeStatus, userLanguage);
 
-  // Translate categories dynamically via DeepL
+  // Translate categories dynamically
   const translatedCategories = await translateObjects(
     categories,
     ['name'],
@@ -136,20 +144,27 @@ async function FeedContent({ searchParams }: FeedPageProps) {
           </div>
         ) : (
           <div className="space-y-4">
-            {translatedPosts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                showActions
-                currentUserId={currentUserId}
-                likeCount={post.likeCount}
-                commentCount={post.commentCount}
-                isLiked={post.isLiked}
-                category={post.category}
-                translatedPlainText={post.plainText || undefined}
-                userLanguage={userLanguage}
-              />
-            ))}
+            {translatedPosts.map((post) => {
+              const originals = originalTexts.get(post.id);
+              return (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  showActions
+                  currentUserId={currentUserId}
+                  likeCount={post.likeCount}
+                  commentCount={post.commentCount}
+                  isLiked={post.isLiked}
+                  category={post.category}
+                  translatedPlainText={post.plainText || undefined}
+                  translatedTitle={post.title || undefined}
+                  originalPlainText={originals?.plainText || undefined}
+                  originalTitle={originals?.title || undefined}
+                  originalLanguage={post._originalLanguage || post.languageCode || 'en'}
+                  userLanguage={userLanguage}
+                />
+              );
+            })}
           </div>
         )}
 

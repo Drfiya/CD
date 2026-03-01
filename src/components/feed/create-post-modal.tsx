@@ -4,8 +4,8 @@ import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { PostEditor } from './post-editor';
 import { VideoInput } from '@/components/video/video-input';
-import { VideoEmbedPlayer } from '@/components/video/video-embed';
 import { GifPicker } from '@/components/ui/gif-picker';
+import { TranslationPreviewModal } from '@/components/translation/translation-preview-modal';
 import { createPost } from '@/lib/post-actions';
 import type { VideoEmbed } from '@/types/post';
 import type { MediaUpload } from '@/lib/media-actions';
@@ -32,6 +32,32 @@ const categoryColors: Record<string, { bg: string; text: string; border: string 
     Questions: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200' },
 };
 
+/**
+ * Extract plain text from Tiptap JSON content
+ */
+function extractPlainText(content: object | null): string {
+    if (!content) return '';
+
+    try {
+        const json = content as { content?: Array<{ content?: Array<{ text?: string }> }> };
+        if (!json.content) return '';
+
+        return json.content
+            .map(node => {
+                if (node.content) {
+                    return node.content
+                        .map(child => child.text || '')
+                        .join('');
+                }
+                return '';
+            })
+            .filter(Boolean)
+            .join('\n');
+    } catch {
+        return '';
+    }
+}
+
 export function CreatePostModal({ categories, userImage, userName, writeSomethingPlaceholder }: CreatePostModalProps) {
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
@@ -42,6 +68,7 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
     const [images, setImages] = useState<MediaUpload[]>([]);
     const [gifs, setGifs] = useState<string[]>([]);
     const [showGifPicker, setShowGifPicker] = useState(false);
+    const [showTranslationPreview, setShowTranslationPreview] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [hasPendingVideo, setHasPendingVideo] = useState(false);
@@ -105,6 +132,9 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
     const getCategoryStyle = (categoryName: string) => {
         return categoryColors[categoryName] || categoryColors.General;
     };
+
+    // Get plain text for translation preview
+    const plainText = extractPlainText(content);
 
     return (
         <>
@@ -301,6 +331,17 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                                         <span className="text-base">🎬</span>
                                         GIF
                                     </button>
+
+                                    {/* Translation Preview button */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowTranslationPreview(true)}
+                                        disabled={!content || isSubmitting}
+                                        className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 rounded-lg hover:bg-gray-200 dark:hover:bg-neutral-600 transition-colors disabled:opacity-50"
+                                        title="Preview how your post looks in other languages"
+                                    >
+                                        <span className="text-base">🌐</span>
+                                    </button>
                                 </div>
 
                                 {/* Action buttons row */}
@@ -337,6 +378,15 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                         setShowGifPicker(false);
                     }}
                     onClose={() => setShowGifPicker(false)}
+                />
+            )}
+
+            {/* Translation Preview Modal */}
+            {showTranslationPreview && (
+                <TranslationPreviewModal
+                    originalText={plainText}
+                    originalTitle={title || undefined}
+                    onClose={() => setShowTranslationPreview(false)}
                 />
             )}
         </>

@@ -1,12 +1,12 @@
 /**
  * Translation API Route
- * 
- * Server-side proxy for DeepL API requests.
+ *
+ * Server-side proxy for Azure Translator API requests.
  * This hides the API key from the client and allows for server-side caching.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { translateBatch } from '@/lib/translation/providers/deepl';
+import { translateBatch } from '@/lib/translation/providers/azure';
 
 // Rate limiting: Track requests per IP
 const requestCounts = new Map<string, { count: number; resetTime: number }>();
@@ -28,26 +28,6 @@ function getRateLimitInfo(ip: string): { allowed: boolean; remaining: number } {
 
     record.count++;
     return { allowed: true, remaining: RATE_LIMIT - record.count };
-}
-
-// Map BCP-47 locale codes to DeepL target language codes
-const DEEPL_TARGET_MAP: Record<string, string> = {
-    'en': 'EN-US', 'en-us': 'EN-US', 'en-gb': 'EN-GB',
-    'pt': 'PT-BR', 'pt-br': 'PT-BR', 'pt-pt': 'PT-PT',
-    'zh': 'ZH-HANS', 'zh-cn': 'ZH-HANS', 'zh-tw': 'ZH-HANT',
-    'de': 'DE', 'es': 'ES', 'fr': 'FR', 'ja': 'JA', 'ko': 'KO',
-    'it': 'IT', 'nl': 'NL', 'pl': 'PL', 'ru': 'RU', 'ar': 'AR',
-    'bg': 'BG', 'cs': 'CS', 'da': 'DA', 'el': 'EL', 'et': 'ET',
-    'fi': 'FI', 'hu': 'HU', 'id': 'ID', 'lt': 'LT', 'lv': 'LV',
-    'nb': 'NB', 'ro': 'RO', 'sk': 'SK', 'sl': 'SL', 'sv': 'SV',
-    'tr': 'TR', 'uk': 'UK',
-};
-
-function toDeepLTarget(locale: string): string {
-    const normalized = locale.toLowerCase();
-    return DEEPL_TARGET_MAP[normalized]
-        ?? DEEPL_TARGET_MAP[normalized.split('-')[0]]
-        ?? 'EN-US'; // fallback to English
 }
 
 interface TranslateRequest {
@@ -103,32 +83,27 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Convert to DeepL format - undefined sourceLang enables auto-detection
-        const deeplTargetLang = toDeepLTarget(targetLang);
-        const deeplSourceLang = sourceLang ? toDeepLTarget(sourceLang) : undefined;
+        // Normalize language codes
+        const normalizedTarget = targetLang.toLowerCase().split('-')[0];
+        const normalizedSource = sourceLang?.toLowerCase().split('-')[0];
 
-        // Skip translation if source is known and matches target (accounting for variants)
-        if (deeplSourceLang) {
-            const normalizedTarget = deeplTargetLang.split('-')[0].toLowerCase();
-            const normalizedSource = deeplSourceLang.split('-')[0].toLowerCase();
-
-            if (normalizedTarget === normalizedSource) {
-                return NextResponse.json({
-                    translations: texts,
-                    skipped: true,
-                    message: 'Source and target languages match; returning original text',
-                });
-            }
+        // Skip translation if source matches target
+        if (normalizedSource && normalizedTarget === normalizedSource) {
+            return NextResponse.json({
+                translations: texts,
+                skipped: true,
+                message: 'Source and target languages match; returning original text',
+            });
         }
 
-        // Call DeepL batch translation (undefined source = auto-detect)
-        const translations = await translateBatch(texts, deeplSourceLang, deeplTargetLang);
+        // Call Azure batch translation
+        const translations = await translateBatch(texts, normalizedSource, normalizedTarget);
 
         return NextResponse.json(
             {
                 translations,
-                targetLang: deeplTargetLang,
-                sourceLang: deeplSourceLang,
+                targetLang: normalizedTarget,
+                sourceLang: normalizedSource,
             },
             {
                 headers: {
@@ -146,7 +121,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
             {
                 error: 'Translation service temporarily unavailable',
-                translations: body.texts || [], // Fallback to original
+                translations: body.texts || [],
                 fallback: true,
             },
             { status: 500 }
@@ -156,12 +131,13 @@ export async function POST(request: NextRequest) {
 
 // Health check endpoint
 export async function GET() {
-    const apiKeyConfigured = !!process.env.DEEPL_API_KEY;
+    const apiKeyConfigured = !!process.env.AZURE_TRANSLATOR_KEY;
 
     return NextResponse.json({
         status: apiKeyConfigured ? 'healthy' : 'misconfigured',
+        provider: 'azure',
         message: apiKeyConfigured
-            ? 'Translation service is ready'
-            : 'DEEPL_API_KEY is not configured',
+            ? 'Azure Translator service is ready'
+            : 'AZURE_TRANSLATOR_KEY is not configured',
     });
 }

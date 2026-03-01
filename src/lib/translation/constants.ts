@@ -6,9 +6,10 @@
 
 /**
  * Supported language codes (ISO 639-1)
+ * Expanded: DE, EN, FR, ES, IT, PT, NL, PL, ZH, JA, KO, AR
  */
 export const SUPPORTED_LANGUAGES = [
-    'en', 'de', 'es', 'fr', 'ja', 'pt', 'zh', 'ko', 'ar', 'it'
+    'en', 'de', 'fr', 'es', 'it', 'pt', 'nl', 'pl', 'zh', 'ja', 'ko', 'ar'
 ] as const;
 
 export type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
@@ -19,14 +20,16 @@ export type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
 export const LANGUAGE_NAMES: Record<SupportedLanguage, string> = {
     en: 'English',
     de: 'Deutsch',
-    es: 'Español',
     fr: 'Français',
-    ja: '日本語',
+    es: 'Español',
+    it: 'Italiano',
     pt: 'Português',
+    nl: 'Nederlands',
+    pl: 'Polski',
     zh: '中文',
+    ja: '日本語',
     ko: '한국어',
     ar: 'العربية',
-    it: 'Italiano',
 };
 
 /**

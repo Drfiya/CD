@@ -28,6 +28,7 @@ interface ClassroomUI {
   completed: string;
   continueLearning: string;
   startCourse: string;
+  viewCourse: string;
   noCoursesAvailable: string;
   checkBackSoon: string;
   noEnrolledCourses: string;
@@ -66,6 +67,7 @@ export default async function ClassroomPage({ searchParams }: ClassroomPageProps
     completed: 'Completed',
     continueLearning: 'Continue Learning',
     startCourse: 'Start Course',
+    viewCourse: 'View Course →',
     noCoursesAvailable: 'No courses available',
     checkBackSoon: 'Check back soon for new courses.',
     noEnrolledCourses: 'No enrolled courses',
@@ -208,6 +210,7 @@ async function AllCoursesSection({ ui, userLanguage }: { ui: ClassroomUI; userLa
         ui={{
           lessons: ui.lessons,
           lesson: ui.lesson,
+          viewCourse: ui.viewCourse,
           noCoursesAvailable: ui.noCoursesAvailable,
           checkBackSoon: ui.checkBackSoon,
         }}
@@ -320,6 +323,7 @@ async function LoggedInContent({
             ui={{
               lessons: ui.lessons,
               lesson: ui.lesson,
+              viewCourse: ui.viewCourse,
               noCoursesAvailable: ui.noCoursesAvailable,
               checkBackSoon: ui.checkBackSoon,
             }}

@@ -1,10 +1,10 @@
 /**
  * Language Detection Module
- * 
- * Uses DeepL's translation endpoint to detect the source language of text.
+ *
+ * Uses Azure Translator's detect endpoint to identify the source language of text.
  */
 
-import { detectLanguageViaTranslation } from './providers/deepl';
+import { detectLanguage as azureDetectLanguage } from './providers/azure';
 
 /**
  * Detect the language of the given text
@@ -17,9 +17,9 @@ export async function detectLanguage(text: string): Promise<string> {
     }
 
     try {
-        // Use the first 200 characters for detection (faster and sufficient)
-        const sampleText = text.slice(0, 200);
-        const detectedLang = await detectLanguageViaTranslation(sampleText);
+        // Use the first 500 characters for detection (Azure supports more than DeepL)
+        const sampleText = text.slice(0, 500);
+        const detectedLang = await azureDetectLanguage(sampleText);
 
         return detectedLang || 'en';
     } catch (error) {

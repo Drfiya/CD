@@ -4,6 +4,7 @@ import { EnrolledCourseCard, type EnrolledCourse } from './enrolled-course-card'
 interface CatalogGridUI {
   lessons: string;
   lesson: string;
+  viewCourse: string;
   noCoursesAvailable: string;
   checkBackSoon: string;
 }
@@ -41,7 +42,7 @@ export function CourseCatalogGrid({ courses, ui }: CourseCatalogGridProps) {
         <CourseCatalogCard
           key={course.id}
           course={course}
-          ui={{ lessons: ui.lessons, lesson: ui.lesson }}
+          ui={{ lessons: ui.lessons, lesson: ui.lesson, viewCourse: ui.viewCourse }}
         />
       ))}
     </div>

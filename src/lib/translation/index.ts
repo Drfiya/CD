@@ -1,21 +1,24 @@
 /**
  * Core Translation API
- * 
- * High-level translation functions that integrate caching, detection, and the DeepL provider.
+ *
+ * High-level translation functions that integrate caching, detection,
+ * protected terms, and the Azure Translator provider.
  */
 
 import { getCachedTranslationWithHash, setCachedTranslation } from './cache';
-import { translateText } from './providers/deepl';
+import { translateText } from './providers/azure';
 import { detectLanguage } from './detect';
-import { hashContent, SUPPORTED_LANGUAGES, LANGUAGE_NAMES, isSupportedLanguage } from './utils';
+import { hashContent, SUPPORTED_LANGUAGES, LANGUAGE_NAMES } from './utils';
+import { collectProtectedTerms } from './protected-terms';
+import { trackTranslationUsage } from './usage';
 
 // Re-export utilities for convenience
 export { detectLanguage } from './detect';
 export { hashContent, SUPPORTED_LANGUAGES, LANGUAGE_NAMES, isSupportedLanguage } from './utils';
 export type { SupportedLanguage } from './utils';
 
-const MODEL_PROVIDER = 'deepl';
-const MODEL_VERSION = 'v2';
+const MODEL_PROVIDER = 'azure';
+const MODEL_VERSION = 'v3.0';
 
 export interface TranslateForUserParams {
     entityType: string;
@@ -24,15 +27,18 @@ export interface TranslateForUserParams {
     content: string;
     sourceLanguage: string;
     targetLanguage: string;
+    categoryName?: string;
 }
 
 /**
  * Translate content for a user
- * 
+ *
  * - Returns original if source and target languages match
  * - Checks cache first
- * - Falls back to DeepL API on cache miss
+ * - Falls back to Azure Translator API on cache miss
+ * - Applies protected terms (global, domain, user-defined)
  * - Stores result in cache
+ * - Tracks usage for cost monitoring
  */
 export async function translateForUser(
     params: TranslateForUserParams
@@ -44,6 +50,7 @@ export async function translateForUser(
         content,
         sourceLanguage,
         targetLanguage,
+        categoryName,
     } = params;
 
     // No translation needed if languages match
@@ -68,11 +75,19 @@ export async function translateForUser(
     );
 
     if (cached) {
+        // Track cache hit
+        trackTranslationUsage(content.length, sourceLanguage, targetLanguage, true);
         return cached;
     }
 
-    // Translate via DeepL
-    const translated = await translateText(content, sourceLanguage, targetLanguage);
+    // Collect protected terms (global + domain + user-defined)
+    const { allTerms, cleanText } = collectProtectedTerms(content, categoryName);
+
+    // Translate via Azure with protected terms
+    const translated = await translateText(cleanText, sourceLanguage, targetLanguage, allTerms);
+
+    // Track API call usage
+    trackTranslationUsage(content.length, sourceLanguage, targetLanguage, false);
 
     // Cache the result (don't await - fire and forget)
     setCachedTranslation({
@@ -103,18 +118,18 @@ export interface TranslatablePost {
 
 /**
  * Translate a post for a user
- * 
- * Translates plainText and title fields if they exist
- * Returns the post with translated content
+ *
+ * Translates plainText and title fields if they exist.
+ * Returns the post with translated content and original language info.
  */
 export async function translatePostForUser<T extends TranslatablePost>(
     post: T,
     userLanguage: string
-): Promise<T> {
+): Promise<T & { _originalLanguage?: string }> {
     const storedLanguage = post.languageCode || 'en';
 
     // When stored language matches user language, verify via auto-detection.
-    // This catches posts whose language was misdetected (e.g. DeepL was
+    // This catches posts whose language was misdetected (e.g. API was
     // unavailable at creation time, so the fallback 'en' was stored).
     let effectiveSourceLanguage = storedLanguage;
     if (storedLanguage === userLanguage && post.plainText) {
@@ -122,16 +137,16 @@ export async function translatePostForUser<T extends TranslatablePost>(
         if (detected !== userLanguage) {
             effectiveSourceLanguage = detected;
         } else {
-            return post; // Genuinely the same language
+            return { ...post, _originalLanguage: storedLanguage };
         }
     }
 
     // No translation needed if languages truly match
     if (effectiveSourceLanguage === userLanguage) {
-        return post;
+        return { ...post, _originalLanguage: effectiveSourceLanguage };
     }
 
-    const translatedPost = { ...post };
+    const translatedPost = { ...post, _originalLanguage: effectiveSourceLanguage };
 
     // Translate plainText if present
     if (post.plainText) {
@@ -172,7 +187,7 @@ export interface TranslatableComment {
 
 /**
  * Translate a comment for a user
- * 
+ *
  * Translates the content field
  * Returns the comment with translated content
  */
@@ -218,7 +233,7 @@ export async function translateCommentForUser<T extends TranslatableComment>(
 export async function translatePostsForUser<T extends TranslatablePost>(
     posts: T[],
     userLanguage: string
-): Promise<T[]> {
+): Promise<(T & { _originalLanguage?: string })[]> {
     return Promise.all(
         posts.map(post => translatePostForUser(post, userLanguage))
     );
@@ -234,4 +249,27 @@ export async function translateCommentsForUser<T extends TranslatableComment>(
     return Promise.all(
         comments.map(comment => translateCommentForUser(comment, userLanguage))
     );
+}
+
+/**
+ * Translate a single text for preview purposes (not cached in DB)
+ * Used by the translation preview modal in the post editor
+ */
+export async function translateForPreview(
+    text: string,
+    sourceLang: string,
+    targetLang: string,
+    categoryName?: string
+): Promise<string> {
+    if (sourceLang === targetLang || !text.trim()) {
+        return text;
+    }
+
+    const { allTerms, cleanText } = collectProtectedTerms(text, categoryName);
+    const translated = await translateText(cleanText, sourceLang, targetLang, allTerms);
+
+    // Track usage but mark as preview (still costs money)
+    trackTranslationUsage(text.length, sourceLang, targetLang, false);
+
+    return translated;
 }

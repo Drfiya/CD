@@ -12,6 +12,7 @@ export interface CatalogCourse {
 interface CatalogCardUI {
   lessons: string;
   lesson: string;
+  viewCourse: string;
 }
 
 interface CourseCatalogCardProps {
@@ -63,7 +64,7 @@ export function CourseCatalogCard({ course, ui }: CourseCatalogCardProps) {
           className="text-sm font-semibold pt-1 transition-colors"
           style={{ color: '#D94A4A' }}
         >
-          Kurs ansehen →
+          {ui.viewCourse}
         </div>
       </div>
     </Link>

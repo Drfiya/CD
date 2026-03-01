@@ -85,12 +85,12 @@ async function runAllChecks(): Promise<CheckResult[]> {
         autoChecked: true,
     });
 
-    // DeepL API key (translations)
+    // Azure Translator API key (translations)
     results.push({
-        key: 'technical.deepl_api_key',
+        key: 'technical.azure_translator_key',
         category: 'technical',
-        label: 'DeepL API key configured (translations)',
-        passed: !!process.env.DEEPL_API_KEY,
+        label: 'Azure Translator API key configured (translations)',
+        passed: !!process.env.AZURE_TRANSLATOR_KEY,
         blocker: false,
         autoChecked: true,
     });

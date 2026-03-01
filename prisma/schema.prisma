@@ -353,6 +353,19 @@ model Translation {
   @@index([entityType, entityId, targetLanguage])
 }
 
+model TranslationUsage {
+  id           String   @id @default(cuid())
+  date         DateTime @default(now())
+  charCount    Int
+  sourceLang   String
+  targetLang   String
+  fromCache    Boolean  @default(false)
+  costEstimate Float    @default(0)
+
+  @@index([date])
+  @@index([sourceLang, targetLang])
+}
+
 model KanbanCard {
   id          String       @id @default(cuid())
   title       String       @db.VarChar(200)
