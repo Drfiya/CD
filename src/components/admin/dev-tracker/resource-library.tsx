@@ -160,10 +160,10 @@ function DropZone({
                 onDragLeave={handleDragLeave}
                 onClick={() => inputRef.current?.click()}
                 className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${dragActive
-                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 scale-[1.01]'
+                    ? 'border-red-500 bg-red-50/50 dark:bg-red-900/10 scale-[1.01]'
                     : uploading
                         ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20'
-                        : 'border-gray-300 dark:border-neutral-600 bg-gray-50/50 dark:bg-neutral-800 hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10'
+                        : 'border-gray-300 dark:border-neutral-600 bg-gray-50/50 dark:bg-neutral-800 hover:border-gray-400 hover:bg-gray-100/50 dark:hover:border-neutral-500 dark:hover:bg-neutral-700/50'
                     }`}
             >
                 <input
@@ -249,7 +249,7 @@ function AddTextForm({
                         type="button"
                         onClick={() => setType(t)}
                         className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${type === t
-                            ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700'
+                            ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800'
                             : 'bg-gray-100 dark:bg-neutral-700 text-gray-500 dark:text-neutral-400 hover:bg-gray-200 dark:hover:bg-neutral-600'
                             }`}
                     >
@@ -262,19 +262,19 @@ function AddTextForm({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Title"
-                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-neutral-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-neutral-100 focus:ring-2 focus:ring-gray-400 dark:focus:ring-neutral-500 focus:border-gray-400 outline-none"
             />
             <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder={type === 'LINK' ? 'https://…' : 'Content'}
                 rows={type === 'PROMPT' ? 4 : 2}
-                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-neutral-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-neutral-100 focus:ring-2 focus:ring-gray-400 dark:focus:ring-neutral-500 focus:border-gray-400 outline-none resize-none"
             />
             <button
                 type="submit"
                 disabled={isPending || !title.trim() || !content.trim()}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-900 dark:bg-neutral-200 text-white dark:text-neutral-900 hover:bg-gray-800 dark:hover:bg-neutral-300 disabled:opacity-50 transition-colors"
             >
                 {isPending ? 'Adding…' : `Add ${type.charAt(0) + type.slice(1).toLowerCase()}`}
             </button>
@@ -338,7 +338,7 @@ function ResourceCard({
                     </button>
                     <span className="text-base shrink-0">{icon}</span>
                     <h3
-                        className="text-sm font-medium text-gray-900 dark:text-neutral-100 truncate cursor-pointer hover:text-indigo-600"
+                        className="text-sm font-medium text-gray-900 dark:text-neutral-100 truncate cursor-pointer hover:text-primary"
                         onClick={() => setExpanded(!expanded)}
                     >
                         {resource.title}
@@ -499,8 +499,8 @@ export function ResourceLibrary({ initialResources, userId }: ResourceLibraryPro
                         key={id}
                         onClick={() => setActiveTab(id)}
                         className={`px-3 py-2 text-xs font-medium whitespace-nowrap border-b-2 transition-colors ${activeTab === id
-                            ? 'border-indigo-500 text-indigo-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                            ? 'border-primary text-primary'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-200'
                             }`}
                     >
                         {label}
@@ -515,7 +515,7 @@ export function ResourceLibrary({ initialResources, userId }: ResourceLibraryPro
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search resources…"
-                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-neutral-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-neutral-100 focus:ring-2 focus:ring-gray-400 dark:focus:ring-neutral-500 focus:border-gray-400 outline-none"
             />
 
             {/* Resource list */}
