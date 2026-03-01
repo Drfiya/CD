@@ -90,9 +90,9 @@ function ScoreRing({ score, hasBlocker }: { score: number; hasBlocker: boolean }
                 'border-red-200 bg-red-50';
 
     return (
-        <div className="flex flex-col items-center gap-3">
-            <div className={`w-32 h-32 rounded-full border-4 ${bgRing} flex items-center justify-center`}>
-                <div className={`text-4xl font-bold ${color}`}>{score}%</div>
+        <div className="flex flex-col items-center gap-2">
+            <div className={`w-20 h-20 rounded-full border-4 ${bgRing} flex items-center justify-center`}>
+                <div className={`text-2xl font-bold ${color}`}>{score}%</div>
             </div>
             <p className="text-sm font-medium text-gray-600 dark:text-neutral-400">Launch Readiness</p>
             {hasBlocker && (
@@ -119,11 +119,11 @@ function ScanButton({ onComplete }: { onComplete: (summary: string) => void }) {
     };
 
     return (
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-start gap-2">
             <button
                 onClick={handleScan}
                 disabled={scanning}
-                className="px-6 py-2.5 text-sm font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-5 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
                 {scanning ? '🔍 Scanning project…' : '🔍 Run Readiness Scan'}
             </button>
@@ -170,7 +170,7 @@ function AddItemForm({
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
                 placeholder="Add manual item…"
-                className="flex-1 px-2 py-1 text-sm border border-gray-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-700 dark:text-neutral-100 focus:ring-1 focus:ring-indigo-500 outline-none"
+                className="flex-1 px-2 py-1 text-sm border border-gray-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-700 dark:text-neutral-100 focus:ring-1 focus:ring-gray-400 outline-none"
             />
             <label className="flex items-center gap-1 text-xs text-gray-500 dark:text-neutral-400 cursor-pointer">
                 <input
@@ -184,7 +184,7 @@ function AddItemForm({
             <button
                 type="submit"
                 disabled={isPending || !label.trim()}
-                className="px-3 py-1 text-xs font-medium rounded bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                className="px-3 py-1 text-xs font-medium rounded bg-gray-900 dark:bg-neutral-200 text-white dark:text-neutral-900 hover:bg-gray-800 dark:hover:bg-neutral-300 disabled:opacity-50 transition-colors"
             >
                 Add
             </button>
@@ -292,7 +292,7 @@ function CategorySection({
                                 checked={item.checked}
                                 onChange={(e) => handleToggle(item.id, e.target.checked)}
                                 disabled={isPending}
-                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 shrink-0"
+                                className="rounded border-gray-300 text-red-600 focus:ring-red-500 shrink-0"
                             />
                             <span
                                 className={`text-sm flex-1 ${item.checked ? 'text-gray-400 dark:text-neutral-500 line-through' : 'text-gray-700 dark:text-neutral-300'
@@ -327,7 +327,7 @@ function CategorySection({
             {/* Add manual item */}
             <button
                 onClick={() => setShowAdd(!showAdd)}
-                className="mt-1 text-xs text-gray-400 hover:text-indigo-600 transition-colors"
+                className="mt-1 text-xs text-gray-400 hover:text-primary transition-colors"
             >
                 {showAdd ? 'Cancel' : '+ Add manual item'}
             </button>
@@ -351,20 +351,21 @@ export function LaunchControl({ initialItems }: LaunchControlProps) {
     const blockerCount = items.filter((i) => i.blocker && !i.checked).length;
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-4">
             {/* Readiness score + scan button */}
-            <div className="flex flex-col items-center gap-6 py-6">
+            <div className="flex items-center gap-6 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl p-4">
                 <ScoreRing score={scores.overall} hasBlocker={scores.hasBlocker} />
 
-                <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-neutral-400">
-                    <span>✅ {passedCount} passed</span>
-                    <span>📋 {totalCount} total</span>
-                    {blockerCount > 0 && (
-                        <span className="text-red-600 font-medium">🚫 {blockerCount} blockers</span>
-                    )}
+                <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-neutral-400">
+                        <span>✅ {passedCount} passed</span>
+                        <span>📋 {totalCount} total</span>
+                        {blockerCount > 0 && (
+                            <span className="text-red-600 font-medium">🚫 {blockerCount} blockers</span>
+                        )}
+                    </div>
+                    <ScanButton onComplete={handleRefresh} />
                 </div>
-
-                <ScanButton onComplete={handleRefresh} />
             </div>
 
             {/* Category grid */}
