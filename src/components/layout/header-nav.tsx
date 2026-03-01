@@ -137,10 +137,10 @@ export function HeaderNav({ messages }: HeaderNavProps) {
                                 href={link.href}
                                 ref={(el) => { linkRefs.current[i] = el; }}
                                 className={`
-                                    relative z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-normal transition-colors
+                                    relative z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-[450] transition-colors
                                     ${isActive
                                         ? 'text-[#0A0A0F] dark:text-white'
-                                        : 'text-[#64656A] dark:text-[#A0A0A0] hover:text-[#0A0A0F] dark:hover:text-white'
+                                        : 'text-[#64656A] dark:text-[#C8C8C8] hover:text-[#0A0A0F] dark:hover:text-white'
                                     }
                                 `}
                             >
