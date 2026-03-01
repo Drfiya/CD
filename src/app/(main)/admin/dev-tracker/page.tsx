@@ -20,12 +20,14 @@ async function BoardContent() {
 
 export default function CommandCenterPage() {
     return (
-        <div className="space-y-6 p-6">
-            <div>
-                <h1 className="text-2xl font-semibold text-gray-900 dark:text-neutral-100">Command Center</h1>
-                <p className="text-muted-foreground mt-1">
-                    Track features, tasks, and deployment readiness — all in one place.
-                </p>
+        <div className="space-y-3 p-6 pb-4">
+            <div className="flex items-start justify-between">
+                <div>
+                    <h1 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Command Center</h1>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                        Track features, tasks, and deployment readiness — all in one place.
+                    </p>
+                </div>
             </div>
 
             <Suspense

@@ -553,10 +553,11 @@ export function TrackerBoard({ initialData }: TrackerBoardProps) {
     }
 
     return (
-        <div className="space-y-4">
-            {/* Header: sync */}
-            <div className="flex items-center justify-end">
-                <div className="flex items-center gap-3">
+        <div className="space-y-3">
+            {/* Stats + sync */}
+            <div className="flex items-center justify-between">
+                <StatsHeader stats={data.stats} manualCount={manualCount} />
+                <div className="flex items-center gap-3 shrink-0">
                     {data.syncedAt && (
                         <span className="text-[10px] text-gray-400">
                             Last sync: {new Date(data.syncedAt).toLocaleTimeString()}
@@ -571,9 +572,6 @@ export function TrackerBoard({ initialData }: TrackerBoardProps) {
                     </button>
                 </div>
             </div>
-
-            {/* Stats */}
-            <StatsHeader stats={data.stats} manualCount={manualCount} />
 
             {/* Recent Activity */}
             {data.recentCommits && data.recentCommits.length > 0 && (
