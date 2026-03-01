@@ -113,12 +113,12 @@ export function HeaderNav({ messages }: HeaderNavProps) {
             <div className="hidden lg:flex flex-1 items-center justify-center">
                 <div
                     ref={containerRef}
-                    className="relative inline-flex items-center gap-0.5 p-1 bg-gray-100/80 dark:bg-neutral-800/80 rounded-full border border-gray-200 dark:border-neutral-700"
+                    className="relative inline-flex items-center gap-0.5 p-1 bg-[#F5F6F8] dark:bg-[#232323] rounded-full border border-gray-200 dark:border-transparent shadow-[0_2px_8px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.06)] dark:shadow-none"
                 >
                     {/* Sliding pill indicator */}
                     {slider.ready && activeIndex >= 0 && (
                         <div
-                            className="absolute bg-gray-600 dark:bg-neutral-600 rounded-full shadow-sm transition-all duration-300 ease-in-out"
+                            className="absolute bg-white dark:bg-[#404040] rounded-full shadow-sm dark:shadow-none transition-all duration-300 ease-in-out"
                             style={{
                                 left: slider.left,
                                 width: slider.width,
@@ -137,10 +137,10 @@ export function HeaderNav({ messages }: HeaderNavProps) {
                                 href={link.href}
                                 ref={(el) => { linkRefs.current[i] = el; }}
                                 className={`
-                                    relative z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors
+                                    relative z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-normal transition-colors
                                     ${isActive
-                                        ? 'text-white dark:text-neutral-100'
-                                        : 'text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200'
+                                        ? 'text-[#0A0A0F] dark:text-white'
+                                        : 'text-[#64656A] dark:text-[#A0A0A0] hover:text-[#0A0A0F] dark:hover:text-white'
                                     }
                                 `}
                             >
