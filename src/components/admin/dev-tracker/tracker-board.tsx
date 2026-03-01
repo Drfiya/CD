@@ -370,23 +370,7 @@ function StatsHeader({ stats, manualCount }: { stats: TrackerStats; manualCount:
 
 // --- Team time zones ---
 
-function TeamTimezones() {
-    const format = (tz: string) => {
-        try {
-            return new Date().toLocaleTimeString('en-US', {
-                timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: true,
-            });
-        } catch { return '—'; }
-    };
 
-    return (
-        <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-neutral-400">
-            <span className="font-medium">Build Tracker</span>
-            <span>🇺🇸 {format('America/Chicago')}</span>
-            <span>🇩🇪 {format('Europe/Berlin')}</span>
-        </div>
-    );
-}
 
 // --- New task modal ---
 
@@ -570,9 +554,8 @@ export function TrackerBoard({ initialData }: TrackerBoardProps) {
 
     return (
         <div className="space-y-4">
-            {/* Header: time zones + sync */}
-            <div className="flex items-center justify-between">
-                <TeamTimezones />
+            {/* Header: sync */}
+            <div className="flex items-center justify-end">
                 <div className="flex items-center gap-3">
                     {data.syncedAt && (
                         <span className="text-[10px] text-gray-400">

@@ -18,7 +18,7 @@ export function DevTrackerNav() {
     const pathname = usePathname();
 
     return (
-        <div className="flex gap-2 border-b border-gray-100 px-6 pt-4 -mt-2">
+        <div className="flex gap-2 border-b border-gray-100 dark:border-neutral-700">
             {SUB_TABS.map(({ href, label, exact }) => {
                 const isActive = exact
                     ? pathname === href
