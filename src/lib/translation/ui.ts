@@ -2,7 +2,7 @@
  * Dynamic UI Text Translation
  * 
  * Translates UI strings (like category names, placeholders, etc.)
- * using Azure Translator, with caching to minimize API calls.
+ * using DeepL, with caching to minimize API calls.
  */
 
 import { translateForUser } from './index';

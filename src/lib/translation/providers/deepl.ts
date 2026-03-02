@@ -43,12 +43,38 @@ export interface TranslationResult {
 }
 
 /**
+ * Wrap protected terms with XML <keep> tags for DeepL's ignore_tags feature
+ */
+function wrapProtectedTerms(text: string, protectedTerms: string[]): string {
+    if (!protectedTerms || protectedTerms.length === 0) return text;
+
+    let result = text;
+    // Sort by length descending to handle overlapping terms
+    const sorted = [...protectedTerms].sort((a, b) => b.length - a.length);
+    for (const term of sorted) {
+        const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(?<!<keep>)${escaped}(?!</keep>)`, 'gi');
+        result = result.replace(regex, `<keep>${term}</keep>`);
+    }
+    return result;
+}
+
+/**
+ * Remove <keep> tags from translated text, preserving the content inside
+ */
+function unwrapProtectedTerms(text: string): string {
+    return text.replace(/<\/?keep>/g, '');
+}
+
+/**
  * Translate a single text using DeepL
+ * Supports protected terms via DeepL's XML tag handling (ignore_tags)
  */
 export async function translateText(
     text: string,
     sourceLang: string,
-    targetLang: string
+    targetLang: string,
+    protectedTerms: string[] = []
 ): Promise<string> {
     if (!DEEPL_API_KEY) {
         console.error('DEEPL_API_KEY is not configured');
@@ -60,17 +86,29 @@ export async function translateText(
     }
 
     try {
+        // Wrap protected terms with <keep> tags
+        const processedText = wrapProtectedTerms(text, protectedTerms);
+        const useXml = protectedTerms.length > 0;
+
+        const requestBody: Record<string, unknown> = {
+            text: [processedText],
+            source_lang: toDeepLLanguage(sourceLang, false),
+            target_lang: toDeepLLanguage(targetLang, true),
+        };
+
+        // Enable XML tag handling if we have protected terms
+        if (useXml) {
+            requestBody.tag_handling = 'xml';
+            requestBody.ignore_tags = ['keep'];
+        }
+
         const response = await fetch(`${DEEPL_API_URL}/v2/translate`, {
             method: 'POST',
             headers: {
                 'Authorization': `DeepL-Auth-Key ${DEEPL_API_KEY}`,
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                text: [text],
-                source_lang: toDeepLLanguage(sourceLang, false),
-                target_lang: toDeepLLanguage(targetLang, true),
-            }),
+            body: JSON.stringify(requestBody),
         });
 
         if (!response.ok) {
@@ -82,7 +120,8 @@ export async function translateText(
         const data = await response.json();
 
         if (data.translations && data.translations.length > 0) {
-            return data.translations[0].text;
+            const translated = data.translations[0].text;
+            return useXml ? unwrapProtectedTerms(translated) : translated;
         }
 
         return text;

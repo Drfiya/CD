@@ -1,12 +1,12 @@
 /**
  * Translation API Route
  *
- * Server-side proxy for Azure Translator API requests.
+ * Server-side proxy for DeepL API requests.
  * This hides the API key from the client and allows for server-side caching.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { translateBatch } from '@/lib/translation/providers/azure';
+import { translateBatch } from '@/lib/translation/providers/deepl';
 
 // Rate limiting: Track requests per IP
 const requestCounts = new Map<string, { count: number; resetTime: number }>();
@@ -76,9 +76,9 @@ export async function POST(request: NextRequest) {
         }
 
         // Limit batch size to prevent abuse
-        if (texts.length > 100) {
+        if (texts.length > 50) {
             return NextResponse.json(
-                { error: 'Maximum 100 texts per request' },
+                { error: 'Maximum 50 texts per request' },
                 { status: 400 }
             );
         }
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        // Call Azure batch translation
+        // Call DeepL batch translation
         const translations = await translateBatch(texts, normalizedSource, normalizedTarget);
 
         return NextResponse.json(
@@ -131,13 +131,13 @@ export async function POST(request: NextRequest) {
 
 // Health check endpoint
 export async function GET() {
-    const apiKeyConfigured = !!process.env.AZURE_TRANSLATOR_KEY;
+    const apiKeyConfigured = !!process.env.DEEPL_API_KEY;
 
     return NextResponse.json({
         status: apiKeyConfigured ? 'healthy' : 'misconfigured',
-        provider: 'azure',
+        provider: 'deepl',
         message: apiKeyConfigured
-            ? 'Azure Translator service is ready'
-            : 'AZURE_TRANSLATOR_KEY is not configured',
+            ? 'DeepL translation service is ready'
+            : 'DEEPL_API_KEY is not configured',
     });
 }

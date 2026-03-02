@@ -2,56 +2,39 @@
  * Language Code Utilities (Client-Safe)
  *
  * Maps BCP-47 browser locale codes to standard ISO 639-1 codes.
- * Azure Translator uses standard codes, so mapping is simpler than DeepL.
+ * DeepL uses uppercase codes with some variants (EN-US, PT-BR).
+ *
+ * BUILD PHASE: Limited to EN, DE, FR to control translation costs.
  */
 
-// Supported languages with their display names
+// Supported languages with their display names (build phase: EN/DE/FR only)
 export const SUPPORTED_LANGUAGES = {
     'en': { name: 'English', nativeName: 'English' },
     'de': { name: 'German', nativeName: 'Deutsch' },
     'fr': { name: 'French', nativeName: 'Français' },
-    'es': { name: 'Spanish', nativeName: 'Español' },
-    'it': { name: 'Italian', nativeName: 'Italiano' },
-    'pt': { name: 'Portuguese', nativeName: 'Português' },
-    'nl': { name: 'Dutch', nativeName: 'Nederlands' },
-    'pl': { name: 'Polish', nativeName: 'Polski' },
-    'ja': { name: 'Japanese', nativeName: '日本語' },
-    'ko': { name: 'Korean', nativeName: '한국어' },
-    'zh': { name: 'Chinese', nativeName: '中文' },
-    'ar': { name: 'Arabic', nativeName: 'العربية' },
-    'ru': { name: 'Russian', nativeName: 'Русский' },
-    'bg': { name: 'Bulgarian', nativeName: 'Български' },
-    'cs': { name: 'Czech', nativeName: 'Čeština' },
-    'da': { name: 'Danish', nativeName: 'Dansk' },
-    'el': { name: 'Greek', nativeName: 'Ελληνικά' },
-    'et': { name: 'Estonian', nativeName: 'Eesti' },
-    'fi': { name: 'Finnish', nativeName: 'Suomi' },
-    'hu': { name: 'Hungarian', nativeName: 'Magyar' },
-    'id': { name: 'Indonesian', nativeName: 'Bahasa Indonesia' },
-    'lt': { name: 'Lithuanian', nativeName: 'Lietuvių' },
-    'lv': { name: 'Latvian', nativeName: 'Latviešu' },
-    'nb': { name: 'Norwegian', nativeName: 'Norsk' },
-    'ro': { name: 'Romanian', nativeName: 'Română' },
-    'sk': { name: 'Slovak', nativeName: 'Slovenčina' },
-    'sl': { name: 'Slovenian', nativeName: 'Slovenščina' },
-    'sv': { name: 'Swedish', nativeName: 'Svenska' },
-    'tr': { name: 'Turkish', nativeName: 'Türkçe' },
-    'uk': { name: 'Ukrainian', nativeName: 'Українська' },
 } as const;
 
 /**
- * Convert BCP-47 locale code to target language code for the API
- * Azure uses standard ISO 639-1 codes (much simpler than DeepL)
+ * Convert BCP-47 locale code to DeepL target language code
+ * DeepL uses uppercase codes, with EN-US/EN-GB for English targets
  */
 export function toDeepLTarget(locale: string): string {
-    // Keep this function name for backwards compatibility with cache-client.ts
     const normalized = locale.toLowerCase().trim();
-    const baseLang = normalized.split('-')[0];
-    return baseLang;
+    const baseLang = normalized.split('-')[0].toUpperCase();
+
+    // DeepL requires specific variants for some target languages
+    switch (baseLang) {
+        case 'EN':
+            return 'EN-US';
+        case 'PT':
+            return 'PT-BR';
+        default:
+            return baseLang;
+    }
 }
 
 /**
- * Convert language code back to simple ISO 639-1 code
+ * Convert DeepL language code back to simple ISO 639-1 code
  */
 export function fromDeepLCode(code: string): string {
     return code.split('-')[0].toLowerCase();

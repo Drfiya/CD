@@ -2,8 +2,8 @@
  * Translation Usage Tracking
  *
  * Tracks API calls for cost monitoring and optimization.
- * Azure Translator S1: $10 per 1M characters
- * Azure Translator F0 (Free): 2M characters/month
+ * DeepL API Free: 500,000 chars/month
+ * DeepL API Pro: $20 per 1M characters
  */
 
 import db from '@/lib/db';

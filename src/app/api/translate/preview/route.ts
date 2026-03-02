@@ -2,7 +2,7 @@
  * Translation Preview API Route
  *
  * Allows users to preview how their post will look in another language
- * before publishing. Uses the same Azure Translator pipeline.
+ * before publishing. Uses the same DeepL translation pipeline.
  */
 
 import { NextRequest, NextResponse } from 'next/server';

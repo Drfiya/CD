@@ -2,11 +2,11 @@
  * Core Translation API
  *
  * High-level translation functions that integrate caching, detection,
- * protected terms, and the Azure Translator provider.
+ * protected terms, and the DeepL provider.
  */
 
 import { getCachedTranslationWithHash, setCachedTranslation } from './cache';
-import { translateText } from './providers/azure';
+import { translateText } from './providers/deepl';
 import { detectLanguage } from './detect';
 import { hashContent, SUPPORTED_LANGUAGES, LANGUAGE_NAMES } from './utils';
 import { collectProtectedTerms } from './protected-terms';
@@ -17,8 +17,8 @@ export { detectLanguage } from './detect';
 export { hashContent, SUPPORTED_LANGUAGES, LANGUAGE_NAMES, isSupportedLanguage } from './utils';
 export type { SupportedLanguage } from './utils';
 
-const MODEL_PROVIDER = 'azure';
-const MODEL_VERSION = 'v3.0';
+const MODEL_PROVIDER = 'deepl';
+const MODEL_VERSION = 'v2';
 
 export interface TranslateForUserParams {
     entityType: string;
@@ -35,7 +35,7 @@ export interface TranslateForUserParams {
  *
  * - Returns original if source and target languages match
  * - Checks cache first
- * - Falls back to Azure Translator API on cache miss
+ * - Falls back to DeepL API on cache miss
  * - Applies protected terms (global, domain, user-defined)
  * - Stores result in cache
  * - Tracks usage for cost monitoring
@@ -83,7 +83,7 @@ export async function translateForUser(
     // Collect protected terms (global + domain + user-defined)
     const { allTerms, cleanText } = collectProtectedTerms(content, categoryName);
 
-    // Translate via Azure with protected terms
+    // Translate via DeepL with protected terms
     const translated = await translateText(cleanText, sourceLanguage, targetLanguage, allTerms);
 
     // Track API call usage
