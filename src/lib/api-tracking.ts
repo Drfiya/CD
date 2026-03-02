@@ -33,7 +33,7 @@ export function trackApiCall(params: TrackApiCallParams): void {
             units,
             unitType,
             cost,
-            metadata: metadata ?? undefined,
+            metadata: metadata ? JSON.parse(JSON.stringify(metadata)) : undefined,
         },
     }).catch((err) => {
         console.error(`[api-tracking] Failed to track ${service}/${action}:`, err);
