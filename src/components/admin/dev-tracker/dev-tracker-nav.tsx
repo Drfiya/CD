@@ -12,6 +12,7 @@ const SUB_TABS = [
     { href: '/admin/dev-tracker', label: 'Board', exact: true },
     { href: '/admin/dev-tracker/resources', label: 'Resources' },
     { href: '/admin/dev-tracker/launch', label: 'Launch Control' },
+    { href: '/admin/dev-tracker/api-usage', label: 'API Usage' },
 ];
 
 export function DevTrackerNav() {
