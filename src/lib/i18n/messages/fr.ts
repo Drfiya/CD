@@ -30,7 +30,7 @@ export const fr: Messages = {
     // Right sidebar
     sidebar: {
         members: 'Membres',
-        leaderboard: 'Classement',
+        leaderboard: 'Top Apprenants',
         viewAll: 'Voir tout',
     },
 
@@ -53,7 +53,7 @@ export const fr: Messages = {
 
     // Gamification
     gamification: {
-        level: 'Niv',
+        level: 'Niveau',
         points: 'points',
     },
 
@@ -69,5 +69,43 @@ export const fr: Messages = {
         loading: 'Chargement...',
         error: 'Erreur',
         noResults: 'Aucun résultat trouvé',
+    },
+
+    // Members page
+    membersPage: {
+        title: 'Membres',
+        member: 'membre',
+        members: 'membres',
+        inTheCommunity: 'dans la communauté',
+        searchPlaceholder: 'Rechercher des membres...',
+        filtersTitle: 'Filtres',
+        allMembers: 'Tous les membres',
+        communityStats: 'Statistiques',
+        completed: 'Terminé',
+        courses: 'Cours',
+    },
+
+    // Classroom page
+    classroomPage: {
+        title: 'Salle de classe',
+        subtitle: 'Parcourir les cours et suivre votre progression.',
+        myCourses: 'Mes cours',
+        availableCourses: 'Cours disponibles',
+        signInPrompt: 'pour vous inscrire aux cours et suivre votre progression.',
+        lessons: 'leçons',
+        lesson: 'leçon',
+        completed: 'Terminé',
+        continueLearning: 'Continuer',
+        startCourse: 'Commencer le cours',
+        viewCourse: 'Voir le cours →',
+        noCoursesAvailable: 'Aucun cours disponible',
+        checkBackSoon: 'Revenez bientôt pour de nouveaux cours.',
+        noEnrolledCourses: 'Aucun cours inscrit',
+        notEnrolledYet: "Vous n'êtes inscrit à aucun cours.",
+        allCourses: 'Tous les cours',
+        coursesCategory: 'Cours',
+        myProgress: 'Ma progression',
+        enrolled: 'Inscrit',
+        lessonsLabel: 'Leçons',
     },
 };

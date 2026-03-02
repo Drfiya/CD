@@ -12,8 +12,9 @@ import {
 import type { EnrolledCourse } from '@/components/classroom/enrolled-course-card';
 import { ClassroomLeftSidebar } from '@/components/classroom/classroom-left-sidebar';
 import { ClassroomRightSidebar } from '@/components/classroom/classroom-right-sidebar';
-import { tMany, getUserLanguage } from '@/lib/translation/helpers';
+import { getUserLanguage } from '@/lib/translation/helpers';
 import { translateObjects } from '@/lib/translation/ui';
+import { getMessages } from '@/lib/i18n';
 import { getCommunitySettings } from '@/lib/settings-actions';
 
 interface ClassroomUI {
@@ -54,37 +55,38 @@ export default async function ClassroomPage({ searchParams }: ClassroomPageProps
   const session = await getServerSession(authOptions);
   const userLanguage = await getUserLanguage();
 
-  // Translate all UI text dynamically via DeepL
-  const uiRaw = await tMany({
-    title: 'Classroom',
-    subtitle: 'Browse courses and track your learning progress.',
-    myCourses: 'My Courses',
-    availableCourses: 'Available Courses',
-    signIn: 'Sign in',
-    signInPrompt: 'to enroll in courses and track your progress.',
-    lessons: 'lessons',
-    lesson: 'lesson',
-    completed: 'Completed',
-    continueLearning: 'Continue Learning',
-    startCourse: 'Start Course',
-    viewCourse: 'View Course →',
-    noCoursesAvailable: 'No courses available',
-    checkBackSoon: 'Check back soon for new courses.',
-    noEnrolledCourses: 'No enrolled courses',
-    notEnrolledYet: "You haven't enrolled in any courses yet.",
-    allCourses: 'All Courses',
-    categoriesTitle: 'Courses',
-    learningProgress: 'My Progress',
-    topLearners: 'Top Learners',
-    viewAll: 'View all',
-    aiToolsTitle: 'AI Tools',
-    level: 'Level',
-    coursesEnrolled: 'Enrolled',
-    coursesCompleted: 'Completed',
-    lessonsCompleted: 'Lessons',
-  }, 'classroom');
+  // Get static translations from message files (no API calls!)
+  const messages = getMessages(userLanguage);
+  const cp = messages.classroomPage;
 
-  const ui: ClassroomUI = uiRaw as unknown as ClassroomUI;
+  const ui: ClassroomUI = {
+    title: cp.title,
+    subtitle: cp.subtitle,
+    myCourses: cp.myCourses,
+    availableCourses: cp.availableCourses,
+    signIn: messages.auth.signIn,
+    signInPrompt: cp.signInPrompt,
+    lessons: cp.lessons,
+    lesson: cp.lesson,
+    completed: cp.completed,
+    continueLearning: cp.continueLearning,
+    startCourse: cp.startCourse,
+    viewCourse: cp.viewCourse,
+    noCoursesAvailable: cp.noCoursesAvailable,
+    checkBackSoon: cp.checkBackSoon,
+    noEnrolledCourses: cp.noEnrolledCourses,
+    notEnrolledYet: cp.notEnrolledYet,
+    allCourses: cp.allCourses,
+    categoriesTitle: cp.coursesCategory,
+    learningProgress: cp.myProgress,
+    topLearners: messages.sidebar.leaderboard,
+    viewAll: messages.sidebar.viewAll,
+    aiToolsTitle: messages.nav.aiTools,
+    level: messages.gamification.level,
+    coursesEnrolled: cp.enrolled,
+    coursesCompleted: cp.completed,
+    lessonsCompleted: cp.lessonsLabel,
+  };
 
   // Get community settings for sidebar banner
   const communitySettings = await getCommunitySettings();

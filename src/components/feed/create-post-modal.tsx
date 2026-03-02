@@ -22,6 +22,8 @@ interface CreatePostModalProps {
     userImage?: string | null;
     userName?: string | null;
     writeSomethingPlaceholder?: string;
+    postButtonLabel?: string;
+    cancelLabel?: string;
 }
 
 // Category color map for the pill buttons
@@ -58,7 +60,7 @@ function extractPlainText(content: object | null): string {
     }
 }
 
-export function CreatePostModal({ categories, userImage, userName, writeSomethingPlaceholder }: CreatePostModalProps) {
+export function CreatePostModal({ categories, userImage, userName, writeSomethingPlaceholder, postButtonLabel, cancelLabel }: CreatePostModalProps) {
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -160,7 +162,7 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#C43E3E'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#D94A4A'}
                     >
-                        Post
+                        {postButtonLabel || 'Post'}
                     </button>
                 </div>
             </div>
@@ -351,7 +353,7 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                                         onClick={() => setIsOpen(false)}
                                         className="px-5 py-2 rounded-full text-sm font-medium text-gray-700 dark:text-neutral-300 border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
                                     >
-                                        Cancel
+                                        {cancelLabel || 'Cancel'}
                                     </button>
                                     <button
                                         type="submit"
@@ -361,7 +363,7 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                                         onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.backgroundColor = '#C43E3E'; }}
                                         onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#D94A4A'; }}
                                     >
-                                        {isSubmitting ? 'Posting...' : 'Post'}
+                                        {isSubmitting ? '...' : (postButtonLabel || 'Post')}
                                     </button>
                                 </div>
                             </div>

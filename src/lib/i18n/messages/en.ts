@@ -28,7 +28,7 @@ export const en: Messages = {
     // Right sidebar
     sidebar: {
         members: 'Members',
-        leaderboard: 'Leaderboard',
+        leaderboard: 'Top Learners',
         viewAll: 'View all',
     },
 
@@ -51,7 +51,7 @@ export const en: Messages = {
 
     // Gamification
     gamification: {
-        level: 'Lvl',
+        level: 'Level',
         points: 'points',
     },
 
@@ -67,6 +67,44 @@ export const en: Messages = {
         loading: 'Loading...',
         error: 'Error',
         noResults: 'No results found',
+    },
+
+    // Members page
+    membersPage: {
+        title: 'Members',
+        member: 'member',
+        members: 'members',
+        inTheCommunity: 'in the community',
+        searchPlaceholder: 'Search members...',
+        filtersTitle: 'Filters',
+        allMembers: 'All Members',
+        communityStats: 'Community Stats',
+        completed: 'Completed',
+        courses: 'Courses',
+    },
+
+    // Classroom page
+    classroomPage: {
+        title: 'Classroom',
+        subtitle: 'Browse courses and track your learning progress.',
+        myCourses: 'My Courses',
+        availableCourses: 'Available Courses',
+        signInPrompt: 'to enroll in courses and track your progress.',
+        lessons: 'lessons',
+        lesson: 'lesson',
+        completed: 'Completed',
+        continueLearning: 'Continue Learning',
+        startCourse: 'Start Course',
+        viewCourse: 'View Course →',
+        noCoursesAvailable: 'No courses available',
+        checkBackSoon: 'Check back soon for new courses.',
+        noEnrolledCourses: 'No enrolled courses',
+        notEnrolledYet: "You haven't enrolled in any courses yet.",
+        allCourses: 'All Courses',
+        coursesCategory: 'Courses',
+        myProgress: 'My Progress',
+        enrolled: 'Enrolled',
+        lessonsLabel: 'Lessons',
     },
 };
 
@@ -120,5 +158,39 @@ export interface Messages {
         loading: string;
         error: string;
         noResults: string;
+    };
+    membersPage: {
+        title: string;
+        member: string;
+        members: string;
+        inTheCommunity: string;
+        searchPlaceholder: string;
+        filtersTitle: string;
+        allMembers: string;
+        communityStats: string;
+        completed: string;
+        courses: string;
+    };
+    classroomPage: {
+        title: string;
+        subtitle: string;
+        myCourses: string;
+        availableCourses: string;
+        signInPrompt: string;
+        lessons: string;
+        lesson: string;
+        completed: string;
+        continueLearning: string;
+        startCourse: string;
+        viewCourse: string;
+        noCoursesAvailable: string;
+        checkBackSoon: string;
+        noEnrolledCourses: string;
+        notEnrolledYet: string;
+        allCourses: string;
+        coursesCategory: string;
+        myProgress: string;
+        enrolled: string;
+        lessonsLabel: string;
     };
 }

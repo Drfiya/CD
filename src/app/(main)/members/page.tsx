@@ -4,7 +4,8 @@ import { MemberGrid } from '@/components/profile/member-grid';
 import { MembersLeftSidebar } from '@/components/profile/members-left-sidebar';
 import { ClassroomRightSidebar } from '@/components/classroom/classroom-right-sidebar';
 import { Pagination } from '@/components/ui/pagination';
-import { tMany } from '@/lib/translation/helpers';
+import { getUserLanguage } from '@/lib/translation/helpers';
+import { getMessages } from '@/lib/i18n';
 import { getCommunitySettings } from '@/lib/settings-actions';
 
 const ITEMS_PER_PAGE = 12;
@@ -45,27 +46,30 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
   const maxLevel = maxLevelResult._max.level || 1;
 
-  // Translate UI text
-  const uiRaw = await tMany({
-    title: 'Members',
-    member: 'member',
-    members: 'members',
-    inTheCommunity: 'in the community',
-    searchPlaceholder: 'Search members...',
-    filtersTitle: 'Filters',
-    allMembers: 'All Members',
-    levelPrefix: 'Level',
-    topLearners: 'Top Learners',
-    viewAll: 'View all',
-    aiToolsTitle: 'AI Tools',
-    level: 'Level',
-    learningProgress: 'Community Stats',
-    coursesEnrolled: 'Members',
-    coursesCompleted: 'Completed',
-    lessonsCompleted: 'Courses',
-  }, 'members');
+  // Get static translations from message files (no API calls!)
+  const userLanguage = await getUserLanguage();
+  const messages = getMessages(userLanguage);
+  const mp = messages.membersPage;
 
-  const ui = uiRaw as Record<string, string>;
+  const ui = {
+    title: mp.title,
+    member: mp.member,
+    members: mp.members,
+    inTheCommunity: mp.inTheCommunity,
+    searchPlaceholder: mp.searchPlaceholder,
+    filtersTitle: mp.filtersTitle,
+    allMembers: mp.allMembers,
+    levelPrefix: messages.gamification.level,
+    topLearners: messages.sidebar.leaderboard,
+    viewAll: messages.sidebar.viewAll,
+    aiToolsTitle: messages.nav.aiTools,
+    level: messages.gamification.level,
+    learningProgress: mp.communityStats,
+    coursesEnrolled: mp.members,
+    coursesCompleted: mp.completed,
+    lessonsCompleted: mp.courses,
+  };
+
   const memberLabel = total === 1 ? ui.member : ui.members;
 
   return (

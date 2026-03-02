@@ -30,13 +30,13 @@ export const de: Messages = {
     // Right sidebar
     sidebar: {
         members: 'Mitglieder',
-        leaderboard: 'Rangliste',
+        leaderboard: 'Top-Lernende',
         viewAll: 'Alle anzeigen',
     },
 
     // Post creation
     post: {
-        writeSomething: 'Schreiben Sie etwas...',
+        writeSomething: 'Schreibe etwas...',
         post: 'Veröffentlichen',
         edit: 'Bearbeiten',
         save: 'Speichern',
@@ -69,5 +69,43 @@ export const de: Messages = {
         loading: 'Wird geladen...',
         error: 'Fehler',
         noResults: 'Keine Ergebnisse gefunden',
+    },
+
+    // Members page
+    membersPage: {
+        title: 'Mitglieder',
+        member: 'Mitglied',
+        members: 'Mitglieder',
+        inTheCommunity: 'in der Community',
+        searchPlaceholder: 'Mitglieder suchen...',
+        filtersTitle: 'Filter',
+        allMembers: 'Alle Mitglieder',
+        communityStats: 'Community-Statistiken',
+        completed: 'Abgeschlossen',
+        courses: 'Kurse',
+    },
+
+    // Classroom page
+    classroomPage: {
+        title: 'Kursbereich',
+        subtitle: 'Kurse durchsuchen und deinen Lernfortschritt verfolgen.',
+        myCourses: 'Meine Kurse',
+        availableCourses: 'Verfügbare Kurse',
+        signInPrompt: 'um dich für Kurse einzuschreiben und deinen Fortschritt zu verfolgen.',
+        lessons: 'Lektionen',
+        lesson: 'Lektion',
+        completed: 'Abgeschlossen',
+        continueLearning: 'Weiterlernen',
+        startCourse: 'Kurs starten',
+        viewCourse: 'Kurs ansehen →',
+        noCoursesAvailable: 'Keine Kurse verfügbar',
+        checkBackSoon: 'Schau bald wieder vorbei für neue Kurse.',
+        noEnrolledCourses: 'Keine eingeschriebenen Kurse',
+        notEnrolledYet: 'Du hast dich noch für keinen Kurs eingeschrieben.',
+        allCourses: 'Alle Kurse',
+        coursesCategory: 'Kurse',
+        myProgress: 'Mein Fortschritt',
+        enrolled: 'Eingeschrieben',
+        lessonsLabel: 'Lektionen',
     },
 };

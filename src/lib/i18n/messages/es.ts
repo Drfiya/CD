@@ -30,7 +30,7 @@ export const es: Messages = {
     // Right sidebar
     sidebar: {
         members: 'Miembros',
-        leaderboard: 'Clasificación',
+        leaderboard: 'Top Aprendices',
         viewAll: 'Ver todo',
     },
 
@@ -70,4 +70,43 @@ export const es: Messages = {
         error: 'Error',
         noResults: 'No se encontraron resultados',
     },
+
+    // Members page
+    membersPage: {
+        title: 'Miembros',
+        member: 'miembro',
+        members: 'miembros',
+        inTheCommunity: 'en la comunidad',
+        searchPlaceholder: 'Buscar miembros...',
+        filtersTitle: 'Filtros',
+        allMembers: 'Todos los miembros',
+        communityStats: 'Estadísticas',
+        completed: 'Completado',
+        courses: 'Cursos',
+    },
+
+    // Classroom page
+    classroomPage: {
+        title: 'Aula',
+        subtitle: 'Explorar cursos y seguir tu progreso de aprendizaje.',
+        myCourses: 'Mis cursos',
+        availableCourses: 'Cursos disponibles',
+        signInPrompt: 'para inscribirte en cursos y seguir tu progreso.',
+        lessons: 'lecciones',
+        lesson: 'lección',
+        completed: 'Completado',
+        continueLearning: 'Continuar',
+        startCourse: 'Iniciar curso',
+        viewCourse: 'Ver curso →',
+        noCoursesAvailable: 'No hay cursos disponibles',
+        checkBackSoon: 'Vuelve pronto para nuevos cursos.',
+        noEnrolledCourses: 'No hay cursos inscritos',
+        notEnrolledYet: 'Aún no te has inscrito en ningún curso.',
+        allCourses: 'Todos los cursos',
+        coursesCategory: 'Cursos',
+        myProgress: 'Mi progreso',
+        enrolled: 'Inscrito',
+        lessonsLabel: 'Lecciones',
+    },
 };
+

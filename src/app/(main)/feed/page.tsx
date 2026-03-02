@@ -8,8 +8,9 @@ import { CategoriesSidebar } from '@/components/feed/categories-sidebar';
 import { RightSidebar } from '@/components/feed/right-sidebar';
 import { CreatePostModal } from '@/components/feed/create-post-modal';
 import { translatePostsForUser } from '@/lib/translation';
-import { translateUIText, translateObjects } from '@/lib/translation/ui';
+import { translateObjects } from '@/lib/translation/ui';
 import { getCommunitySettings } from '@/lib/settings-actions';
+import { getMessages } from '@/lib/i18n';
 
 const POSTS_PER_PAGE = 10;
 
@@ -99,17 +100,18 @@ async function FeedContent({ searchParams }: FeedPageProps) {
     'category'
   );
 
-  // Translate UI strings dynamically
+  // Get static UI translations from message files (instant, no API call)
+  const messages = getMessages(userLanguage);
   const translatedUI = {
-    categoriesTitle: await translateUIText('Categories', 'en', userLanguage, 'sidebar'),
-    allPosts: await translateUIText('All Posts', 'en', userLanguage, 'sidebar'),
-    members: await translateUIText('Members', 'en', userLanguage, 'sidebar'),
-    leaderboard: await translateUIText('Top Learners', 'en', userLanguage, 'sidebar'),
-    viewAll: await translateUIText('View all', 'en', userLanguage, 'sidebar'),
-    aiToolsTitle: await translateUIText('AI Tools', 'en', userLanguage, 'sidebar'),
-    level: await translateUIText('Level', 'en', userLanguage, 'gamification'),
-    writeSomething: await translateUIText('Write something...', 'en', userLanguage, 'placeholder'),
-    noPosts: await translateUIText('No posts yet. Be the first to share something!', 'en', userLanguage, 'message'),
+    categoriesTitle: messages.categories.title,
+    allPosts: messages.categories.allPosts,
+    members: messages.sidebar.members,
+    leaderboard: messages.sidebar.leaderboard,
+    viewAll: messages.sidebar.viewAll,
+    aiToolsTitle: messages.nav.aiTools,
+    level: messages.gamification.level,
+    writeSomething: messages.post.writeSomething,
+    noPosts: messages.common.noResults,
   };
 
   // Get community settings for sidebar banner
@@ -135,6 +137,8 @@ async function FeedContent({ searchParams }: FeedPageProps) {
           userImage={session?.user?.image}
           userName={session?.user?.name}
           writeSomethingPlaceholder={translatedUI.writeSomething}
+          postButtonLabel={messages.post.post}
+          cancelLabel={messages.post.cancel}
         />
 
         {/* Posts list */}
