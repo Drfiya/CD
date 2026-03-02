@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { getStripe } from '@/lib/stripe';
 import db from '@/lib/db';
 import type Stripe from 'stripe';
+import { trackStripeEvent } from '@/lib/api-tracking';
 
 // Disable body parsing — Stripe needs the raw body for signature verification
 export const dynamic = 'force-dynamic';
@@ -59,6 +60,9 @@ export async function POST(req: Request) {
         console.error(`Error handling event ${event.type}:`, err);
         return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
     }
+
+    // Track the webhook event
+    trackStripeEvent(event.type);
 
     return NextResponse.json({ received: true });
 }

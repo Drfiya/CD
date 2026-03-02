@@ -366,6 +366,20 @@ model TranslationUsage {
   @@index([sourceLang, targetLang])
 }
 
+model ApiUsage {
+  id        String   @id @default(cuid())
+  service   String   // "deepl", "gemini", "resend", "stripe", "giphy", "supabase"
+  action    String   // "translate", "send_email", "search_gif", "checkout", etc.
+  units     Int      @default(1)
+  unitType  String   // "characters", "tokens", "emails", "requests"
+  cost      Float    @default(0)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([service, createdAt])
+  @@index([createdAt])
+}
+
 model KanbanCard {
   id          String       @id @default(cuid())
   title       String       @db.VarChar(200)

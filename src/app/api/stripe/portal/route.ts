@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getStripe } from '@/lib/stripe';
 import db from '@/lib/db';
+import { trackStripeEvent } from '@/lib/api-tracking';
 
 export async function POST(req: Request) {
     try {
@@ -30,6 +31,9 @@ export async function POST(req: Request) {
             customer: membership.stripeCustomerId,
             return_url: `${req.headers.get('origin')}/`,
         });
+
+        // Track portal session creation
+        trackStripeEvent('billing_portal.session.created');
 
         return NextResponse.json({ url: portalSession.url });
     } catch (error) {

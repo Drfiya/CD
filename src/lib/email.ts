@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 import crypto from 'crypto';
 import db from '@/lib/db';
+import { trackResendEmail } from '@/lib/api-tracking';
 
 // Lazy initialization — only create Resend client when actually needed
 // This prevents crashes when RESEND_API_KEY is not set but other
@@ -71,6 +72,8 @@ export async function sendPasswordResetEmail(email: string) {
         </div>
       `,
     });
+    // Track successful email send
+    trackResendEmail(email);
   } catch (error) {
     console.error('Failed to send email:', error);
     // Still return success to not reveal email existence

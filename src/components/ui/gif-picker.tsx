@@ -53,6 +53,12 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
 
             if (data.data) {
                 setGifs(data.data);
+                // Track GIPHY API usage
+                fetch('/api/track-usage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ service: 'giphy', action: 'trending' }),
+                }).catch(() => { });
             }
         } catch (err) {
             setError('Failed to load GIFs');
@@ -87,6 +93,12 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
 
             if (data.data) {
                 setGifs(data.data);
+                // Track GIPHY API usage
+                fetch('/api/track-usage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ service: 'giphy', action: 'search', metadata: { query: searchQuery } }),
+                }).catch(() => { });
             }
         } catch (err) {
             setError('Failed to search GIFs');

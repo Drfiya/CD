@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getStripe } from '@/lib/stripe';
 import db from '@/lib/db';
 import type Stripe from 'stripe';
+import { trackStripeEvent } from '@/lib/api-tracking';
 
 /**
  * Resolve a customer-facing promo code string (e.g. "ALPHA100") to a Stripe
@@ -106,6 +107,9 @@ export async function POST(req: Request) {
         }
 
         const checkoutSession = await stripe.checkout.sessions.create(params);
+
+        // Track checkout session creation
+        trackStripeEvent('checkout.session.created');
 
         return NextResponse.json({ url: checkoutSession.url });
     } catch (error) {

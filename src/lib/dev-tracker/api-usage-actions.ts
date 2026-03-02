@@ -167,7 +167,7 @@ async function getGeminiStats(): Promise<ServiceUsage> {
             name: 'Gemini AI',
             icon: '🤖',
             status: 'inactive',
-            unit: 'Reports',
+            unit: 'Tokens',
             usageToday: 0,
             usageThisMonth: 0,
             costToday: 0,
@@ -181,29 +181,44 @@ async function getGeminiStats(): Promise<ServiceUsage> {
         const monthStart = startOfMonth();
         const now = new Date();
 
-        const reportsToday = await db.feedReport.count({
-            where: { createdAt: { gte: today, lte: now } },
-        });
+        // Check ApiUsage table for tracked Gemini calls
+        const [todayUsage, monthUsage] = await Promise.all([
+            db.apiUsage.aggregate({
+                where: { service: 'gemini', createdAt: { gte: today, lte: now } },
+                _sum: { units: true, cost: true },
+                _count: true,
+            }),
+            db.apiUsage.aggregate({
+                where: { service: 'gemini', createdAt: { gte: monthStart, lte: now } },
+                _sum: { units: true, cost: true },
+                _count: true,
+            }),
+        ]);
+
+        // Fallback: also count FeedReport rows as proxy
         const reportsMonth = await db.feedReport.count({
             where: { createdAt: { gte: monthStart, lte: now } },
         });
 
-        // Estimate: ~2K tokens/report (avg input+output), Gemini 2.0 Flash: $0.10/1M input + $0.40/1M output
-        // Rough estimate: ~$0.001 per report
-        const costPerReport = 0.001;
+        const tokensToday = todayUsage._sum.units || 0;
+        const tokensMonth = monthUsage._sum.units || (reportsMonth * 2000);
+        const costToday = todayUsage._sum.cost || 0;
+        const costMonth = monthUsage._sum.cost || (reportsMonth * 0.001);
 
         return {
             name: 'Gemini AI',
             icon: '🤖',
             status: 'active',
-            unit: 'Reports',
-            usageToday: reportsToday,
-            usageThisMonth: reportsMonth,
-            costToday: reportsToday * costPerReport,
-            costThisMonth: reportsMonth * costPerReport,
+            unit: 'Tokens',
+            usageToday: tokensToday,
+            usageThisMonth: tokensMonth,
+            costToday,
+            costThisMonth: costMonth,
             limit: 'Free: 15 RPM / Flash: ~$0.001/report',
             details: {
-                estimatedTokensMonth: reportsMonth * 2000,
+                trackedCalls: monthUsage._count,
+                feedReports: reportsMonth,
+                estimatedTokensMonth: tokensMonth,
             },
         };
     } catch (error) {
@@ -212,7 +227,7 @@ async function getGeminiStats(): Promise<ServiceUsage> {
             name: 'Gemini AI',
             icon: '🤖',
             status: 'error',
-            unit: 'Reports',
+            unit: 'Tokens',
             usageToday: 0,
             usageThisMonth: 0,
             costToday: 0,
@@ -231,7 +246,7 @@ async function getStripeStats(): Promise<ServiceUsage> {
             name: 'Stripe',
             icon: '💳',
             status: 'inactive',
-            unit: 'Subscriptions',
+            unit: 'Requests',
             usageToday: 0,
             usageThisMonth: 0,
             costToday: 0,
@@ -241,24 +256,50 @@ async function getStripeStats(): Promise<ServiceUsage> {
     }
 
     try {
-        const activeMembers = await db.membership.count({
-            where: { status: 'ACTIVE' },
+        const today = startOfDay();
+        const monthStart = startOfMonth();
+        const now = new Date();
+
+        const [todayUsage, monthUsage, activeMembers, totalMembers] = await Promise.all([
+            db.apiUsage.aggregate({
+                where: { service: 'stripe', createdAt: { gte: today, lte: now } },
+                _count: true,
+            }),
+            db.apiUsage.aggregate({
+                where: { service: 'stripe', createdAt: { gte: monthStart, lte: now } },
+                _count: true,
+            }),
+            db.membership.count({ where: { status: 'ACTIVE' } }),
+            db.membership.count(),
+        ]);
+
+        // Get event type breakdown
+        const eventBreakdown = await db.apiUsage.groupBy({
+            by: ['action'],
+            where: { service: 'stripe', createdAt: { gte: monthStart, lte: now } },
+            _count: true,
+            orderBy: { _count: { action: 'desc' } },
         });
-        const totalMembers = await db.membership.count();
+
+        const eventDetails: Record<string, number> = {};
+        eventBreakdown.forEach(e => {
+            eventDetails[e.action] = e._count;
+        });
 
         return {
             name: 'Stripe',
             icon: '💳',
             status: 'active',
-            unit: 'Subscriptions',
-            usageToday: 0,
-            usageThisMonth: activeMembers,
+            unit: 'Requests',
+            usageToday: todayUsage._count,
+            usageThisMonth: monthUsage._count,
             costToday: 0,
-            costThisMonth: 0, // Stripe costs are % of revenue — not direct API cost
+            costThisMonth: 0,
             limit: '2.9% + 30¢ per charge',
             details: {
                 activeSubscriptions: activeMembers,
-                totalEver: totalMembers,
+                totalMembers: totalMembers,
+                ...eventDetails,
             },
         };
     } catch (error) {
@@ -267,7 +308,7 @@ async function getStripeStats(): Promise<ServiceUsage> {
             name: 'Stripe',
             icon: '💳',
             status: 'error',
-            unit: 'Subscriptions',
+            unit: 'Requests',
             usageToday: 0,
             usageThisMonth: 0,
             costToday: 0,
@@ -281,40 +322,141 @@ async function getStripeStats(): Promise<ServiceUsage> {
 
 async function getResendStats(): Promise<ServiceUsage> {
     const isConfigured = !!process.env.RESEND_API_KEY;
-    return {
-        name: 'Resend',
-        icon: '📧',
-        status: isConfigured ? 'active' : 'inactive',
-        unit: 'Emails',
-        usageToday: 0,
-        usageThisMonth: 0,
-        costToday: 0,
-        costThisMonth: 0,
-        limit: isConfigured ? 'Free: 100/day, 3K/mo' : 'Not configured',
-        details: {
-            note: 'Email tracking available via Resend dashboard',
-        },
-    };
+    if (!isConfigured) {
+        return {
+            name: 'Resend',
+            icon: '📧',
+            status: 'inactive',
+            unit: 'Emails',
+            usageToday: 0,
+            usageThisMonth: 0,
+            costToday: 0,
+            costThisMonth: 0,
+            limit: 'Not configured',
+        };
+    }
+
+    try {
+        const today = startOfDay();
+        const monthStart = startOfMonth();
+        const now = new Date();
+
+        const [todayUsage, monthUsage] = await Promise.all([
+            db.apiUsage.aggregate({
+                where: { service: 'resend', createdAt: { gte: today, lte: now } },
+                _sum: { units: true },
+                _count: true,
+            }),
+            db.apiUsage.aggregate({
+                where: { service: 'resend', createdAt: { gte: monthStart, lte: now } },
+                _sum: { units: true },
+                _count: true,
+            }),
+        ]);
+
+        return {
+            name: 'Resend',
+            icon: '📧',
+            status: 'active',
+            unit: 'Emails',
+            usageToday: todayUsage._sum.units || 0,
+            usageThisMonth: monthUsage._sum.units || 0,
+            costToday: 0,
+            costThisMonth: 0,
+            limit: 'Free: 100/day, 3K/mo',
+            details: {
+                emailsSentToday: todayUsage._count,
+                emailsSentMonth: monthUsage._count,
+            },
+        };
+    } catch (error) {
+        console.error('Failed to get Resend stats:', error);
+        return {
+            name: 'Resend',
+            icon: '📧',
+            status: 'error',
+            unit: 'Emails',
+            usageToday: 0,
+            usageThisMonth: 0,
+            costToday: 0,
+            costThisMonth: 0,
+            limit: 'Error fetching stats',
+        };
+    }
 }
 
 // --- GIPHY Stats ---
 
-function getGiphyStats(): ServiceUsage {
+async function getGiphyStats(): Promise<ServiceUsage> {
     const isConfigured = !!process.env.NEXT_PUBLIC_GIPHY_API_KEY;
-    return {
-        name: 'GIPHY',
-        icon: '🎬',
-        status: isConfigured ? 'active' : 'inactive',
-        unit: 'Requests',
-        usageToday: 0,
-        usageThisMonth: 0,
-        costToday: 0,
-        costThisMonth: 0,
-        limit: isConfigured ? 'Free: 42 req/hr, 1K/day' : 'Not configured',
-        details: {
-            note: 'Client-side only — no server tracking',
-        },
-    };
+    if (!isConfigured) {
+        return {
+            name: 'GIPHY',
+            icon: '🎬',
+            status: 'inactive',
+            unit: 'Requests',
+            usageToday: 0,
+            usageThisMonth: 0,
+            costToday: 0,
+            costThisMonth: 0,
+            limit: 'Not configured',
+        };
+    }
+
+    try {
+        const today = startOfDay();
+        const monthStart = startOfMonth();
+        const now = new Date();
+
+        const [todayUsage, monthUsage] = await Promise.all([
+            db.apiUsage.aggregate({
+                where: { service: 'giphy', createdAt: { gte: today, lte: now } },
+                _count: true,
+            }),
+            db.apiUsage.aggregate({
+                where: { service: 'giphy', createdAt: { gte: monthStart, lte: now } },
+                _count: true,
+            }),
+        ]);
+
+        // Get breakdown by action type
+        const actionBreakdown = await db.apiUsage.groupBy({
+            by: ['action'],
+            where: { service: 'giphy', createdAt: { gte: monthStart, lte: now } },
+            _count: true,
+        });
+
+        const details: Record<string, number> = {};
+        actionBreakdown.forEach(a => {
+            details[`${a.action}Requests`] = a._count;
+        });
+
+        return {
+            name: 'GIPHY',
+            icon: '🎬',
+            status: 'active',
+            unit: 'Requests',
+            usageToday: todayUsage._count,
+            usageThisMonth: monthUsage._count,
+            costToday: 0,
+            costThisMonth: 0,
+            limit: 'Free: 42 req/hr, 1K/day',
+            details,
+        };
+    } catch (error) {
+        console.error('Failed to get GIPHY stats:', error);
+        return {
+            name: 'GIPHY',
+            icon: '🎬',
+            status: 'error',
+            unit: 'Requests',
+            usageToday: 0,
+            usageThisMonth: 0,
+            costToday: 0,
+            costThisMonth: 0,
+            limit: 'Error fetching stats',
+        };
+    }
 }
 
 // --- Supabase Stats ---
@@ -381,15 +523,14 @@ async function getSupabaseStats(): Promise<ServiceUsage> {
 // --- Main Aggregator ---
 
 export async function getApiUsageData(): Promise<ApiUsageData> {
-    const [deepl, gemini, stripe, resend, supabase] = await Promise.all([
+    const [deepl, gemini, stripe, resend, giphy, supabase] = await Promise.all([
         getDeepLStats(),
         getGeminiStats(),
         getStripeStats(),
         getResendStats(),
+        getGiphyStats(),
         getSupabaseStats(),
     ]);
-
-    const giphy = getGiphyStats();
 
     const services = [deepl, gemini, stripe, resend, giphy, supabase];
 
