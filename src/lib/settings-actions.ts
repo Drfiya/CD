@@ -34,6 +34,8 @@ export type CommunitySettings = {
   landingCtaText: string | null;
   landingTestimonials: { name: string; text: string; role: string }[];
   landingTranslations: Record<string, LandingTranslation>;
+  // Classroom video URLs per language
+  classroomVideoUrls: Record<string, string>;
 };
 
 /**
@@ -52,14 +54,9 @@ export type LandingTranslation = {
  * Get community settings, creating defaults if they don't exist.
  */
 export async function getCommunitySettings(): Promise<CommunitySettings> {
-  // Upsert singleton settings - creates if missing
-  const settings = await db.communitySettings.upsert({
+  // Get or create singleton settings
+  let settings = await db.communitySettings.findUnique({
     where: { id: 'singleton' },
-    update: {},
-    create: {
-      id: 'singleton',
-      communityName: 'Community',
-    },
     select: {
       id: true,
       communityName: true,
@@ -80,8 +77,40 @@ export async function getCommunitySettings(): Promise<CommunitySettings> {
       landingCtaText: true,
       landingTestimonials: true,
       landingTranslations: true,
+      classroomVideoUrls: true,
     },
   });
+
+  if (!settings) {
+    settings = await db.communitySettings.create({
+      data: {
+        id: 'singleton',
+        communityName: 'Community',
+      },
+      select: {
+        id: true,
+        communityName: true,
+        communityDescription: true,
+        communityLogo: true,
+        communityLogoDark: true,
+        logoSize: true,
+        sidebarBannerImage: true,
+        sidebarBannerUrl: true,
+        sidebarBannerEnabled: true,
+        landingHeadline: true,
+        landingSubheadline: true,
+        landingDescription: true,
+        landingVideoUrls: true,
+        landingBenefits: true,
+        landingPriceUsd: true,
+        landingPriceEur: true,
+        landingCtaText: true,
+        landingTestimonials: true,
+        landingTranslations: true,
+        classroomVideoUrls: true,
+      },
+    });
+  }
 
   return {
     ...settings,
@@ -89,6 +118,7 @@ export async function getCommunitySettings(): Promise<CommunitySettings> {
     landingBenefits: (settings.landingBenefits as string[] | null) ?? [],
     landingTestimonials: (settings.landingTestimonials as { name: string; text: string; role: string }[] | null) ?? [],
     landingTranslations: (settings.landingTranslations as Record<string, LandingTranslation> | null) ?? {},
+    classroomVideoUrls: (settings.classroomVideoUrls as Record<string, string> | null) ?? {},
   };
 }
 
@@ -749,6 +779,51 @@ export async function updateSidebarBannerSettings(
 
   revalidatePath('/admin/settings');
   revalidatePath('/feed');
+
+  return { success: true };
+}
+
+/**
+ * Update classroom video URLs (per-language YouTube URLs).
+ * Only callable by admin+ roles.
+ */
+export async function updateClassroomVideoUrls(
+  data: Record<string, string>
+): Promise<{ success?: boolean; error?: string }> {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return { error: 'Not authenticated' };
+  }
+
+  if (!canEditSettings(session.user.role)) {
+    return { error: 'Permission denied' };
+  }
+
+  // Filter out empty URLs
+  const cleaned: Record<string, string> = {};
+  for (const [lang, url] of Object.entries(data)) {
+    if (url && url.trim()) {
+      cleaned[lang] = url.trim();
+    }
+  }
+
+  await db.communitySettings.update({
+    where: { id: 'singleton' },
+    data: { classroomVideoUrls: cleaned },
+  });
+
+  await logAuditEvent(session.user.id, 'UPDATE_SETTINGS', {
+    targetId: 'singleton',
+    targetType: 'SETTINGS',
+    details: {
+      action: 'classroom_video_urls_update',
+      languages: Object.keys(cleaned),
+    },
+  });
+
+  revalidatePath('/admin/courses');
+  revalidatePath('/classroom');
 
   return { success: true };
 }

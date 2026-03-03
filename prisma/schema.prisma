@@ -315,6 +315,7 @@ model CommunitySettings {
   sidebarBannerImage   String?
   sidebarBannerUrl     String?
   sidebarBannerEnabled Boolean  @default(false)
+  classroomVideoUrls   Json     @default("{}")
 }
 
 model Membership {

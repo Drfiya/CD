@@ -4,8 +4,10 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { canEditSettings } from '@/lib/permissions';
 import { getCourses } from '@/lib/course-actions';
+import { getCommunitySettings } from '@/lib/settings-actions';
 import { CourseCard } from '@/components/admin/course-card';
 import { CourseForm } from '@/components/admin/course-form';
+import { ClassroomVideoForm } from '@/components/admin/classroom-video-form';
 import { EmptyState } from '@/components/ui/empty-state';
 
 export const metadata: Metadata = {
@@ -24,7 +26,10 @@ export default async function AdminCoursesPage() {
     redirect('/admin/moderation');
   }
 
-  const courses = await getCourses();
+  const [courses, communitySettings] = await Promise.all([
+    getCourses(),
+    getCommunitySettings(),
+  ]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 p-6">
@@ -57,6 +62,16 @@ export default async function AdminCoursesPage() {
           </div>
         )}
       </div>
+
+      {/* Classroom Video — Multilingual */}
+      <div className="border rounded-lg p-4">
+        <h2 className="text-lg font-medium mb-1">Classroom Video</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Set a YouTube video URL per language. This video will be displayed on the Classroom page based on the user&apos;s language.
+        </p>
+        <ClassroomVideoForm currentUrls={communitySettings.classroomVideoUrls} />
+      </div>
     </div>
   );
 }
+

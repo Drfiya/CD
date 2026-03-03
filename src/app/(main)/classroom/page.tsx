@@ -145,6 +145,12 @@ export default async function ClassroomPage({ searchParams }: ClassroomPageProps
             </div>
           </div>
 
+          {/* Classroom Video Embed - Language-aware */}
+          <ClassroomVideoEmbed
+            classroomVideoUrls={communitySettings.classroomVideoUrls}
+            userLanguage={userLanguage}
+          />
+
           {/* Sign-in prompt for non-logged-in users */}
           {!session?.user?.id && (
             <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-100 dark:border-neutral-700 p-4">
@@ -344,3 +350,38 @@ function SectionHeader({ title, icon }: { title: string; icon: React.ReactNode }
     </div>
   );
 }
+
+function ClassroomVideoEmbed({
+  classroomVideoUrls,
+  userLanguage,
+}: {
+  classroomVideoUrls: Record<string, string>;
+  userLanguage: string;
+}) {
+  // Pick the video URL for the user's language, fallback to English
+  const videoUrl = classroomVideoUrls[userLanguage] || classroomVideoUrls['en'];
+  if (!videoUrl) return null;
+
+  // Extract YouTube video ID
+  const ytMatch = videoUrl.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+  );
+  if (!ytMatch) return null;
+
+  const embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}?rel=0`;
+
+  return (
+    <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-100 dark:border-neutral-700 overflow-hidden">
+      <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+        <iframe
+          src={embedUrl}
+          title="Classroom Video"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          className="absolute inset-0 w-full h-full"
+        />
+      </div>
+    </div>
+  );
+}
+
