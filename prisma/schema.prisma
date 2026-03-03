@@ -465,6 +465,14 @@ model AiTool {
   @@index([active, position])
 }
 
+model AdminTool {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(200)
+  url         String   @db.VarChar(500)
+  description String?
+  createdAt   DateTime @default(now())
+}
+
 model FeedReport {
   id             String   @id
   userId         String
