@@ -132,7 +132,7 @@ export function AdminToolManager({ tools }: AdminToolManagerProps) {
                             <tr className="border-b border-gray-100 dark:border-neutral-700 text-left">
                                 <th className="px-4 py-3 font-medium text-gray-500 dark:text-neutral-400">Name</th>
                                 <th className="px-4 py-3 font-medium text-gray-500 dark:text-neutral-400 hidden md:table-cell">Description</th>
-                                <th className="px-4 py-3 font-medium text-gray-500 dark:text-neutral-400 hidden lg:table-cell">URL</th>
+                                <th className="px-4 py-3 font-medium text-gray-500 dark:text-neutral-400">URL</th>
                                 <th className="px-4 py-3 font-medium text-gray-500 dark:text-neutral-400 hidden sm:table-cell">Created</th>
                                 <th className="px-4 py-3 font-medium text-gray-500 dark:text-neutral-400 w-28 text-right">Actions</th>
                             </tr>
@@ -153,7 +153,7 @@ export function AdminToolManager({ tools }: AdminToolManagerProps) {
                                             {tool.description || '—'}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 hidden lg:table-cell">
+                                    <td className="px-4 py-3">
                                         <a
                                             href={tool.url}
                                             target="_blank"
