@@ -11,6 +11,7 @@ import { translatePostsForUser } from '@/lib/translation';
 import { translateObjects } from '@/lib/translation/ui';
 import { getCommunitySettings } from '@/lib/settings-actions';
 import { getMessages } from '@/lib/i18n';
+import { getUserLanguage } from '@/lib/translation/helpers';
 
 const POSTS_PER_PAGE = 10;
 
@@ -27,13 +28,8 @@ async function FeedContent({ searchParams }: FeedPageProps) {
   const session = await getServerSession(authOptions);
   const currentUserId = session?.user?.id;
 
-  // Get user's language preference
-  const userLanguage = currentUserId
-    ? (await db.user.findUnique({
-      where: { id: currentUserId },
-      select: { languageCode: true },
-    }))?.languageCode || 'en'
-    : 'en';
+  // Get user's language preference (includes DB, cookie, IP geo, Accept-Language fallbacks)
+  const userLanguage = await getUserLanguage();
 
   // Build where clause for category filter
   const whereClause = category ? { categoryId: category } : {};
