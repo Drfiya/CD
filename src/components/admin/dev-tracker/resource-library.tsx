@@ -378,6 +378,15 @@ function ResourceCard({
                             ↗️
                         </a>
                     )}
+                    {resource.readme && (
+                        <span
+                            className="p-1 text-blue-400 dark:text-blue-500 cursor-pointer hover:text-blue-600 dark:hover:text-blue-300 transition-colors"
+                            title={resource.readme}
+                            onClick={() => setExpanded(!expanded)}
+                        >
+                            📖
+                        </span>
+                    )}
                     <button
                         onClick={handleCopy}
                         className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
