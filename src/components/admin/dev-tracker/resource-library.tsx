@@ -278,7 +278,7 @@ function AddTextForm({
             <textarea
                 value={readme}
                 onChange={(e) => setReadme(e.target.value)}
-                placeholder="README (optional) — kurze Beschreibung für Kollegen, was dieser Prompt/Link macht"
+                placeholder="README (optional) — short description for colleagues about what this prompt/link does"
                 rows={2}
                 className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-neutral-100 focus:ring-2 focus:ring-gray-400 dark:focus:ring-neutral-500 focus:border-gray-400 outline-none resize-none"
             />
@@ -441,13 +441,13 @@ function ResourceCard({
                                 value={readmeText}
                                 onChange={(e) => setReadmeText(e.target.value)}
                                 rows={3}
-                                placeholder="Kurze Beschreibung für Kollegen, was dieser Prompt/Link macht…"
+                                placeholder="Short description for colleagues about what this prompt/link does…"
                                 className="w-full px-2 py-1.5 text-xs border border-blue-200 dark:border-blue-800 rounded bg-white dark:bg-neutral-800 dark:text-neutral-100 focus:ring-1 focus:ring-blue-400 outline-none resize-none"
                                 autoFocus
                             />
                         ) : (
                             <p className="text-xs text-gray-600 dark:text-neutral-400 leading-relaxed whitespace-pre-wrap">
-                                {resource.readme || <span className="italic text-gray-400 dark:text-neutral-500">Noch kein README — klicke "Edit" um eine Beschreibung hinzuzufügen</span>}
+                                {resource.readme || <span className="italic text-gray-400 dark:text-neutral-500">No README yet — click &quot;Edit&quot; to add a description</span>}
                             </p>
                         )}
                     </div>

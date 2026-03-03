@@ -111,7 +111,7 @@ export function AdminToolManager({ tools }: AdminToolManagerProps) {
                         className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50"
                         style={{ backgroundColor: '#D94A4A' }}
                     >
-                        {isPending ? 'Adding…' : 'Tool hinzufügen'}
+                        {isPending ? 'Adding…' : 'Add Tool'}
                     </button>
                 </div>
             </form>
