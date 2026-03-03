@@ -101,10 +101,24 @@ export function HeaderNav({ messages }: HeaderNavProps) {
     }, [activeIndex]);
 
     // Recalculate on mount, route change, and window resize
+    // Wait for fonts to load before initial measurement to avoid wrong sizing
     useEffect(() => {
+        // Immediate measurement (works on SPA navigation when fonts are cached)
         updateSlider();
+
+        // Wait for fonts to finish loading, then re-measure
+        document.fonts.ready.then(() => {
+            updateSlider();
+        });
+
+        // Safety-net: re-measure after a short delay in case layout shifts
+        const timer = setTimeout(updateSlider, 150);
+
         window.addEventListener('resize', updateSlider);
-        return () => window.removeEventListener('resize', updateSlider);
+        return () => {
+            window.removeEventListener('resize', updateSlider);
+            clearTimeout(timer);
+        };
     }, [updateSlider]);
 
     return (
