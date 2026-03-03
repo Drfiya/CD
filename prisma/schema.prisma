@@ -428,6 +428,7 @@ model DevTrackerResource {
   fileName    String?         @db.VarChar(255)
   fileSize    Int?
   mimeType    String?         @db.VarChar(100)
+  readme      String?
   createdBy   User            @relation(fields: [createdById], references: [id])
 
   @@index([type])

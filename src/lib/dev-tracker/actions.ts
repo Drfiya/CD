@@ -212,6 +212,7 @@ export async function addResource(data: {
     title: string;
     content: string;
     createdById: string;
+    readme?: string;
 }) {
     await db.devTrackerResource.create({ data });
     revalidatePath('/admin/dev-tracker/resources');
@@ -224,6 +225,7 @@ export async function updateResource(
         content?: string;
         starred?: boolean;
         useCount?: number;
+        readme?: string | null;
     }
 ) {
     await db.devTrackerResource.update({ where: { id }, data });

@@ -20,6 +20,7 @@ interface Resource {
     type: 'PROMPT' | 'LINK' | 'NOTE' | 'FILE';
     title: string;
     content: string;
+    readme: string | null;
     starred: boolean;
     useCount: number;
     fileUrl: string | null;
@@ -221,6 +222,7 @@ function AddTextForm({
     const [type, setType] = useState<'PROMPT' | 'LINK' | 'NOTE'>('PROMPT');
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
+    const [readme, setReadme] = useState('');
     const [isPending, startTransition] = useTransition();
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -233,9 +235,11 @@ function AddTextForm({
                 title: title.trim(),
                 content: content.trim(),
                 createdById: userId,
+                readme: readme.trim() || undefined,
             });
             setTitle('');
             setContent('');
+            setReadme('');
             onAdded();
         });
     };
@@ -271,6 +275,13 @@ function AddTextForm({
                 rows={type === 'PROMPT' ? 4 : 2}
                 className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-neutral-100 focus:ring-2 focus:ring-gray-400 dark:focus:ring-neutral-500 focus:border-gray-400 outline-none resize-none"
             />
+            <textarea
+                value={readme}
+                onChange={(e) => setReadme(e.target.value)}
+                placeholder="README (optional) — kurze Beschreibung für Kollegen, was dieser Prompt/Link macht"
+                rows={2}
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-neutral-100 focus:ring-2 focus:ring-gray-400 dark:focus:ring-neutral-500 focus:border-gray-400 outline-none resize-none"
+            />
             <button
                 type="submit"
                 disabled={isPending || !title.trim() || !content.trim()}
@@ -293,6 +304,8 @@ function ResourceCard({
 }) {
     const [isPending, startTransition] = useTransition();
     const [expanded, setExpanded] = useState(false);
+    const [editingReadme, setEditingReadme] = useState(false);
+    const [readmeText, setReadmeText] = useState(resource.readme || '');
 
     const handleStar = () => {
         startTransition(async () => {
@@ -316,6 +329,15 @@ function ResourceCard({
         navigator.clipboard.writeText(textToCopy);
         startTransition(async () => {
             await updateResource(resource.id, { useCount: resource.useCount + 1 });
+            onRefresh();
+        });
+    };
+
+    const handleSaveReadme = () => {
+        const trimmed = readmeText.trim();
+        startTransition(async () => {
+            await updateResource(resource.id, { readme: trimmed || null });
+            setEditingReadme(false);
             onRefresh();
         });
     };
@@ -395,7 +417,42 @@ function ResourceCard({
 
             {/* Expanded content */}
             {expanded && (
-                <div className="mt-3 pt-3 border-t border-gray-100">
+                <div className="mt-3 pt-3 border-t border-gray-100 dark:border-neutral-700 space-y-3">
+                    {/* README section */}
+                    <div className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">📖 README</span>
+                            <button
+                                onClick={() => {
+                                    if (editingReadme) {
+                                        handleSaveReadme();
+                                    } else {
+                                        setEditingReadme(true);
+                                    }
+                                }}
+                                disabled={isPending}
+                                className="text-xs text-blue-500 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                            >
+                                {editingReadme ? (isPending ? 'Saving…' : '💾 Save') : '✏️ Edit'}
+                            </button>
+                        </div>
+                        {editingReadme ? (
+                            <textarea
+                                value={readmeText}
+                                onChange={(e) => setReadmeText(e.target.value)}
+                                rows={3}
+                                placeholder="Kurze Beschreibung für Kollegen, was dieser Prompt/Link macht…"
+                                className="w-full px-2 py-1.5 text-xs border border-blue-200 dark:border-blue-800 rounded bg-white dark:bg-neutral-800 dark:text-neutral-100 focus:ring-1 focus:ring-blue-400 outline-none resize-none"
+                                autoFocus
+                            />
+                        ) : (
+                            <p className="text-xs text-gray-600 dark:text-neutral-400 leading-relaxed whitespace-pre-wrap">
+                                {resource.readme || <span className="italic text-gray-400 dark:text-neutral-500">Noch kein README — klicke "Edit" um eine Beschreibung hinzuzufügen</span>}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Content */}
                     {isFile && isImage && resource.fileUrl ? (
                         // Image preview
                         <div className="rounded-lg overflow-hidden border border-gray-200 max-h-64">
