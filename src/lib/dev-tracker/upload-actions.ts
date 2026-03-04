@@ -7,7 +7,7 @@
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
+// Admin client is imported dynamically in upload functions
 import db from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
@@ -115,7 +115,9 @@ export async function uploadResourceFile(formData: FormData): Promise<{
         return { error: `File too large. Maximum size is ${formatFileSize(MAX_FILE_SIZE)}.` };
     }
 
-    const supabase = await createClient();
+    // Use admin client to bypass RLS (NextAuth doesn't create Supabase sessions)
+    const { createAdminClient } = await import('@/lib/supabase/admin');
+    const supabase = createAdminClient();
 
     // Build storage path: dev-resources/<userId>/<timestamp>-<filename>
     const sanitizedName = sanitizeFilename(file.name);
