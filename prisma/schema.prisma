@@ -429,6 +429,7 @@ model DevTrackerResource {
   fileSize    Int?
   mimeType    String?         @db.VarChar(100)
   readme      String?
+  media       Json            @default("[]")
   createdBy   User            @relation(fields: [createdById], references: [id])
 
   @@index([type])

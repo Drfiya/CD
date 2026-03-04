@@ -193,3 +193,63 @@ export async function uploadResourceFiles(formData: FormData): Promise<{
 
     return { results };
 }
+
+// --- Media image upload for resource attachments ---
+
+const MEDIA_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const MAX_MEDIA_SIZE = 10 * 1024 * 1024; // 10MB
+
+/** Upload multiple images as resource media attachments. Returns URLs for storage in the media JSON field. */
+export async function uploadResourceMedia(formData: FormData): Promise<{
+    results: Array<{ url: string; filename: string; success: boolean; error?: string }>;
+}> {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+        return { results: [{ url: '', filename: '', success: false, error: 'Not authenticated' }] };
+    }
+
+    const files = formData.getAll('media') as File[];
+    const results: Array<{ url: string; filename: string; success: boolean; error?: string }> = [];
+
+    const supabase = await createClient();
+
+    for (const file of files) {
+        // Validate type
+        if (!MEDIA_IMAGE_TYPES.includes(file.type)) {
+            results.push({ url: '', filename: file.name, success: false, error: `Unsupported type: ${file.type}` });
+            continue;
+        }
+
+        // Validate size
+        if (file.size > MAX_MEDIA_SIZE) {
+            results.push({ url: '', filename: file.name, success: false, error: `File too large (max 10MB)` });
+            continue;
+        }
+
+        const sanitizedName = sanitizeFilename(file.name);
+        const path = `resource-media/${session.user.id}/${Date.now()}-${sanitizedName}`;
+
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = new Uint8Array(arrayBuffer);
+
+        const { error: uploadError } = await supabase.storage
+            .from('dev-resources')
+            .upload(path, buffer, {
+                contentType: file.type,
+                cacheControl: '3600',
+                upsert: false,
+            });
+
+        if (uploadError) {
+            results.push({ url: '', filename: file.name, success: false, error: uploadError.message });
+            continue;
+        }
+
+        const { data: { publicUrl } } = supabase.storage.from('dev-resources').getPublicUrl(path);
+
+        results.push({ url: publicUrl, filename: file.name, success: true });
+    }
+
+    return { results };
+}
+

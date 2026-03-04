@@ -9,7 +9,7 @@ import db from '@/lib/db';
 import { fullSync, type GitHubCommit } from './github-api';
 import { buildCards, computeStats, type TrackerCard, type TrackerStats, type CardMetadata } from './sync';
 import { revalidatePath } from 'next/cache';
-import type { KanbanStatus } from '@/generated/prisma/client';
+import type { KanbanStatus, Prisma } from '@/generated/prisma/client';
 
 // --- Sync ---
 
@@ -213,6 +213,7 @@ export async function addResource(data: {
     content: string;
     createdById: string;
     readme?: string;
+    media?: Prisma.InputJsonValue;
 }) {
     await db.devTrackerResource.create({ data });
     revalidatePath('/admin/dev-tracker/resources');
@@ -226,6 +227,7 @@ export async function updateResource(
         starred?: boolean;
         useCount?: number;
         readme?: string | null;
+        media?: Prisma.InputJsonValue;
     }
 ) {
     await db.devTrackerResource.update({ where: { id }, data });

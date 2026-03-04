@@ -3,6 +3,7 @@
 /**
  * Dev Tracker Resource Library — Client component.
  * Drag-and-drop file uploads + manual text entries (prompts, links, notes).
+ * Supports image & YouTube video media attachments on any resource.
  */
 
 import { useState, useTransition, useCallback, useRef } from 'react';
@@ -11,9 +12,20 @@ import {
     updateResource,
     deleteResource,
 } from '@/lib/dev-tracker/actions';
-import { uploadResourceFiles } from '@/lib/dev-tracker/upload-actions';
+import { uploadResourceFiles, uploadResourceMedia } from '@/lib/dev-tracker/upload-actions';
+import { parseVideoUrl } from '@/lib/video-utils';
+import { VideoEmbedPlayer } from '@/components/video/video-embed';
 
 // --- Types ---
+
+interface MediaItem {
+    type: 'image' | 'video';
+    url: string;
+    linkUrl?: string;
+    filename?: string;
+    service?: string;
+    videoId?: string;
+}
 
 interface Resource {
     id: string;
@@ -27,6 +39,7 @@ interface Resource {
     fileName: string | null;
     fileSize: number | null;
     mimeType: string | null;
+    media: unknown; // Prisma Json — cast to MediaItem[] at usage
     createdAt: Date;
     createdBy: { name: string | null };
 }
@@ -78,6 +91,211 @@ const TABS = [
     { id: 'LINK' as const, label: '🔗 Links' },
     { id: 'NOTE' as const, label: '📝 Notes' },
 ];
+
+// --- Image Lightbox ---
+
+function ImageLightbox({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
+    return (
+        <div
+            className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+            onClick={onClose}
+        >
+            <button
+                onClick={onClose}
+                className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors"
+                aria-label="Close"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+            </button>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+                src={src}
+                alt={alt}
+                className="max-w-full max-h-[90vh] object-contain rounded-lg"
+                onClick={(e) => e.stopPropagation()}
+            />
+        </div>
+    );
+}
+
+// --- Media editor (shared between Add & Edit) ---
+
+function MediaEditor({
+    media,
+    onChange,
+}: {
+    media: MediaItem[];
+    onChange: (media: MediaItem[]) => void;
+}) {
+    const [videoUrl, setVideoUrl] = useState('');
+    const [videoError, setVideoError] = useState('');
+    const [uploading, setUploading] = useState(false);
+    const imageInputRef = useRef<HTMLInputElement>(null);
+
+    const images = media.filter((m) => m.type === 'image');
+    const videos = media.filter((m) => m.type === 'video');
+
+    const handleImageUpload = async (files: FileList) => {
+        setUploading(true);
+        const formData = new FormData();
+        Array.from(files).forEach((f) => formData.append('media', f));
+
+        try {
+            const { results } = await uploadResourceMedia(formData);
+            const newImages: MediaItem[] = results
+                .filter((r) => r.success)
+                .map((r) => ({ type: 'image' as const, url: r.url, filename: r.filename }));
+            onChange([...media, ...newImages]);
+        } catch (err) {
+            console.error('Upload failed:', err);
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handleAddVideo = () => {
+        setVideoError('');
+        const parsed = parseVideoUrl(videoUrl.trim());
+        if (!parsed) {
+            setVideoError('Invalid YouTube/Vimeo/Loom URL');
+            return;
+        }
+        const newVideo: MediaItem = {
+            type: 'video',
+            url: parsed.url,
+            service: parsed.service,
+            videoId: parsed.id,
+        };
+        onChange([...media, newVideo]);
+        setVideoUrl('');
+    };
+
+    const handleRemove = (index: number) => {
+        onChange(media.filter((_, i) => i !== index));
+    };
+
+    const handleImageLinkChange = (index: number, linkUrl: string) => {
+        onChange(media.map((m, i) => (i === index ? { ...m, linkUrl } : m)));
+    };
+
+    return (
+        <div className="space-y-3 border border-gray-200 dark:border-neutral-600 rounded-lg p-3 bg-gray-50/50 dark:bg-neutral-700/30">
+            <p className="text-xs font-semibold text-gray-500 dark:text-neutral-400 uppercase tracking-wide">Media Attachments</p>
+
+            {/* Image upload */}
+            <div>
+                <input
+                    ref={imageInputRef}
+                    type="file"
+                    multiple
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) handleImageUpload(e.target.files);
+                        e.target.value = '';
+                    }}
+                />
+                <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    disabled={uploading}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-600 transition-colors disabled:opacity-50"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
+                    </svg>
+                    {uploading ? 'Uploading…' : 'Add Images'}
+                </button>
+            </div>
+
+            {/* Image previews */}
+            {images.length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                    {images.map((img, idx) => {
+                        const globalIdx = media.indexOf(img);
+                        return (
+                            <div key={idx} className="relative group">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                    src={img.url}
+                                    alt={img.filename || 'Image'}
+                                    className="w-full h-20 object-cover rounded-lg border border-gray-200 dark:border-neutral-600"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemove(globalIdx)}
+                                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                                    title="Remove"
+                                >
+                                    ✕
+                                </button>
+                                <input
+                                    type="url"
+                                    value={img.linkUrl || ''}
+                                    onChange={(e) => handleImageLinkChange(globalIdx, e.target.value)}
+                                    placeholder="Link URL (optional)"
+                                    className="mt-1 w-full px-1.5 py-0.5 text-[10px] border border-gray-200 dark:border-neutral-600 rounded bg-white dark:bg-neutral-700 dark:text-neutral-200 outline-none focus:ring-1 focus:ring-gray-400"
+                                />
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* Video URL input */}
+            <div className="flex gap-2">
+                <input
+                    type="url"
+                    value={videoUrl}
+                    onChange={(e) => { setVideoUrl(e.target.value); setVideoError(''); }}
+                    placeholder="YouTube/Vimeo/Loom URL"
+                    className="flex-1 px-2.5 py-1.5 text-xs border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-neutral-100 outline-none focus:ring-1 focus:ring-gray-400"
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddVideo())}
+                />
+                <button
+                    type="button"
+                    onClick={handleAddVideo}
+                    disabled={!videoUrl.trim()}
+                    className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-600 transition-colors disabled:opacity-50"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                </button>
+            </div>
+            {videoError && <p className="text-xs text-red-500">{videoError}</p>}
+
+            {/* Video list */}
+            {videos.length > 0 && (
+                <div className="space-y-1.5">
+                    {videos.map((vid, idx) => {
+                        const globalIdx = media.indexOf(vid);
+                        return (
+                            <div key={idx} className="flex items-center gap-2 bg-white dark:bg-neutral-700 border border-gray-200 dark:border-neutral-600 rounded-lg px-2.5 py-1.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-gray-400 shrink-0">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+                                </svg>
+                                <span className="text-xs text-gray-700 dark:text-neutral-300 truncate flex-1">{vid.url}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemove(globalIdx)}
+                                    className="text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                                    title="Remove"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+        </div>
+    );
+}
 
 // --- Drag-and-drop upload zone ---
 
@@ -223,6 +441,7 @@ function AddTextForm({
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [readme, setReadme] = useState('');
+    const [media, setMedia] = useState<MediaItem[]>([]);
     const [isPending, startTransition] = useTransition();
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -236,10 +455,12 @@ function AddTextForm({
                 content: content.trim(),
                 createdById: userId,
                 readme: readme.trim() || undefined,
+                media: media.length > 0 ? JSON.parse(JSON.stringify(media)) : undefined,
             });
             setTitle('');
             setContent('');
             setReadme('');
+            setMedia([]);
             onAdded();
         });
     };
@@ -282,6 +503,10 @@ function AddTextForm({
                 rows={2}
                 className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-neutral-100 focus:ring-2 focus:ring-gray-400 dark:focus:ring-neutral-500 focus:border-gray-400 outline-none resize-none"
             />
+
+            {/* Media attachments editor */}
+            <MediaEditor media={media} onChange={setMedia} />
+
             <button
                 type="submit"
                 disabled={isPending || !title.trim() || !content.trim()}
@@ -306,6 +531,9 @@ function ResourceCard({
     const [expanded, setExpanded] = useState(false);
     const [editingReadme, setEditingReadme] = useState(false);
     const [readmeText, setReadmeText] = useState(resource.readme || '');
+    const [editingMedia, setEditingMedia] = useState(false);
+    const [editMedia, setEditMedia] = useState<MediaItem[]>((resource.media || []) as MediaItem[]);
+    const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
 
     const handleStar = () => {
         startTransition(async () => {
@@ -342,9 +570,21 @@ function ResourceCard({
         });
     };
 
+    const handleSaveMedia = () => {
+        startTransition(async () => {
+            await updateResource(resource.id, { media: JSON.parse(JSON.stringify(editMedia)) });
+            setEditingMedia(false);
+            onRefresh();
+        });
+    };
+
     const isFile = resource.type === 'FILE';
     const icon = isFile ? getFileIcon(resource.mimeType) : getTypeIcon(resource.type);
     const isImage = resource.mimeType?.startsWith('image/');
+
+    const mediaArray = (resource.media || []) as MediaItem[];
+    const imageCount = mediaArray.filter((m) => m.type === 'image').length;
+    const videoCount = mediaArray.filter((m) => m.type === 'video').length;
 
     return (
         <div className="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg p-4 hover:shadow-sm transition-shadow">
@@ -367,6 +607,30 @@ function ResourceCard({
                     </h3>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
+                    {/* Media count badges */}
+                    {imageCount > 0 && (
+                        <span
+                            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-gray-400 dark:text-neutral-500"
+                            title={`${imageCount} image${imageCount > 1 ? 's' : ''}`}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
+                            </svg>
+                            <span className="text-[10px] font-medium">{imageCount}</span>
+                        </span>
+                    )}
+                    {videoCount > 0 && (
+                        <span
+                            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-gray-400 dark:text-neutral-500"
+                            title={`${videoCount} video${videoCount > 1 ? 's' : ''}`}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+                            </svg>
+                            <span className="text-[10px] font-medium">{videoCount}</span>
+                        </span>
+                    )}
+
                     {isFile && resource.fileUrl && (
                         <a
                             href={resource.fileUrl}
@@ -506,7 +770,107 @@ function ResourceCard({
                             {resource.content}
                         </pre>
                     )}
+
+                    {/* Media attachments display */}
+                    {mediaArray.length > 0 && !editingMedia && (
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-semibold text-gray-500 dark:text-neutral-400 uppercase tracking-wide">📎 Media</span>
+                                <button
+                                    onClick={() => { setEditMedia([...mediaArray]); setEditingMedia(true); }}
+                                    className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-neutral-300 transition-colors"
+                                >
+                                    ✏️ Edit Media
+                                </button>
+                            </div>
+
+                            {/* Image gallery */}
+                            {mediaArray.filter((m) => m.type === 'image').length > 0 && (
+                                <div className="grid grid-cols-3 gap-2">
+                                    {mediaArray.filter((m) => m.type === 'image').map((img, idx) => (
+                                        <button
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => {
+                                                if (img.linkUrl) {
+                                                    window.open(img.linkUrl, '_blank', 'noopener,noreferrer');
+                                                } else {
+                                                    setLightboxSrc(img.url);
+                                                }
+                                            }}
+                                            className="relative group cursor-pointer"
+                                            title={img.linkUrl ? `Opens: ${img.linkUrl}` : 'Click to view full size'}
+                                        >
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={img.url}
+                                                alt={img.filename || 'Attached image'}
+                                                className="w-full h-24 object-cover rounded-lg border border-gray-200 dark:border-neutral-600 group-hover:opacity-90 transition-opacity"
+                                            />
+                                            {img.linkUrl && (
+                                                <span className="absolute bottom-1 right-1 bg-black/60 text-white rounded-full p-0.5">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                                    </svg>
+                                                </span>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Video embeds */}
+                            {mediaArray.filter((m) => m.type === 'video').map((vid, idx) => (
+                                vid.service && vid.videoId ? (
+                                    <div key={idx} className="rounded-lg overflow-hidden">
+                                        <VideoEmbedPlayer embed={{ service: vid.service as 'youtube' | 'vimeo' | 'loom', id: vid.videoId, url: vid.url }} />
+                                    </div>
+                                ) : null
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Media editing */}
+                    {editingMedia && (
+                        <div className="space-y-2">
+                            <MediaEditor media={editMedia} onChange={setEditMedia} />
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleSaveMedia}
+                                    disabled={isPending}
+                                    className="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-900 dark:bg-neutral-200 text-white dark:text-neutral-900 hover:bg-gray-800 dark:hover:bg-neutral-300 disabled:opacity-50 transition-colors"
+                                >
+                                    {isPending ? 'Saving…' : '💾 Save Media'}
+                                </button>
+                                <button
+                                    onClick={() => setEditingMedia(false)}
+                                    className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Add media if none exist yet */}
+                    {mediaArray.length === 0 && !editingMedia && (
+                        <button
+                            onClick={() => { setEditMedia([]); setEditingMedia(true); }}
+                            className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-neutral-300 transition-colors"
+                        >
+                            + Add media attachments
+                        </button>
+                    )}
                 </div>
+            )}
+
+            {/* Lightbox */}
+            {lightboxSrc && (
+                <ImageLightbox
+                    src={lightboxSrc}
+                    alt={resource.title}
+                    onClose={() => setLightboxSrc(null)}
+                />
             )}
         </div>
     );
