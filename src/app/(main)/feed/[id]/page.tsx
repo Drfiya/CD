@@ -127,7 +127,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
       {/* Back link */}
       <Link
         href="/feed"
-        className="inline-flex items-center text-sm text-gray-500 hover:text-gray-900 mb-4"
+        className="inline-flex items-center text-sm text-gray-500 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-100 mb-4"
       >
         <svg
           className="w-4 h-4 mr-1"
@@ -142,7 +142,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
       </Link>
 
       {/* Post card */}
-      <article className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <article className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-100 dark:border-neutral-700 overflow-hidden">
         <div className="p-5">
           {/* Header: Avatar, Name, Time, Category, Menu */}
           <div className="flex items-start justify-between mb-4">
@@ -152,10 +152,10 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
                 <LevelBadge level={post.author.level} size="sm" className="absolute -bottom-1 -right-1" />
               </div>
               <div>
-                <div className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                <div className="font-semibold text-gray-900 dark:text-neutral-100 group-hover:text-blue-600 transition-colors">
                   {post.author.name}
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-500">
+                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-neutral-400">
                   <span>{formatDistanceToNow(new Date(post.createdAt), { addSuffix: false })} ago</span>
                   {post.category && (
                     <>
@@ -209,7 +209,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
         </div>
 
         {/* Action bar */}
-        <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between">
+        <div className="px-5 py-3 border-t border-gray-100 dark:border-neutral-700 flex items-center justify-between">
           <div className="flex items-center gap-4">
             {/* Like button */}
             <LikeButton
@@ -220,7 +220,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
             />
 
             {/* Comment count */}
-            <div className="flex items-center gap-1.5 text-gray-500">
+            <div className="flex items-center gap-1.5 text-gray-500 dark:text-neutral-400">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -242,7 +242,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
         </div>
 
         {/* Comment input section - inside the card */}
-        <div className="px-5 py-4 border-t border-gray-100">
+        <div className="px-5 py-4 border-t border-gray-100 dark:border-neutral-700">
           <CommentSection
             postId={post.id}
             currentUserId={currentUserId}

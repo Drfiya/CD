@@ -38,8 +38,8 @@ export function CommentSection({ postId, currentUserId, userImage, comments }: C
             {currentUserId ? (
                 <CommentInput postId={postId} userImage={userImage} />
             ) : (
-                <div className="p-4 text-center bg-gray-50 rounded-lg border border-gray-200">
-                    <p className="text-sm text-gray-500">
+                <div className="p-4 text-center bg-gray-50 dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
+                    <p className="text-sm text-gray-500 dark:text-neutral-400">
                         <Link href="/login" className="text-blue-600 hover:underline">
                             Sign in
                         </Link>{' '}
@@ -56,8 +56,8 @@ export function CommentSection({ postId, currentUserId, userImage, comments }: C
                             <Avatar src={comment.authorImage} name={comment.authorName} size="sm" />
                             <div className="flex-1">
                                 <div className="flex items-center gap-2">
-                                    <span className="font-medium text-sm text-gray-900">{comment.authorName || 'Anonymous'}</span>
-                                    <span className="text-xs text-gray-500">· {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: false })} ago</span>
+                                    <span className="font-medium text-sm text-gray-900 dark:text-neutral-100">{comment.authorName || 'Anonymous'}</span>
+                                    <span className="text-xs text-gray-500 dark:text-neutral-400">· {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: false })} ago</span>
                                 </div>
                                 <CommentContent content={comment.content} />
                             </div>
@@ -166,7 +166,7 @@ function CommentContent({ content }: { content: string }) {
             );
         } else if (m.type === 'attachment' && m.url) {
             parts.push(
-                <span key={keyIndex++} className="inline-flex items-center gap-1 text-gray-600 text-sm bg-gray-100 px-2 py-0.5 rounded">
+                <span key={keyIndex++} className="inline-flex items-center gap-1 text-gray-600 dark:text-neutral-300 text-sm bg-gray-100 dark:bg-neutral-700 px-2 py-0.5 rounded">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
                         <path strokeLinecap="round" strokeLinejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
                     </svg>
@@ -188,10 +188,10 @@ function CommentContent({ content }: { content: string }) {
 
     // If no matches found, just return plain text
     if (parts.length === 0) {
-        return <p className="text-sm text-gray-700 mt-0.5">{content}</p>;
+        return <p className="text-sm text-gray-700 dark:text-neutral-300 mt-0.5">{content}</p>;
     }
 
-    return <div className="text-sm text-gray-700 mt-0.5">{parts}</div>;
+    return <div className="text-sm text-gray-700 dark:text-neutral-300 mt-0.5">{parts}</div>;
 }
 
 interface EmojiData {
@@ -412,8 +412,8 @@ function CommentInput({ postId, userImage }: { postId: string; userImage?: strin
                             onClick={handleSubmit}
                             disabled={!content.trim() || isPending}
                             className={`transition-colors ${content.trim() && !isPending
-                                    ? 'hover:text-gray-600 dark:hover:text-neutral-300 cursor-pointer'
-                                    : 'opacity-40 cursor-default'
+                                ? 'hover:text-gray-600 dark:hover:text-neutral-300 cursor-pointer'
+                                : 'opacity-40 cursor-default'
                                 }`}
                             aria-label="Send comment"
                             title="Send comment"
@@ -436,7 +436,7 @@ function CommentInput({ postId, userImage }: { postId: string; userImage?: strin
                     <Picker
                         data={async () => (await import('@emoji-mart/data')).default}
                         onEmojiSelect={handleEmojiSelect}
-                        theme="light"
+                        theme="auto"
                         previewPosition="none"
                     />
                 </div>
@@ -445,21 +445,21 @@ function CommentInput({ postId, userImage }: { postId: string; userImage?: strin
             {/* URL Modal */}
             {showUrlModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowUrlModal(false)}>
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-xl" onClick={e => e.stopPropagation()}>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Add Link</h3>
+                    <div className="bg-white dark:bg-neutral-800 rounded-lg p-6 w-full max-w-md mx-4 shadow-xl" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-4">Add Link</h3>
                         <input
                             type="url"
                             value={urlInput}
                             onChange={(e) => setUrlInput(e.target.value)}
                             placeholder="https://example.com"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             autoFocus
                             onKeyDown={(e) => e.key === 'Enter' && handleUrlInsert()}
                         />
                         <div className="flex justify-end gap-2 mt-4">
                             <button
                                 onClick={() => setShowUrlModal(false)}
-                                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
+                                className="px-4 py-2 text-sm text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-100"
                             >
                                 Cancel
                             </button>
@@ -477,22 +477,22 @@ function CommentInput({ postId, userImage }: { postId: string; userImage?: strin
             {/* Video Modal */}
             {showVideoModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowVideoModal(false)}>
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-xl" onClick={e => e.stopPropagation()}>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Add Video Link</h3>
-                        <p className="text-sm text-gray-500 mb-4">Paste a YouTube, Vimeo, or Loom video link</p>
+                    <div className="bg-white dark:bg-neutral-800 rounded-lg p-6 w-full max-w-md mx-4 shadow-xl" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-2">Add Video Link</h3>
+                        <p className="text-sm text-gray-500 dark:text-neutral-400 mb-4">Paste a YouTube, Vimeo, or Loom video link</p>
                         <input
                             type="url"
                             value={videoUrlInput}
                             onChange={(e) => setVideoUrlInput(e.target.value)}
                             placeholder="https://youtube.com/watch?v=..."
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             autoFocus
                             onKeyDown={(e) => e.key === 'Enter' && handleVideoInsert()}
                         />
                         <div className="flex justify-end gap-2 mt-4">
                             <button
                                 onClick={() => setShowVideoModal(false)}
-                                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
+                                className="px-4 py-2 text-sm text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-100"
                             >
                                 Cancel
                             </button>
