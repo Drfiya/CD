@@ -320,7 +320,7 @@ function CommentInput({ postId, userImage }: { postId: string; userImage?: strin
 
     return (
         <div className="relative">
-            <div className="bg-gray-50 rounded-lg border border-gray-200 p-3">
+            <div className="bg-gray-50 dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-3">
                 <div className="flex items-center gap-3">
                     <Avatar src={userImage} name="You" size="sm" />
                     <input
@@ -330,10 +330,10 @@ function CommentInput({ postId, userImage }: { postId: string; userImage?: strin
                         onChange={(e) => setContent(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder="Your comment"
-                        className="flex-1 bg-transparent border-none outline-none text-sm text-gray-700 placeholder:text-gray-400"
+                        className="flex-1 bg-transparent border-none outline-none text-sm text-gray-700 dark:text-neutral-200 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
                         disabled={isPending}
                     />
-                    <div className="flex items-center gap-2 text-gray-400">
+                    <div className="flex items-center gap-2 text-gray-400 dark:text-neutral-500">
                         {/* Hidden file input */}
                         <input
                             ref={fileInputRef}
@@ -347,7 +347,7 @@ function CommentInput({ postId, userImage }: { postId: string; userImage?: strin
                         <button
                             type="button"
                             onClick={handleFileClick}
-                            className="hover:text-gray-600 transition-colors"
+                            className="hover:text-gray-600 dark:hover:text-neutral-300 transition-colors"
                             aria-label="Attach file"
                             title="Attach file"
                         >
@@ -360,7 +360,7 @@ function CommentInput({ postId, userImage }: { postId: string; userImage?: strin
                         <button
                             type="button"
                             onClick={() => setShowUrlModal(true)}
-                            className="hover:text-gray-600 transition-colors"
+                            className="hover:text-gray-600 dark:hover:text-neutral-300 transition-colors"
                             aria-label="Add link"
                             title="Add link"
                         >
@@ -373,7 +373,7 @@ function CommentInput({ postId, userImage }: { postId: string; userImage?: strin
                         <button
                             type="button"
                             onClick={() => setShowVideoModal(true)}
-                            className="hover:text-gray-600 transition-colors"
+                            className="hover:text-gray-600 dark:hover:text-neutral-300 transition-colors"
                             aria-label="Add video"
                             title="Add video link"
                         >
@@ -386,7 +386,7 @@ function CommentInput({ postId, userImage }: { postId: string; userImage?: strin
                         <button
                             type="button"
                             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                            className="hover:text-gray-600 transition-colors"
+                            className="hover:text-gray-600 dark:hover:text-neutral-300 transition-colors"
                             aria-label="Add emoji"
                             title="Add emoji"
                         >
@@ -399,11 +399,28 @@ function CommentInput({ postId, userImage }: { postId: string; userImage?: strin
                         <button
                             type="button"
                             onClick={() => setShowGifModal(true)}
-                            className="text-xs font-semibold hover:text-gray-600 transition-colors"
+                            className="text-xs font-semibold hover:text-gray-600 dark:hover:text-neutral-300 transition-colors"
                             aria-label="Add GIF"
                             title="Add GIF"
                         >
                             GIF
+                        </button>
+
+                        {/* Send button */}
+                        <button
+                            type="button"
+                            onClick={handleSubmit}
+                            disabled={!content.trim() || isPending}
+                            className={`transition-colors ${content.trim() && !isPending
+                                    ? 'hover:text-gray-600 dark:hover:text-neutral-300 cursor-pointer'
+                                    : 'opacity-40 cursor-default'
+                                }`}
+                            aria-label="Send comment"
+                            title="Send comment"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                            </svg>
                         </button>
                     </div>
                 </div>
