@@ -132,6 +132,7 @@ function MediaEditor({
     const [videoUrl, setVideoUrl] = useState('');
     const [videoError, setVideoError] = useState('');
     const [uploading, setUploading] = useState(false);
+    const [uploadError, setUploadError] = useState('');
     const imageInputRef = useRef<HTMLInputElement>(null);
 
     const images = media.filter((m) => m.type === 'image');
@@ -139,17 +140,24 @@ function MediaEditor({
 
     const handleImageUpload = async (files: FileList) => {
         setUploading(true);
+        setUploadError('');
         const formData = new FormData();
         Array.from(files).forEach((f) => formData.append('media', f));
 
         try {
             const { results } = await uploadResourceMedia(formData);
+            const errors = results.filter((r) => !r.success);
+            if (errors.length > 0) {
+                setUploadError(errors.map((e) => `${e.filename}: ${e.error}`).join(', '));
+            }
             const newImages: MediaItem[] = results
                 .filter((r) => r.success)
                 .map((r) => ({ type: 'image' as const, url: r.url, filename: r.filename }));
-            onChange([...media, ...newImages]);
+            if (newImages.length > 0) {
+                onChange([...media, ...newImages]);
+            }
         } catch (err) {
-            console.error('Upload failed:', err);
+            setUploadError(err instanceof Error ? err.message : 'Upload failed');
         } finally {
             setUploading(false);
         }
@@ -208,6 +216,7 @@ function MediaEditor({
                     </svg>
                     {uploading ? 'Uploading…' : 'Add Images'}
                 </button>
+                {uploadError && <p className="text-xs text-red-500 mt-1">{uploadError}</p>}
             </div>
 
             {/* Image previews */}

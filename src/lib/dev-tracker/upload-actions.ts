@@ -211,7 +211,9 @@ export async function uploadResourceMedia(formData: FormData): Promise<{
     const files = formData.getAll('media') as File[];
     const results: Array<{ url: string; filename: string; success: boolean; error?: string }> = [];
 
-    const supabase = await createClient();
+    // Use admin client to bypass RLS policies (NextAuth doesn't create Supabase sessions)
+    const { createAdminClient } = await import('@/lib/supabase/admin');
+    const supabase = createAdminClient();
 
     for (const file of files) {
         // Validate type
@@ -227,7 +229,8 @@ export async function uploadResourceMedia(formData: FormData): Promise<{
         }
 
         const sanitizedName = sanitizeFilename(file.name);
-        const path = `resource-media/${session.user.id}/${Date.now()}-${sanitizedName}`;
+        // Use userId/ prefix to match bucket path expectations
+        const path = `${session.user.id}/media-${Date.now()}-${sanitizedName}`;
 
         const arrayBuffer = await file.arrayBuffer();
         const buffer = new Uint8Array(arrayBuffer);
@@ -241,6 +244,7 @@ export async function uploadResourceMedia(formData: FormData): Promise<{
             });
 
         if (uploadError) {
+            console.error('Media upload error:', uploadError);
             results.push({ url: '', filename: file.name, success: false, error: uploadError.message });
             continue;
         }
