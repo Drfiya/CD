@@ -8,6 +8,7 @@ import { generateHTML } from '@tiptap/html';
 import StarterKit from '@tiptap/starter-kit';
 import { Avatar } from '@/components/ui/avatar';
 import { VideoEmbedPlayer } from '@/components/video/video-embed';
+import { LazyGif } from '@/components/feed/lazy-gif';
 import { LikeButton } from '@/components/feed/like-button';
 import { PostMenu } from '@/components/feed/post-menu';
 import { getLanguageName } from '@/lib/translation/constants';
@@ -59,6 +60,7 @@ export function PostCard({
   // Prisma Json fields need cast through unknown for type safety
   const embeds = (post.embeds as unknown as VideoEmbed[]) || [];
   const gifs = (post.gifs as unknown as string[]) || [];
+  const gifThumbnails = ((post as unknown as { gifThumbnails: unknown }).gifThumbnails as string[]) || [];
 
   // Determine if this post was translated
   const postLanguage = originalLanguage || (post as { languageCode?: string }).languageCode || 'en';
@@ -115,30 +117,34 @@ export function PostCard({
           />
         )}
 
-        {/* Video embeds */}
+        {/* Video embeds — feed mode: thumbnail only, no iframe */}
         {embeds.length > 0 && (
           <div className="mt-4 space-y-3">
             {embeds.map((embed, i) => (
               <div key={`${embed.service}-${embed.id}-${i}`} className="rounded-lg overflow-hidden">
-                <VideoEmbedPlayer embed={embed} />
+                <VideoEmbedPlayer embed={embed} feedMode postId={post.id} />
               </div>
             ))}
           </div>
         )}
 
-        {/* GIF attachments */}
+        {/* GIF attachments — feed mode: JPEG thumbnail only, NO GIF in DOM */}
         {gifs.length > 0 && (
           <div className="mt-4 space-y-3">
-            {gifs.map((gifUrl, i) => (
-              <div key={`gif-${i}`} className="rounded-lg overflow-hidden">
-                <img
-                  src={gifUrl}
-                  alt={`GIF ${i + 1}`}
-                  className="w-full rounded-lg"
-                  loading="lazy"
-                />
-              </div>
-            ))}
+            {gifs.map((gifUrl, i) => {
+              // Use JPEG thumbnail if available, fall back to GIF URL for pre-migration posts
+              const thumbnailSrc = gifThumbnails[i] || gifUrl;
+              return (
+                <div key={`gif-${i}`} className="rounded-lg overflow-hidden">
+                  <LazyGif
+                    src={thumbnailSrc}
+                    alt={`GIF ${i + 1}`}
+                    postId={post.id}
+                    mode="feed"
+                  />
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

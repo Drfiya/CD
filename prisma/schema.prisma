@@ -69,6 +69,7 @@ model Post {
   languageCode String?                  @db.VarChar(10)
   contentHash  String?                  @db.VarChar(64)
   gifs         Json                     @default("[]")
+  gifThumbnails Json                     @default("[]")
   comments     Comment[]
   author       User                     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   category     Category?                @relation(fields: [categoryId], references: [id])

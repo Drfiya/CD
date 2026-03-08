@@ -13,6 +13,7 @@ import { PostDetailContent } from '@/components/feed/post-detail-content';
 import { generateHTML } from '@tiptap/html';
 import StarterKit from '@tiptap/starter-kit';
 import { VideoEmbedPlayer } from '@/components/video/video-embed';
+import { LazyGif } from '@/components/feed/lazy-gif';
 import type { VideoEmbed } from '@/lib/video-utils';
 import { translatePostForUser, translateCommentsForUser } from '@/lib/translation';
 
@@ -185,22 +186,22 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
             <div className="mt-4 space-y-3">
               {embeds.map((embed, i) => (
                 <div key={`${embed.service}-${embed.id}-${i}`} className="rounded-lg overflow-hidden">
-                  <VideoEmbedPlayer embed={embed} />
+                  <VideoEmbedPlayer embed={embed} autoPlay />
                 </div>
               ))}
             </div>
           )}
 
-          {/* GIF attachments */}
+          {/* GIF attachments — detail view: actual GIF auto-plays */}
           {gifs.length > 0 && (
             <div className="mt-4 space-y-3">
               {gifs.map((gifUrl, i) => (
                 <div key={`gif-${i}`} className="rounded-lg overflow-hidden">
-                  <img
+                  <LazyGif
                     src={gifUrl}
                     alt={`GIF ${i + 1}`}
-                    className="w-full rounded-lg"
-                    loading="lazy"
+                    postId={id}
+                    mode="detail"
                   />
                 </div>
               ))}

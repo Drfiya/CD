@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { ReactNode, useState, useRef, useEffect, useCallback } from 'react';
 import { LanguageSelector } from '@/components/translation/LanguageSelector';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
@@ -72,6 +72,7 @@ interface HeaderNavProps {
  */
 export function HeaderNav({ messages }: HeaderNavProps) {
     const pathname = usePathname();
+    const router = useRouter();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     // Refs for measuring each nav link's position inside the container
@@ -150,6 +151,7 @@ export function HeaderNav({ messages }: HeaderNavProps) {
                                 key={link.href}
                                 href={link.href}
                                 ref={(el) => { linkRefs.current[i] = el; }}
+                                onMouseEnter={() => router.prefetch(link.href)}
                                 className={`
                                     relative z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-[450] transition-colors
                                     ${isActive

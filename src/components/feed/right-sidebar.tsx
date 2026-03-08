@@ -1,8 +1,7 @@
 import Link from 'next/link';
-import db from '@/lib/db';
 import { Avatar } from '@/components/ui/avatar';
 import { AiToolsSidebar } from '@/components/feed/ai-tools-sidebar';
-import { getActiveAiTools } from '@/lib/ai-tool-actions';
+import { getCachedTopUsers, getCachedAiTools, getCachedMemberCount } from '@/lib/cached-queries';
 
 interface TranslatedUI {
     members: string;
@@ -17,15 +16,11 @@ interface RightSidebarProps {
 }
 
 export async function RightSidebar({ translatedUI }: RightSidebarProps) {
-    // Fetch member count, top users, and active AI tools
+    // Fetch member count, top users, and active AI tools (cached for performance)
     const [memberCount, topUsers, aiTools] = await Promise.all([
-        db.user.count(),
-        db.user.findMany({
-            take: 3,
-            orderBy: { points: 'desc' },
-            select: { id: true, name: true, image: true, points: true, level: true },
-        }),
-        getActiveAiTools(),
+        getCachedMemberCount(),
+        getCachedTopUsers(3),
+        getCachedAiTools(),
     ]);
 
     return (

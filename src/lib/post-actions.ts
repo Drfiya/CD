@@ -8,7 +8,9 @@ import { postSchema } from '@/lib/validations/post';
 import { awardPoints } from '@/lib/gamification-actions';
 import { extractPlainText } from '@/lib/tiptap-utils';
 import { detectLanguage, hashContent } from '@/lib/translation';
+import { generateAllGifThumbnails, enrichEmbedsWithThumbnails } from '@/lib/thumbnail-actions';
 import type { Prisma } from '@/generated/prisma/client';
+import type { VideoEmbed } from '@/types/post';
 
 export async function createPost(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -38,12 +40,21 @@ export async function createPost(formData: FormData) {
   const languageCode = await detectLanguage(plainText || '');
   const contentHash = hashContent(plainText || '');
 
+  // Generate thumbnails for GIFs and video embeds (server-side)
+  const gifUrls = (gifs as string[]) || [];
+  const videoEmbeds = (embeds as unknown as VideoEmbed[]) || [];
+  const [gifThumbnails, enrichedEmbeds] = await Promise.all([
+    generateAllGifThumbnails(gifUrls),
+    enrichEmbedsWithThumbnails(videoEmbeds),
+  ]);
+
   await db.post.create({
     data: {
       title,
       content: content as Prisma.InputJsonValue,
-      embeds: embeds as Prisma.InputJsonValue,
+      embeds: enrichedEmbeds as unknown as Prisma.InputJsonValue,
       gifs: gifs as Prisma.InputJsonValue,
+      gifThumbnails: gifThumbnails as unknown as Prisma.InputJsonValue,
       plainText,
       languageCode,
       contentHash,
@@ -100,12 +111,21 @@ export async function updatePost(postId: string, formData: FormData) {
   const languageCode = await detectLanguage(plainText || '');
   const contentHash = hashContent(plainText || '');
 
+  // Generate thumbnails for GIFs and video embeds (server-side)
+  const gifUrls = (gifs as string[]) || [];
+  const videoEmbeds = (embeds as unknown as VideoEmbed[]) || [];
+  const [gifThumbnails, enrichedEmbeds] = await Promise.all([
+    generateAllGifThumbnails(gifUrls),
+    enrichEmbedsWithThumbnails(videoEmbeds),
+  ]);
+
   await db.post.update({
     where: { id: postId },
     data: {
       content: content as Prisma.InputJsonValue,
-      embeds: embeds as Prisma.InputJsonValue,
+      embeds: enrichedEmbeds as unknown as Prisma.InputJsonValue,
       gifs: gifs as Prisma.InputJsonValue,
+      gifThumbnails: gifThumbnails as unknown as Prisma.InputJsonValue,
       plainText,
       languageCode,
       contentHash,

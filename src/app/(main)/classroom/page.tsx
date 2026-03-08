@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import {
@@ -15,7 +14,7 @@ import { ClassroomRightSidebar } from '@/components/classroom/classroom-right-si
 import { getUserLanguage } from '@/lib/translation/helpers';
 import { translateObjects } from '@/lib/translation/ui';
 import { getMessages } from '@/lib/i18n';
-import { getCommunitySettings } from '@/lib/settings-actions';
+import { getCachedCommunitySettings } from '@/lib/cached-queries';
 
 interface ClassroomUI {
   title: string;
@@ -88,109 +87,91 @@ export default async function ClassroomPage({ searchParams }: ClassroomPageProps
     lessonsCompleted: cp.lessonsLabel,
   };
 
-  // Get community settings for sidebar banner
-  const communitySettings = await getCommunitySettings();
+  // Get community settings for sidebar banner (cached)
+  const communitySettings = await getCachedCommunitySettings();
 
   const activeFilter = params.filter || null;
 
+  // loading.tsx now handles the instant skeleton — no inline Suspense fallback needed
   return (
-    <Suspense fallback={
-      <div className="flex gap-6 max-w-7xl mx-auto">
-        <div className="w-64 shrink-0">
-          <div className="bg-white dark:bg-neutral-800 rounded-xl p-5 animate-pulse h-48" />
-        </div>
-        <div className="flex-1">
-          <div className="bg-white dark:bg-neutral-800 rounded-xl p-12 animate-pulse h-32 mb-4" />
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white dark:bg-neutral-800 rounded-xl animate-pulse h-64" />
-            <div className="bg-white dark:bg-neutral-800 rounded-xl animate-pulse h-64" />
-          </div>
-        </div>
-        <div className="w-72 shrink-0 space-y-4">
-          <div className="bg-white dark:bg-neutral-800 rounded-xl p-5 animate-pulse h-24" />
-          <div className="bg-white dark:bg-neutral-800 rounded-xl p-5 animate-pulse h-48" />
-        </div>
-      </div>
-    }>
-      <div className="flex gap-6 max-w-7xl mx-auto">
-        {/* Left Sidebar - Course Filters */}
-        <ClassroomLeftSidebar
-          ui={{
-            allCourses: ui.allCourses,
-            myCourses: ui.myCourses,
-            availableCourses: ui.availableCourses,
-            categoriesTitle: ui.categoriesTitle,
-          }}
-          activeFilter={activeFilter}
-          isLoggedIn={!!session?.user?.id}
-          sidebarBannerImage={communitySettings.sidebarBannerImage}
-          sidebarBannerUrl={communitySettings.sidebarBannerUrl}
-          sidebarBannerEnabled={communitySettings.sidebarBannerEnabled}
-        />
+    <div className="flex gap-6 max-w-7xl mx-auto">
+      {/* Left Sidebar - Course Filters */}
+      <ClassroomLeftSidebar
+        ui={{
+          allCourses: ui.allCourses,
+          myCourses: ui.myCourses,
+          availableCourses: ui.availableCourses,
+          categoriesTitle: ui.categoriesTitle,
+        }}
+        activeFilter={activeFilter}
+        isLoggedIn={!!session?.user?.id}
+        sidebarBannerImage={communitySettings.sidebarBannerImage}
+        sidebarBannerUrl={communitySettings.sidebarBannerUrl}
+        sidebarBannerEnabled={communitySettings.sidebarBannerEnabled}
+      />
 
-        {/* Center - Main Content */}
-        <div className="flex-1 min-w-0 space-y-6">
-          {/* Header Banner */}
-          <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-100 dark:border-neutral-700 p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: '#D94A4A' }}>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="white" className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">{ui.title}</h1>
-                <p className="text-sm text-gray-500 dark:text-neutral-400 mt-0.5">{ui.subtitle}</p>
-              </div>
+      {/* Center - Main Content */}
+      <div className="flex-1 min-w-0 space-y-6">
+        {/* Header Banner */}
+        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-100 dark:border-neutral-700 p-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: '#D94A4A' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="white" className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">{ui.title}</h1>
+              <p className="text-sm text-gray-500 dark:text-neutral-400 mt-0.5">{ui.subtitle}</p>
             </div>
           </div>
+        </div>
 
-          {/* Classroom Video Embed - Language-aware */}
-          <ClassroomVideoEmbed
-            classroomVideoUrls={communitySettings.classroomVideoUrls}
+        {/* Classroom Video Embed - Language-aware */}
+        <ClassroomVideoEmbed
+          classroomVideoUrls={communitySettings.classroomVideoUrls}
+          userLanguage={userLanguage}
+        />
+
+        {/* Sign-in prompt for non-logged-in users */}
+        {!session?.user?.id && (
+          <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-100 dark:border-neutral-700 p-4">
+            <p className="text-sm text-gray-500 dark:text-neutral-400">
+              <a href="/login" className="font-semibold hover:underline" style={{ color: '#D94A4A' }}>
+                {ui.signIn}
+              </a>{' '}
+              {ui.signInPrompt}
+            </p>
+          </div>
+        )}
+
+        {session?.user?.id ? (
+          <LoggedInContent
+            userId={session.user.id}
+            ui={ui}
             userLanguage={userLanguage}
+            activeFilter={activeFilter}
           />
-
-          {/* Sign-in prompt for non-logged-in users */}
-          {!session?.user?.id && (
-            <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-100 dark:border-neutral-700 p-4">
-              <p className="text-sm text-gray-500 dark:text-neutral-400">
-                <a href="/login" className="font-semibold hover:underline" style={{ color: '#D94A4A' }}>
-                  {ui.signIn}
-                </a>{' '}
-                {ui.signInPrompt}
-              </p>
-            </div>
-          )}
-
-          {session?.user?.id ? (
-            <LoggedInContent
-              userId={session.user.id}
-              ui={ui}
-              userLanguage={userLanguage}
-              activeFilter={activeFilter}
-            />
-          ) : (
-            <AllCoursesSection ui={ui} userLanguage={userLanguage} />
-          )}
-        </div>
-
-        {/* Right Sidebar - Stats & Leaderboard */}
-        <ClassroomRightSidebar
-          translatedUI={{
-            learningProgress: ui.learningProgress,
-            topLearners: ui.topLearners,
-            viewAll: ui.viewAll,
-            aiToolsTitle: ui.aiToolsTitle,
-            level: ui.level,
-            coursesEnrolled: ui.coursesEnrolled,
-            coursesCompleted: ui.coursesCompleted,
-            lessonsCompleted: ui.lessonsCompleted,
-          }}
-          userId={session?.user?.id}
-        />
+        ) : (
+          <AllCoursesSection ui={ui} userLanguage={userLanguage} />
+        )}
       </div>
-    </Suspense>
+
+      {/* Right Sidebar - Stats & Leaderboard */}
+      <ClassroomRightSidebar
+        translatedUI={{
+          learningProgress: ui.learningProgress,
+          topLearners: ui.topLearners,
+          viewAll: ui.viewAll,
+          aiToolsTitle: ui.aiToolsTitle,
+          level: ui.level,
+          coursesEnrolled: ui.coursesEnrolled,
+          coursesCompleted: ui.coursesCompleted,
+          lessonsCompleted: ui.lessonsCompleted,
+        }}
+        userId={session?.user?.id}
+      />
+    </div>
   );
 }
 

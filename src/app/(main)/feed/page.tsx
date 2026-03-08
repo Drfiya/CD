@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import db from '@/lib/db';
@@ -9,7 +8,7 @@ import { RightSidebar } from '@/components/feed/right-sidebar';
 import { CreatePostModal } from '@/components/feed/create-post-modal';
 import { translatePostsForUser } from '@/lib/translation';
 import { translateObjects } from '@/lib/translation/ui';
-import { getCommunitySettings } from '@/lib/settings-actions';
+import { getCachedCommunitySettings, getCachedCategories } from '@/lib/cached-queries';
 import { getMessages } from '@/lib/i18n';
 import { getUserLanguage } from '@/lib/translation/helpers';
 
@@ -61,9 +60,7 @@ async function FeedContent({ searchParams }: FeedPageProps) {
       },
     }),
     db.post.count({ where: whereClause }),
-    db.category.findMany({
-      orderBy: { name: 'asc' },
-    }),
+    getCachedCategories(),
   ]);
 
   const totalPages = Math.ceil(total / POSTS_PER_PAGE);
@@ -110,8 +107,8 @@ async function FeedContent({ searchParams }: FeedPageProps) {
     noPosts: messages.common.noResults,
   };
 
-  // Get community settings for sidebar banner
-  const communitySettings = await getCommunitySettings();
+  // Get community settings for sidebar banner (cached)
+  const communitySettings = await getCachedCommunitySettings();
 
   return (
     <div className="flex gap-6 max-w-7xl mx-auto">
@@ -183,22 +180,6 @@ async function FeedContent({ searchParams }: FeedPageProps) {
 }
 
 export default function FeedPage(props: FeedPageProps) {
-  return (
-    <Suspense fallback={
-      <div className="flex gap-6 max-w-7xl mx-auto">
-        <div className="w-64 shrink-0">
-          <div className="bg-white dark:bg-neutral-800 rounded-xl p-5 animate-pulse h-48" />
-        </div>
-        <div className="flex-1">
-          <div className="bg-white dark:bg-neutral-800 rounded-xl p-12 animate-pulse h-32" />
-        </div>
-        <div className="w-72 shrink-0 space-y-4">
-          <div className="bg-white dark:bg-neutral-800 rounded-xl p-5 animate-pulse h-24" />
-          <div className="bg-white dark:bg-neutral-800 rounded-xl p-5 animate-pulse h-48" />
-        </div>
-      </div>
-    }>
-      <FeedContent {...props} />
-    </Suspense>
-  );
+  // loading.tsx now handles the instant skeleton — no need for inline Suspense fallback
+  return <FeedContent {...props} />;
 }

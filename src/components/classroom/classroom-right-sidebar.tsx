@@ -2,7 +2,7 @@ import db from '@/lib/db';
 import { Avatar } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { AiToolsSidebar } from '@/components/feed/ai-tools-sidebar';
-import { getActiveAiTools } from '@/lib/ai-tool-actions';
+import { getCachedTopUsers, getCachedAiTools } from '@/lib/cached-queries';
 
 interface ClassroomRightSidebarUI {
     learningProgress: string;
@@ -21,14 +21,10 @@ interface ClassroomRightSidebarProps {
 }
 
 export async function ClassroomRightSidebar({ translatedUI, userId }: ClassroomRightSidebarProps) {
-    // Fetch top learners and active AI tools
+    // Fetch top learners and active AI tools (cached for performance)
     const [topLearners, aiTools] = await Promise.all([
-        db.user.findMany({
-            take: 3,
-            orderBy: { points: 'desc' },
-            select: { id: true, name: true, image: true, points: true, level: true },
-        }),
-        getActiveAiTools(),
+        getCachedTopUsers(3),
+        getCachedAiTools(),
     ]);
 
     // If logged in, get learning stats

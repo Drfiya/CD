@@ -6,6 +6,7 @@ export interface VideoEmbed {
   service: VideoService;
   id: string;
   url: string;
+  thumbnailUrl?: string;
 }
 
 export type PostWithAuthor = Post & {
