@@ -217,7 +217,7 @@ async function main() {
             where: { id: post.id },
             data: {
                 gifThumbnails: gifThumbnails,
-                embeds: enrichedEmbeds,
+                embeds: enrichedEmbeds as unknown as any,
             },
         });
 
