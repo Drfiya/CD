@@ -234,8 +234,8 @@ export function GlobalTranslator() {
      */
     const applyTranslations = useCallback(async (targets: TranslationTarget[]) => {
         console.log('[GlobalTranslator] applyTranslations called with', targets.length, 'targets');
-        if (targets.length === 0 || currentLanguage === 'en') {
-            console.log('[GlobalTranslator] Skipping applyTranslations - empty or English');
+        if (targets.length === 0) {
+            console.log('[GlobalTranslator] Skipping applyTranslations - empty');
             return;
         }
 
@@ -407,10 +407,6 @@ export function GlobalTranslator() {
      */
     const scanFullPage = useCallback(() => {
         console.log('[GlobalTranslator] scanFullPage called, currentLanguage:', currentLanguage);
-        if (currentLanguage === 'en') {
-            console.log('[GlobalTranslator] Skipping - language is English');
-            return; // No translation needed for English
-        }
 
         const targets = extractTargets(document.body);
         console.log('[GlobalTranslator] Found', targets.length, 'targets to translate');
@@ -522,11 +518,18 @@ export function GlobalTranslator() {
         });
 
         if (currentLanguage === 'en') {
-            // Switching TO English - fully revert and clear state
-            if (!isInitialMount) {
+            // English is selected — still scan for non-English text that needs translation
+            if (!isInitialMount && previousLanguage !== 'en') {
+                // Was in another language before, revert those translations first
                 revertTranslations();
             }
-            // On initial mount with English, nothing to do
+            // Scan for any non-English text to translate to English
+            requestAnimationFrame(() => {
+                scanFullPage();
+                setTimeout(() => {
+                    scanFullPage();
+                }, 200);
+            });
         } else if (isInitialMount) {
             // Initial mount with non-English language - use multi-stage scan for reliability
             console.log('[GlobalTranslator] Initial mount, starting multi-stage scan for', currentLanguage);
@@ -562,9 +565,7 @@ export function GlobalTranslator() {
     useEffect(() => {
         // Small delay to let new page content render
         const timeout = setTimeout(() => {
-            if (currentLanguage !== 'en') {
-                scanFullPage();
-            }
+            scanFullPage();
         }, 100);
 
         return () => clearTimeout(timeout);

@@ -16,6 +16,7 @@ import { VideoEmbedPlayer } from '@/components/video/video-embed';
 import { LazyGif } from '@/components/feed/lazy-gif';
 import type { VideoEmbed } from '@/lib/video-utils';
 import { translatePostForUser, translateCommentsForUser } from '@/lib/translation';
+import { getUserLanguage } from '@/lib/translation/helpers';
 
 interface PostDetailPageProps {
   params: Promise<{ id: string }>;
@@ -75,13 +76,8 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
     },
   });
 
-  // Get user's language preference for translation
-  const userLanguage = currentUserId
-    ? (await db.user.findUnique({
-      where: { id: currentUserId },
-      select: { languageCode: true },
-    }))?.languageCode || 'en'
-    : 'en';
+  // Get user's language preference for translation (DB, cookie, IP geo, Accept-Language fallbacks)
+  const userLanguage = await getUserLanguage();
 
   // Save originals before translation
   const originalTitle = post.title;
