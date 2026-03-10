@@ -148,8 +148,8 @@ async function main() {
     });
 
     const postsWithMedia = posts.filter((p) => {
-        const gifs = (p.gifs as string[]) || [];
-        const embeds = (p.embeds as VideoEmbed[]) || [];
+        const gifs = (p.gifs as unknown as string[]) || [];
+        const embeds = (p.embeds as unknown as VideoEmbed[]) || [];
         return gifs.length > 0 || embeds.length > 0;
     });
 
@@ -160,9 +160,9 @@ async function main() {
     let videoCount = 0;
 
     for (const post of postsWithMedia) {
-        const gifs = (post.gifs as string[]) || [];
-        const embeds = (post.embeds as VideoEmbed[]) || [];
-        const existingThumbnails = (post.gifThumbnails as string[]) || [];
+        const gifs = (post.gifs as unknown as string[]) || [];
+        const embeds = (post.embeds as unknown as VideoEmbed[]) || [];
+        const existingThumbnails = (post.gifThumbnails as unknown as string[]) || [];
 
         console.log(`📝 Post ${post.id}: ${gifs.length} GIFs, ${embeds.length} video embeds`);
 
