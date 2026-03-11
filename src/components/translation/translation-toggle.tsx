@@ -51,8 +51,8 @@ export function TranslationToggle({
             }
         >
             <span className="text-sm">🌐</span>
-            <span className="text-sm">
-                {showOriginal ? 'Translated' : 'Trues'}
+            <span className="text-sm" translate="no">
+                {showOriginal ? 'Translated' : 'Truth'}
             </span>
         </button>
     );

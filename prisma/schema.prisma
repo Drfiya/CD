@@ -40,6 +40,11 @@ model User {
   featureIdeaUpvotes FeatureIdeaUpvote[]  @relation("FeatureIdeaUpvotes")
   featureIdeaComments FeatureIdeaComment[] @relation("FeatureIdeaComments")
   kanbanCards        KanbanCard[]
+  blacklistEntries   TranslationBlacklist[] @relation("BlacklistAddedBy")
+  glossaryApprovals  TranslationGlossaryEntry[] @relation("GlossaryApprovedBy")
+  glossaryChanges    GlossaryChangeLog[] @relation("GlossaryChangeBy")
+  translationFeedback TranslationFeedback[] @relation("TranslationFeedbackUser")
+  resolvedFeedback   TranslationFeedback[] @relation("FeedbackResolvedBy")
 
   @@index([email])
   @@index([points])
@@ -545,6 +550,135 @@ enum FeatureIdeaStatus {
   IN_PROGRESS
   COMPLETED
   DECLINED
+}
+
+// ─── Translation System ─────────────────────────────────────────────────────
+
+/// Cached translations to minimise DeepL API calls (Part D / G)
+model TranslationCache {
+  id             String    @id @default(cuid())
+  sourceTextHash String
+  sourceLocale   String    @db.VarChar(10)
+  targetLocale   String    @db.VarChar(10)
+  translatedText String
+  glossaryId     String?
+  contextHash    String?
+  createdAt      DateTime  @default(now())
+  expiresAt      DateTime?
+
+  @@unique([sourceTextHash, sourceLocale, targetLocale, glossaryId])
+  @@index([sourceLocale, targetLocale])
+  @@index([expiresAt])
+}
+
+/// "Do Not Translate" blacklist – terms that stay in original language (Part B1)
+model TranslationBlacklist {
+  id        String   @id @default(cuid())
+  term      String   @unique
+  category  String
+  note      String?
+  addedById String?
+  addedBy   User?    @relation("BlacklistAddedBy", fields: [addedById], references: [id])
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+}
+
+/// Controlled translation pairs synced to DeepL Glossary API (Part B2)
+model TranslationGlossaryEntry {
+  id              String   @id @default(cuid())
+  sourceTerm      String
+  targetTerm      String
+  sourceLocale    String   @db.VarChar(10)
+  targetLocale    String   @db.VarChar(10)
+  domain          String?
+  approvedById    String?
+  approvedBy      User?    @relation("GlossaryApprovedBy", fields: [approvedById], references: [id])
+  deeplGlossaryId String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([sourceTerm, sourceLocale, targetLocale])
+  @@index([sourceLocale, targetLocale])
+  @@index([domain])
+  @@index([isActive])
+}
+
+/// Version log for glossary changes (Part E2)
+model GlossaryChangeLog {
+  id          String   @id @default(cuid())
+  entryId     String?
+  action      String   // "create" | "update" | "delete" | "sync"
+  changedById String
+  changedBy   User     @relation("GlossaryChangeBy", fields: [changedById], references: [id])
+  oldValue    Json?
+  newValue    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([entryId])
+  @@index([createdAt(sort: Desc)])
+}
+
+/// User-submitted translation correction proposals (Part C / F2)
+model TranslationFeedback {
+  id                  String   @id @default(cuid())
+  postId              String?
+  commentId           String?
+  userId              String
+  user                User     @relation("TranslationFeedbackUser", fields: [userId], references: [id])
+  sourceLocale        String   @db.VarChar(10)
+  targetLocale        String   @db.VarChar(10)
+  originalText        String
+  translatedText      String
+  suggestedCorrection String?
+  feedbackType        String   // 'incorrect_term' | 'wrong_context' | 'grammar' | 'missing_nuance' | 'other'
+  status              String   @default("pending") // 'pending' | 'reviewing' | 'resolved' | 'rejected'
+  resolvedById        String?
+  resolvedBy          User?    @relation("FeedbackResolvedBy", fields: [resolvedById], references: [id])
+  resolvedAt          DateTime?
+  adminNote           String?
+  createdAt           DateTime @default(now())
+
+  @@index([status])
+  @@index([userId])
+  @@index([sourceLocale, targetLocale])
+  @@index([createdAt(sort: Desc)])
+}
+
+/// Per-section translation rules (Part E3)
+model TranslationRule {
+  id                    String   @id @default(cuid())
+  sectionName           String   @unique
+  formality             String   @default("more") // 'more' | 'less' | 'default'
+  defaultPreviewLocale  String   @default("en") @db.VarChar(10)
+  activeGlossaryDomain  String?
+  autoTranslate         Boolean  @default(true)
+  qualityThreshold      Float    @default(0.7)
+  cacheTtlDays          Int      @default(30)
+  contextDepth          Int      @default(2)
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([sectionName])
+}
+
+/// Language pair quality matrix (Part F5)
+model LanguagePairQuality {
+  id           String   @id @default(cuid())
+  sourceLocale String   @db.VarChar(10)
+  targetLocale String   @db.VarChar(10)
+  quality      String   @default("B") // 'A' | 'B' | 'C' | 'D'
+  usePivot     Boolean  @default(false)
+  pivotLocale  String?  @db.VarChar(10)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([sourceLocale, targetLocale])
 }
 
 model FeatureIdea {

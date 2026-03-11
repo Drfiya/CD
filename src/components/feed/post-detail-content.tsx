@@ -14,7 +14,7 @@ interface PostDetailContentProps {
 
 /**
  * Client component wrapper for post detail content that supports
- * the Trues toggle between translated and original text.
+ * the Truth toggle between translated and original text.
  */
 export function PostDetailContent({
     translatedTitle,
@@ -52,7 +52,7 @@ export function PostDetailContent({
                 />
             )}
 
-            {/* Trues toggle button - only if translation exists */}
+            {/* Truth toggle button - only if translation exists */}
             {isTranslated && (
                 <button
                     onClick={() => setShowOriginal(!showOriginal)}
@@ -64,8 +64,8 @@ export function PostDetailContent({
                     }
                 >
                     <span className="text-sm">🌐</span>
-                    <span className="text-sm">
-                        {showOriginal ? 'Translated' : 'Trues'}
+                    <span className="text-sm" translate="no">
+                        {showOriginal ? 'Translated' : 'Truth'}
                     </span>
                 </button>
             )}

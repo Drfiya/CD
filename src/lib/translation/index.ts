@@ -5,17 +5,19 @@
  * protected terms, and the DeepL provider.
  */
 
-import { getCachedTranslationWithHash, setCachedTranslation } from './cache';
-import { translateText } from './providers/deepl';
-import { detectLanguage } from './detect';
+import { getCachedTranslationWithHash, setCachedTranslation, getCachedTranslation3Tier, setCachedTranslation3Tier } from './cache';
+import { translateText, type TranslateOptions } from './providers/deepl';
 import { hashContent, SUPPORTED_LANGUAGES, LANGUAGE_NAMES } from './utils';
-import { collectProtectedTerms } from './protected-terms';
+import { collectProtectedTerms, restoreNumericalValues, validateNumericalIntegrity } from './protected-terms';
 import { trackTranslationUsage } from './usage';
+import { assessTranslationConfidence, getLanguagePairQuality, type ConfidenceResult } from './quality';
 
 // Re-export utilities for convenience
 export { detectLanguage } from './detect';
 export { hashContent, SUPPORTED_LANGUAGES, LANGUAGE_NAMES, isSupportedLanguage } from './utils';
 export type { SupportedLanguage } from './utils';
+export { assessTranslationConfidence, type ConfidenceResult } from './quality';
+export { getCachedTranslation3Tier, setCachedTranslation3Tier, invalidateTranslationCache, getCacheStats } from './cache';
 
 const MODEL_PROVIDER = 'deepl';
 const MODEL_VERSION = 'v2';
@@ -28,6 +30,12 @@ export interface TranslateForUserParams {
     sourceLanguage: string;
     targetLanguage: string;
     categoryName?: string;
+    /** Surrounding paragraphs for context-aware translation (A1) */
+    context?: string;
+    /** Formality override: 'more' | 'less' | 'default' (A2) */
+    formality?: 'more' | 'less' | 'default';
+    /** DeepL Glossary ID for this language pair (B2) */
+    glossaryId?: string;
 }
 
 /**
@@ -51,6 +59,9 @@ export async function translateForUser(
         sourceLanguage,
         targetLanguage,
         categoryName,
+        context,
+        formality,
+        glossaryId,
     } = params;
 
     // No translation needed if languages match
@@ -65,8 +76,20 @@ export async function translateForUser(
 
     const contentHashValue = hashContent(content);
 
-    // Check cache first
-    const cached = await getCachedTranslationWithHash(
+    // ── Tier 1+2: Check 3-tier cache first (In-Memory → PostgreSQL) ──
+    const tier3Result = await getCachedTranslation3Tier(
+        content,
+        sourceLanguage,
+        targetLanguage,
+        glossaryId
+    );
+    if (tier3Result) {
+        trackTranslationUsage(content.length, sourceLanguage, targetLanguage, true);
+        return tier3Result.text;
+    }
+
+    // ── Tier 2b: Check entity-based cache (Translation table) ──
+    const entityCached = await getCachedTranslationWithHash(
         entityType,
         entityId,
         fieldName,
@@ -74,22 +97,51 @@ export async function translateForUser(
         contentHashValue
     );
 
-    if (cached) {
-        // Track cache hit
+    if (entityCached) {
         trackTranslationUsage(content.length, sourceLanguage, targetLanguage, true);
-        return cached;
+        // Promote into 3-tier cache for faster future lookups
+        setCachedTranslation3Tier(content, sourceLanguage, targetLanguage, entityCached, glossaryId);
+        return entityCached;
     }
 
-    // Collect protected terms (global + domain + user-defined)
-    const { allTerms, cleanText } = collectProtectedTerms(content, categoryName);
+    // ── Tier 3: DeepL API call ──
 
-    // Translate via DeepL with protected terms
-    const translated = await translateText(cleanText, sourceLanguage, targetLanguage, allTerms);
+    // Collect protected terms (global + domain + user-defined + DB blacklist + NER)
+    const { allTerms, cleanText, numericalValues } = await collectProtectedTerms(content, categoryName);
+
+    // Replace numerical values with placeholders before sending to DeepL
+    let textToTranslate = cleanText;
+    if (numericalValues.length > 0) {
+        for (const { placeholder, original } of numericalValues) {
+            textToTranslate = textToTranslate.replace(original, placeholder);
+        }
+    }
+
+    // Build DeepL options (A1: context, A2: formality, B2: glossary)
+    const deeplOptions: TranslateOptions = {};
+    if (context) deeplOptions.context = context;
+    if (formality) deeplOptions.formality = formality;
+    if (glossaryId) deeplOptions.glossaryId = glossaryId;
+    deeplOptions.tagHandling = 'html'; // Always preserve HTML formatting
+
+    let translated = await translateText(
+        textToTranslate,
+        sourceLanguage,
+        targetLanguage,
+        allTerms,
+        deeplOptions
+    );
+
+    // Restore numerical values from placeholders
+    if (numericalValues.length > 0) {
+        translated = restoreNumericalValues(translated, numericalValues);
+        validateNumericalIntegrity(content, translated, numericalValues);
+    }
 
     // Track API call usage
     trackTranslationUsage(content.length, sourceLanguage, targetLanguage, false);
 
-    // Cache the result (don't await - fire and forget)
+    // Store in BOTH cache layers (fire and forget)
     setCachedTranslation({
         entityType,
         entityId,
@@ -101,8 +153,41 @@ export async function translateForUser(
         modelProvider: MODEL_PROVIDER,
         modelVersion: MODEL_VERSION,
     });
+    setCachedTranslation3Tier(content, sourceLanguage, targetLanguage, translated, glossaryId);
 
     return translated;
+}
+
+/**
+ * Translate content and also return a confidence assessment (F1)
+ */
+export async function translateForUserWithConfidence(
+    params: TranslateForUserParams
+): Promise<{ text: string; confidence: ConfidenceResult }> {
+    const translated = await translateForUser(params);
+
+    // Assess confidence
+    const pairInfo = await getLanguagePairQuality(
+        params.sourceLanguage,
+        params.targetLanguage
+    );
+
+    const { allTerms } = await collectProtectedTerms(
+        params.content,
+        params.categoryName
+    );
+
+    const confidence = assessTranslationConfidence({
+        sourceText: params.content,
+        sourceLocale: params.sourceLanguage,
+        targetLocale: params.targetLanguage,
+        glossaryHitCount: params.glossaryId ? 1 : 0,
+        textLength: params.content.length,
+        hasSpecialTerms: allTerms.length > 0,
+        pairQuality: pairInfo.quality,
+    });
+
+    return { text: translated, confidence };
 }
 
 /**
@@ -128,23 +213,15 @@ export async function translatePostForUser<T extends TranslatablePost>(
 ): Promise<T & { _originalLanguage?: string }> {
     const storedLanguage = post.languageCode || 'en';
 
-    // When stored language matches user language, verify via auto-detection.
-    // This catches posts whose language was misdetected (e.g. API was
-    // unavailable at creation time, so the fallback 'en' was stored).
-    let effectiveSourceLanguage = storedLanguage;
-    if (storedLanguage === userLanguage && post.plainText) {
-        const detected = await detectLanguage(post.plainText);
-        if (detected !== userLanguage) {
-            effectiveSourceLanguage = detected;
-        } else {
-            return { ...post, _originalLanguage: storedLanguage };
-        }
+    // When stored language matches user language, skip translation entirely.
+    // We trust the stored languageCode — auto-detection was causing false
+    // positives for scientific texts with mixed-language terminology (e.g.
+    // German posts with English gene symbols, ICD codes, etc.).
+    if (storedLanguage === userLanguage) {
+        return { ...post, _originalLanguage: storedLanguage };
     }
 
-    // No translation needed if languages truly match
-    if (effectiveSourceLanguage === userLanguage) {
-        return { ...post, _originalLanguage: effectiveSourceLanguage };
-    }
+    const effectiveSourceLanguage = storedLanguage;
 
     const translatedPost = { ...post, _originalLanguage: effectiveSourceLanguage };
 
@@ -197,20 +274,13 @@ export async function translateCommentForUser<T extends TranslatableComment>(
 ): Promise<T> {
     const storedLanguage = comment.languageCode || 'en';
 
-    // Verify via auto-detection when stored language matches user language
-    let effectiveSourceLanguage = storedLanguage;
-    if (storedLanguage === userLanguage && comment.content) {
-        const detected = await detectLanguage(comment.content);
-        if (detected !== userLanguage) {
-            effectiveSourceLanguage = detected;
-        } else {
-            return comment; // Genuinely the same language
-        }
-    }
-
-    if (effectiveSourceLanguage === userLanguage) {
+    // When stored language matches user language, skip translation entirely.
+    // Trust the stored languageCode — see translatePostForUser for rationale.
+    if (storedLanguage === userLanguage) {
         return comment;
     }
+
+    const effectiveSourceLanguage = storedLanguage;
 
     const translatedContent = await translateForUser({
         entityType: 'Comment',
@@ -265,8 +335,23 @@ export async function translateForPreview(
         return text;
     }
 
-    const { allTerms, cleanText } = collectProtectedTerms(text, categoryName);
-    const translated = await translateText(cleanText, sourceLang, targetLang, allTerms);
+    const { allTerms, cleanText, numericalValues } = await collectProtectedTerms(text, categoryName);
+
+    // Replace numerical values with placeholders before translation
+    let textToTranslate = cleanText;
+    if (numericalValues.length > 0) {
+        for (const { placeholder, original } of numericalValues) {
+            textToTranslate = textToTranslate.replace(original, placeholder);
+        }
+    }
+
+    let translated = await translateText(textToTranslate, sourceLang, targetLang, allTerms);
+
+    // Restore numerical values from placeholders
+    if (numericalValues.length > 0) {
+        translated = restoreNumericalValues(translated, numericalValues);
+        validateNumericalIntegrity(text, translated, numericalValues);
+    }
 
     // Track usage but mark as preview (still costs money)
     trackTranslationUsage(text.length, sourceLang, targetLang, false);

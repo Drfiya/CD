@@ -1,8 +1,13 @@
 /**
- * DeepL Translation Provider
- * 
- * Uses the DeepL API for high-quality translations.
- * Requires DEEPL_API_KEY and optionally DEEPL_API_URL environment variables.
+ * DeepL Translation Provider (Enhanced)
+ *
+ * Uses the DeepL API for high-quality, context-aware translations.
+ * Features:
+ * - Context-aware translation (surrounding paragraphs)
+ * - Formality control per section
+ * - DeepL Glossary integration
+ * - HTML tag preservation
+ * - Protected terms via XML ignore_tags
  */
 
 const DEEPL_API_KEY = process.env.DEEPL_API_KEY;
@@ -42,6 +47,23 @@ export interface TranslationResult {
     detectedSourceLanguage?: string;
 }
 
+// ─── Formality support ───────────────────────────────────────────────────────
+
+/**
+ * Languages that support the formality parameter in DeepL
+ */
+const FORMALITY_SUPPORTED_LANGUAGES = new Set([
+    'DE', 'FR', 'IT', 'ES', 'NL', 'PL', 'PT', 'PT-BR', 'RU', 'JA',
+]);
+
+function supportsFormality(targetLang: string): boolean {
+    const upper = targetLang.toUpperCase();
+    return FORMALITY_SUPPORTED_LANGUAGES.has(upper) ||
+        FORMALITY_SUPPORTED_LANGUAGES.has(upper.split('-')[0]);
+}
+
+// ─── Protected terms ─────────────────────────────────────────────────────────
+
 /**
  * Wrap protected terms with XML <keep> tags for DeepL's ignore_tags feature
  */
@@ -66,19 +88,34 @@ function unwrapProtectedTerms(text: string): string {
     return text.replace(/<\/?keep>/g, '');
 }
 
+// ─── Enhanced translation options ────────────────────────────────────────────
+
+export interface TranslateOptions {
+    /** Surrounding text for context-aware translation */
+    context?: string;
+    /** Formality level: 'more' (formal), 'less' (informal), 'default' */
+    formality?: 'more' | 'less' | 'default';
+    /** DeepL Glossary ID for controlled terminology */
+    glossaryId?: string;
+    /** Preserve HTML tags during translation */
+    tagHandling?: 'html' | 'xml';
+    /** Terms to protect from translation */
+    protectedTerms?: string[];
+}
+
 /**
- * Translate a single text using DeepL
- * Supports protected terms via DeepL's XML tag handling (ignore_tags)
+ * Translate a single text using DeepL (enhanced with context, formality, glossary)
  */
 export async function translateText(
     text: string,
     sourceLang: string,
     targetLang: string,
-    protectedTerms: string[] = []
+    protectedTerms: string[] = [],
+    options: TranslateOptions = {}
 ): Promise<string> {
     if (!DEEPL_API_KEY) {
         console.error('DEEPL_API_KEY is not configured');
-        return text; // Return original text as fallback
+        return text;
     }
 
     if (!text.trim()) {
@@ -86,20 +123,46 @@ export async function translateText(
     }
 
     try {
+        // Merge protected terms from both sources
+        const allProtected = [
+            ...protectedTerms,
+            ...(options.protectedTerms || []),
+        ];
+
         // Wrap protected terms with <keep> tags
-        const processedText = wrapProtectedTerms(text, protectedTerms);
-        const useXml = protectedTerms.length > 0;
+        const processedText = wrapProtectedTerms(text, allProtected);
+        const useXml = allProtected.length > 0;
+
+        const deeplTarget = toDeepLLanguage(targetLang, true);
 
         const requestBody: Record<string, unknown> = {
             text: [processedText],
             source_lang: toDeepLLanguage(sourceLang, false),
-            target_lang: toDeepLLanguage(targetLang, true),
+            target_lang: deeplTarget,
         };
 
-        // Enable XML tag handling if we have protected terms
+        // A1: Context-aware translation
+        if (options.context?.trim()) {
+            requestBody.context = options.context.trim();
+        }
+
+        // A1: Tag handling for protected terms or HTML preservation
         if (useXml) {
             requestBody.tag_handling = 'xml';
             requestBody.ignore_tags = ['keep'];
+        } else if (options.tagHandling === 'html') {
+            requestBody.tag_handling = 'html';
+        }
+
+        // A2: Formality control
+        const formality = options.formality || 'more'; // Default: formal for scientists
+        if (formality !== 'default' && supportsFormality(deeplTarget)) {
+            requestBody.formality = formality;
+        }
+
+        // B2: Glossary integration
+        if (options.glossaryId) {
+            requestBody.glossary_id = options.glossaryId;
         }
 
         const response = await fetch(`${DEEPL_API_URL}/v2/translate`, {
@@ -114,7 +177,7 @@ export async function translateText(
         if (!response.ok) {
             const errorText = await response.text();
             console.error(`DeepL API error: ${response.status} - ${errorText}`);
-            return text; // Return original text as fallback
+            return text;
         }
 
         const data = await response.json();
@@ -127,7 +190,7 @@ export async function translateText(
         return text;
     } catch (error) {
         console.error('DeepL translation error:', error);
-        return text; // Return original text as fallback
+        return text;
     }
 }
 
@@ -137,12 +200,13 @@ export async function translateText(
  */
 export async function translateBatch(
     texts: string[],
-    sourceLang: string | undefined,  // Optional - undefined enables auto-detection
-    targetLang: string
+    sourceLang: string | undefined,
+    targetLang: string,
+    options: TranslateOptions = {}
 ): Promise<string[]> {
     if (!DEEPL_API_KEY) {
         console.error('DEEPL_API_KEY is not configured');
-        return texts; // Return original texts as fallback
+        return texts;
     }
 
     if (texts.length === 0) {
@@ -165,14 +229,36 @@ export async function translateBatch(
     }
 
     try {
-        // Build request body - only include source_lang if specified (auto-detect otherwise)
+        const deeplTarget = toDeepLLanguage(targetLang, true);
+
         const requestBody: Record<string, unknown> = {
             text: nonEmptyTexts,
-            target_lang: toDeepLLanguage(targetLang, true),
+            target_lang: deeplTarget,
         };
 
         if (sourceLang) {
             requestBody.source_lang = toDeepLLanguage(sourceLang, false);
+        }
+
+        // Context
+        if (options.context?.trim()) {
+            requestBody.context = options.context.trim();
+        }
+
+        // Tag handling
+        if (options.tagHandling === 'html') {
+            requestBody.tag_handling = 'html';
+        }
+
+        // Formality
+        const formality = options.formality || 'more';
+        if (formality !== 'default' && supportsFormality(deeplTarget)) {
+            requestBody.formality = formality;
+        }
+
+        // Glossary
+        if (options.glossaryId) {
+            requestBody.glossary_id = options.glossaryId;
         }
 
         const response = await fetch(`${DEEPL_API_URL}/v2/translate`, {
@@ -187,13 +273,12 @@ export async function translateBatch(
         if (!response.ok) {
             const errorText = await response.text();
             console.error(`DeepL API error: ${response.status} - ${errorText}`);
-            return texts; // Return original texts as fallback
+            return texts;
         }
 
         const data = await response.json();
 
         if (data.translations && data.translations.length === nonEmptyTexts.length) {
-            // Reconstruct the result array with translated texts in correct positions
             const result = [...texts];
             data.translations.forEach((translation: { text: string }, index: number) => {
                 result[nonEmptyIndices[index]] = translation.text;
@@ -204,7 +289,107 @@ export async function translateBatch(
         return texts;
     } catch (error) {
         console.error('DeepL batch translation error:', error);
-        return texts; // Return original texts as fallback
+        return texts;
+    }
+}
+
+// ─── DeepL Glossary Management API ──────────────────────────────────────────
+
+/**
+ * Create or update a DeepL glossary from entries
+ * Returns the DeepL glossary ID
+ */
+export async function syncDeepLGlossary(
+    name: string,
+    sourceLang: string,
+    targetLang: string,
+    entries: { source: string; target: string }[]
+): Promise<string | null> {
+    if (!DEEPL_API_KEY || entries.length === 0) return null;
+
+    try {
+        // Build TSV entries
+        const entriesTsv = entries
+            .map((e) => `${e.source}\t${e.target}`)
+            .join('\n');
+
+        const response = await fetch(`${DEEPL_API_URL}/v2/glossaries`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `DeepL-Auth-Key ${DEEPL_API_KEY}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name,
+                source_lang: toDeepLLanguage(sourceLang, false),
+                target_lang: toDeepLLanguage(targetLang, true),
+                entries: entriesTsv,
+                entries_format: 'tsv',
+            }),
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`DeepL Glossary API error: ${response.status} - ${errorText}`);
+            return null;
+        }
+
+        const data = await response.json();
+        return data.glossary_id || null;
+    } catch (error) {
+        console.error('DeepL glossary sync error:', error);
+        return null;
+    }
+}
+
+/**
+ * Delete a DeepL glossary by ID
+ */
+export async function deleteDeepLGlossary(glossaryId: string): Promise<boolean> {
+    if (!DEEPL_API_KEY) return false;
+
+    try {
+        const response = await fetch(
+            `${DEEPL_API_URL}/v2/glossaries/${glossaryId}`,
+            {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `DeepL-Auth-Key ${DEEPL_API_KEY}`,
+                },
+            }
+        );
+        return response.ok;
+    } catch (error) {
+        console.error('DeepL glossary delete error:', error);
+        return false;
+    }
+}
+
+/**
+ * Get DeepL API usage stats
+ */
+export async function getDeepLUsage(): Promise<{
+    characterCount: number;
+    characterLimit: number;
+} | null> {
+    if (!DEEPL_API_KEY) return null;
+
+    try {
+        const response = await fetch(`${DEEPL_API_URL}/v2/usage`, {
+            headers: {
+                'Authorization': `DeepL-Auth-Key ${DEEPL_API_KEY}`,
+            },
+        });
+
+        if (!response.ok) return null;
+
+        const data = await response.json();
+        return {
+            characterCount: data.character_count || 0,
+            characterLimit: data.character_limit || 0,
+        };
+    } catch {
+        return null;
     }
 }
 
@@ -222,7 +407,6 @@ export async function detectLanguageViaTranslation(text: string): Promise<string
     }
 
     try {
-        // Send a translation request - DeepL will detect the source language
         const response = await fetch(`${DEEPL_API_URL}/v2/translate`, {
             method: 'POST',
             headers: {
@@ -230,8 +414,8 @@ export async function detectLanguageViaTranslation(text: string): Promise<string
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                text: [text.slice(0, 200)], // Use first 200 chars for detection
-                target_lang: 'EN-US', // Target doesn't matter for detection
+                text: [text.slice(0, 200)],
+                target_lang: 'EN-US',
             }),
         });
 

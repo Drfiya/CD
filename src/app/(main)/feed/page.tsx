@@ -73,7 +73,7 @@ async function FeedContent({ searchParams }: FeedPageProps) {
     commentCount: post._count.comments,
   }));
 
-  // Save original text before translation (for Trues toggle)
+  // Save original text before translation (for Truth toggle)
   const originalTexts = new Map(
     postsWithLikeStatus.map((post) => [
       post.id,

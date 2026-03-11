@@ -75,9 +75,10 @@ export function PostCard({
 
   const displayPlainText = isTranslated && !showOriginal
     ? translatedPlainText
-    : originalPlainText;
+    : null; // When showing original, fall through to rich Tiptap content
 
-  const shouldShowPlainText = isTranslated && displayPlainText;
+  // Show plain text only when displaying a translation (not original)
+  const shouldShowPlainText = isTranslated && !showOriginal && displayPlainText;
 
   return (
     <article className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-100 dark:border-neutral-700 overflow-hidden">
@@ -181,7 +182,7 @@ export function PostCard({
           <span className="text-sm">{commentCount}</span>
         </Link>
 
-        {/* Trues button - only shown when translation exists */}
+        {/* Truth button - toggle between translation and original text */}
         {isTranslated && (
           <button
             onClick={() => setShowOriginal(!showOriginal)}
@@ -193,8 +194,8 @@ export function PostCard({
             }
           >
             <span className="text-sm">🌐</span>
-            <span className="text-sm">
-              {showOriginal ? 'Translated' : 'Trues'}
+            <span className="text-sm" translate="no">
+              {showOriginal ? 'Translated' : 'Truth'}
             </span>
           </button>
         )}

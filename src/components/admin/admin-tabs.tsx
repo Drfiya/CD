@@ -64,6 +64,11 @@ const tabs: Tab[] = [
     canAccess: (role) => canEditSettings(role),
   },
   {
+    href: '/admin/language-settings',
+    label: 'Language Settings',
+    canAccess: (role) => canEditSettings(role),
+  },
+  {
     href: '/admin/dev-tracker',
     label: 'Command Center',
     canAccess: (role) => canEditSettings(role),
