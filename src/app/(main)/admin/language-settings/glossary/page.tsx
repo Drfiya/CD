@@ -45,7 +45,16 @@ export default async function GlossaryPage() {
             </div>
 
             <GlossaryManager
-                initialEntries={entries}
+                initialEntries={entries.map(e => ({
+                    id: e.id,
+                    sourceTerm: e.sourceTerm,
+                    targetTerm: e.targetTerm,
+                    sourceLocale: e.sourceLocale,
+                    targetLocale: e.targetLocale,
+                    domain: e.domain ?? undefined,
+                    isActive: e.isActive,
+                    createdAt: e.createdAt.toISOString(),
+                }))}
                 domains={domains}
                 languagePairs={languagePairs}
             />
