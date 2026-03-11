@@ -157,6 +157,7 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                 <div className="flex items-center justify-end px-4 py-3 border-t border-gray-100 dark:border-neutral-700">
                     <button
                         type="button"
+                        data-no-translate
                         className="inline-flex items-center px-5 py-2 text-white text-sm font-semibold tracking-wide rounded-full transition-colors shadow-sm"
                         style={{ backgroundColor: '#D94A4A' }}
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#C43E3E'}
@@ -358,6 +359,7 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                                     <button
                                         type="submit"
                                         disabled={isSubmitting || !content || hasPendingVideo}
+                                        data-no-translate
                                         className="px-5 py-2 rounded-full text-sm font-semibold tracking-wide text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
                                         style={{ backgroundColor: '#D94A4A' }}
                                         onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.backgroundColor = '#C43E3E'; }}
