@@ -83,12 +83,13 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Normalize language codes
-        const normalizedTarget = targetLang.toLowerCase().split('-')[0];
-        const normalizedSource = sourceLang?.toLowerCase().split('-')[0];
+        // Pass language codes through to DeepL provider (which handles formatting)
+        // Do NOT strip variants like EN-US → en, because DeepL requires EN-US for English targets
+        const baseTarget = targetLang.toLowerCase().split('-')[0];
+        const baseSource = sourceLang?.toLowerCase().split('-')[0];
 
-        // Skip translation if source matches target
-        if (normalizedSource && normalizedTarget === normalizedSource) {
+        // Skip translation if source matches target (compare base languages only)
+        if (baseSource && baseTarget === baseSource) {
             return NextResponse.json({
                 translations: texts,
                 skipped: true,
@@ -96,14 +97,14 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        // Call DeepL batch translation
-        const translations = await translateBatch(texts, normalizedSource, normalizedTarget);
+        // Call DeepL batch translation — pass original codes, not normalized ones
+        const translations = await translateBatch(texts, sourceLang, targetLang);
 
         return NextResponse.json(
             {
                 translations,
-                targetLang: normalizedTarget,
-                sourceLang: normalizedSource,
+                targetLang: baseTarget,
+                sourceLang: baseSource,
             },
             {
                 headers: {
