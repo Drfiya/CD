@@ -11,7 +11,7 @@ import { VideoEmbedPlayer } from '@/components/video/video-embed';
 import { LazyGif } from '@/components/feed/lazy-gif';
 import { LikeButton } from '@/components/feed/like-button';
 import { PostMenu } from '@/components/feed/post-menu';
-import { getLanguageName } from '@/lib/translation/constants';
+import { getLanguageName, getToggleLabel } from '@/lib/translation/constants';
 import type { PostWithAuthor } from '@/types/post';
 import type { VideoEmbed } from '@/lib/video-utils';
 
@@ -64,7 +64,7 @@ export function PostCard({
 
   // Determine if this post was translated
   const postLanguage = originalLanguage || (post as { languageCode?: string }).languageCode || 'en';
-  const isTranslated = !!translatedPlainText &&
+  const isTranslated = (!!translatedPlainText || !!translatedTitle) &&
     !!userLanguage &&
     postLanguage !== userLanguage;
 
@@ -101,22 +101,31 @@ export function PostCard({
           <PostMenu postId={post.id} isAuthor={!!currentUserId && currentUserId === post.authorId} />
         </div>
 
-        {/* Post title (if present) */}
-        {displayTitle && (
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-2">{displayTitle}</h3>
-        )}
+        {/*
+          Post content wrapper — data-no-translate prevents GlobalTranslator from
+          touching post content. Server-side translation already handles posts;
+          the GlobalTranslator is only for UI elements (nav, buttons, etc.).
+        */}
+        <div data-no-translate>
+          {/* Post title */}
+          {displayTitle && (
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-2">
+              {displayTitle}
+            </h3>
+          )}
 
-        {/* Post content - show translated plain text or original rich content */}
-        {shouldShowPlainText ? (
-          <div className="prose prose-sm max-w-none text-gray-700 dark:text-neutral-300 whitespace-pre-wrap">
-            {displayPlainText}
-          </div>
-        ) : (
-          <div
-            className="prose prose-sm max-w-none text-gray-700 dark:text-neutral-300"
-            dangerouslySetInnerHTML={{ __html: renderContent(post.content) }}
-          />
-        )}
+          {/* Post content - show translated plain text or original rich content */}
+          {shouldShowPlainText ? (
+            <div className="prose prose-sm max-w-none text-gray-700 dark:text-neutral-300 whitespace-pre-wrap">
+              {displayPlainText}
+            </div>
+          ) : (
+            <div
+              className="prose prose-sm max-w-none text-gray-700 dark:text-neutral-300"
+              dangerouslySetInnerHTML={{ __html: renderContent(post.content) }}
+            />
+          )}
+        </div>
 
         {/* Video embeds — feed mode: thumbnail only, no iframe */}
         {embeds.length > 0 && (
@@ -182,9 +191,10 @@ export function PostCard({
           <span className="text-sm">{commentCount}</span>
         </Link>
 
-        {/* Truth button - toggle between translation and original text */}
+        {/* Original toggle - switch between translation and original text */}
         {isTranslated && (
           <button
+            data-no-translate
             onClick={() => setShowOriginal(!showOriginal)}
             className="flex items-center gap-1 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             title={
@@ -195,7 +205,7 @@ export function PostCard({
           >
             <span className="text-sm">🌐</span>
             <span className="text-sm" translate="no">
-              {showOriginal ? 'Translated' : 'Truth'}
+              {getToggleLabel(userLanguage || 'en', showOriginal)}
             </span>
           </button>
         )}

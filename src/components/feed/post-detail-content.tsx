@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { getLanguageName } from '@/lib/translation/constants';
+import { getLanguageName, getToggleLabel } from '@/lib/translation/constants';
 
 interface PostDetailContentProps {
     translatedTitle?: string | null;
@@ -14,7 +14,7 @@ interface PostDetailContentProps {
 
 /**
  * Client component wrapper for post detail content that supports
- * the Truth toggle between translated and original text.
+ * the Original toggle between translated and original text.
  */
 export function PostDetailContent({
     translatedTitle,
@@ -25,7 +25,7 @@ export function PostDetailContent({
     userLanguage,
 }: PostDetailContentProps) {
     const [showOriginal, setShowOriginal] = useState(false);
-    const isTranslated = originalLanguage !== userLanguage && !!translatedPlainText;
+    const isTranslated = originalLanguage !== userLanguage && (!!translatedPlainText || !!translatedTitle);
 
     const displayTitle = isTranslated && !showOriginal
         ? translatedTitle
@@ -33,28 +33,35 @@ export function PostDetailContent({
 
     return (
         <>
-            {/* Post title */}
-            {displayTitle && (
-                <h1 className="text-xl font-bold text-gray-900 dark:text-neutral-100 mb-2">
-                    {displayTitle}
-                </h1>
-            )}
+            {/*
+              Post content wrapper — data-no-translate prevents GlobalTranslator from
+              touching post content. Server-side translation already handles posts.
+            */}
+            <div data-no-translate>
+                {/* Post title */}
+                {displayTitle && (
+                    <h1 className="text-xl font-bold text-gray-900 dark:text-neutral-100 mb-2">
+                        {displayTitle}
+                    </h1>
+                )}
 
-            {/* Post content */}
-            {isTranslated && !showOriginal ? (
-                <div className="prose prose-sm max-w-none text-gray-700 dark:text-neutral-300 whitespace-pre-wrap">
-                    {translatedPlainText}
-                </div>
-            ) : (
-                <div
-                    className="prose prose-sm max-w-none text-gray-700 dark:text-neutral-300"
-                    dangerouslySetInnerHTML={{ __html: originalContent }}
-                />
-            )}
+                {/* Post content */}
+                {isTranslated && !showOriginal ? (
+                    <div className="prose prose-sm max-w-none text-gray-700 dark:text-neutral-300 whitespace-pre-wrap">
+                        {translatedPlainText}
+                    </div>
+                ) : (
+                    <div
+                        className="prose prose-sm max-w-none text-gray-700 dark:text-neutral-300"
+                        dangerouslySetInnerHTML={{ __html: originalContent }}
+                    />
+                )}
+            </div>
 
-            {/* Truth toggle button - only if translation exists */}
+            {/* Original toggle button - only if translation exists */}
             {isTranslated && (
                 <button
+                    data-no-translate
                     onClick={() => setShowOriginal(!showOriginal)}
                     className="mt-3 flex items-center gap-1 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                     title={
@@ -65,7 +72,7 @@ export function PostDetailContent({
                 >
                     <span className="text-sm">🌐</span>
                     <span className="text-sm" translate="no">
-                        {showOriginal ? 'Translated' : 'Truth'}
+                        {getToggleLabel(userLanguage, showOriginal)}
                     </span>
                 </button>
             )}

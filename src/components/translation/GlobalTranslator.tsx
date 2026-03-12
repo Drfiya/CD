@@ -83,8 +83,8 @@ export function GlobalTranslator() {
             return true;
         }
 
-        // Skip elements marked with data-no-translate
-        if (element.hasAttribute('data-no-translate')) {
+        // Skip elements marked with data-no-translate or translate="no" (HTML standard)
+        if (element.hasAttribute('data-no-translate') || element.getAttribute('translate') === 'no') {
             return true;
         }
 
@@ -98,10 +98,11 @@ export function GlobalTranslator() {
             return true;
         }
 
-        // Check ancestors for data-no-translate
+        // Check ancestors for data-no-translate / translate="no"
         let parent = element.parentElement;
         while (parent) {
             if (parent.hasAttribute('data-no-translate') ||
+                parent.getAttribute('translate') === 'no' ||
                 parent.classList.contains('notranslate') ||
                 SKIP_ELEMENTS.has(parent.tagName)) {
                 return true;
@@ -146,6 +147,17 @@ export function GlobalTranslator() {
      */
     const extractTargets = useCallback((root: Node): TranslationTarget[] => {
         const targets: TranslationTarget[] = [];
+
+        // CRITICAL: TreeWalker never calls acceptNode on the root itself,
+        // so if the root is inside a data-no-translate container, its children
+        // would bypass the filter. Check the root and its ancestors first.
+        const rootElement = root.nodeType === Node.ELEMENT_NODE
+            ? root as Element
+            : (root as Node).parentElement;
+        if (rootElement && shouldSkipElement(rootElement)) {
+            return targets; // Entire subtree is protected
+        }
+
         const walker = document.createTreeWalker(
             root,
             NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
@@ -361,6 +373,13 @@ export function GlobalTranslator() {
                 const node = mutation.target;
                 const text = node.textContent || '';
 
+                // Skip nodes inside data-no-translate containers
+                // (e.g. server-translated post content, Original toggle view)
+                const parentEl = node.parentElement;
+                if (parentEl && shouldSkipElement(parentEl)) {
+                    continue;
+                }
+
                 // Check if React restored original text
                 const original = getOriginalText(node);
                 if (original && text === original) {
@@ -381,6 +400,11 @@ export function GlobalTranslator() {
             } else if (mutation.type === 'attributes') {
                 const element = mutation.target as Element;
                 const attr = mutation.attributeName;
+
+                // Skip elements inside data-no-translate containers
+                if (shouldSkipElement(element)) {
+                    continue;
+                }
 
                 if (attr && TRANSLATABLE_ATTRS.includes(attr as typeof TRANSLATABLE_ATTRS[number])) {
                     const value = element.getAttribute(attr);

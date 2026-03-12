@@ -42,6 +42,7 @@ export function TranslationToggle({
 
     return (
         <button
+            data-no-translate
             onClick={handleClick}
             className="flex items-center gap-1 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             title={
