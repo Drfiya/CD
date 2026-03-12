@@ -82,6 +82,12 @@ async function FeedContent({ searchParams }: FeedPageProps) {
   );
 
   // Translate posts to user's preferred language (server-side)
+  console.log(`[Translation] User language: "${userLanguage}" | Posts to check: ${postsWithLikeStatus.length}`);
+  postsWithLikeStatus.forEach((p) => {
+    const postLang = (p as { languageCode?: string | null }).languageCode || 'en';
+    const willTranslate = postLang !== userLanguage;
+    console.log(`[Translation]   Post "${(p.title || p.id).substring(0, 40)}" lang=${postLang} → ${willTranslate ? 'TRANSLATE' : 'SKIP (same lang)'}`);
+  });
   const translatedPosts = await translatePostsForUser(postsWithLikeStatus, userLanguage);
 
   // Translate categories dynamically
