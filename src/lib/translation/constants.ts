@@ -42,3 +42,18 @@ export function getLanguageName(code: string): string {
     }
     return code.toUpperCase();
 }
+
+/**
+ * Returns a short label for the translation toggle button.
+ * - showingOriginal=true  → offer to switch back to translation
+ * - showingOriginal=false → offer to show the original
+ */
+export function getToggleLabel(uiLanguage: string, showingOriginal: boolean): string {
+    const labels: Record<string, { original: string; translation: string }> = {
+        de: { original: 'Original anzeigen', translation: 'Übersetzung anzeigen' },
+        fr: { original: 'Voir l\'original',   translation: 'Voir la traduction' },
+        en: { original: 'Show original',      translation: 'Show translation' },
+    };
+    const lang = isSupportedLanguage(uiLanguage) ? uiLanguage : 'en';
+    return showingOriginal ? labels[lang].translation : labels[lang].original;
+}

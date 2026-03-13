@@ -8,7 +8,7 @@
 
 ## 1. Was ist ScienceExperts.ai?
 
-ScienceExperts.ai ist eine **selbst-gehostete Community-Plattform** für Wissenschaftler, Forscher und Experten aus dem Life-Science-Bereich. Die Plattform ist ein Feature-vollständiger **Klon des Skool-Modells** (Community + Classroom + Gamification), jedoch vollständig selbst entwickelt und unter eigener Kontrolle — ohne Abhängigkeit von Drittanbieter-Plattformen.
+ScienceExperts.ai ist eine **selbst-gehostete Community-Plattform** für Wissenschaftler, Forscher und Experten aus dem Life-Science-Bereich. Die Plattform bietet einen Feature-vollständigen Funktionsumfang (Community + Classroom + Gamification), vollständig selbst entwickelt und unter eigener Kontrolle — ohne Abhängigkeit von Drittanbieter-Plattformen.
 
 ### Kernmission
 
@@ -491,7 +491,7 @@ Das Admin-Dashboard umfasst **23+ Unterseiten**:
 
 ### 8.1 Visual Identity
 
-- **Designsprache:** Minimalistisch, klinisch, Skool-inspiriert
+- **Designsprache:** Minimalistisch, klinisch, ScienceExperts.ai Community-Design
 - **Farbpalette:** Monochromes Schwarz/Weiß/Grau-Schema
   - Background: `#f8f9fa`, Foreground: `#1f2937`, Cards: `#ffffff`
 - **Typografie:** Inter (Sans-serif), Medium (500) + Bold (700)
@@ -499,7 +499,7 @@ Das Admin-Dashboard umfasst **23+ Unterseiten**:
 
 ### 8.2 Komponenten-Patterns
 
-- **Cards:** `.skool-card` — White bg, 1px border, 12px radius, subtle shadow
+- **Cards:** `.community-card` — White bg, 1px border, 12px radius, subtle shadow
 - **Buttons:** Pill-shaped (`rounded-full`), Primary (schwarz), Secondary (grau), Ghost
 - **Navigation:** Horizontale Tabs mit monochrom SVG-Icons (Lucide/Heroicons)
 - **Sticky Header:** Logo + Search bleiben fixiert, Sub-Nav versteckt sich beim Scrollen
@@ -605,7 +605,7 @@ RESEND_API_KEY=
 
 ## 13. Zukünftige Features (Roadmap-Auszug)
 
-Basierend auf der Marktforschung (170+ Skool-Feature-Requests analysiert):
+Basierend auf der Marktforschung (170+ Community-Feature-Requests analysiert):
 
 - **Post-Scheduling:** Posts für die Zukunft planen
 - **Tiered Category Access:** Kategorien nur für zahlende Mitglieder
@@ -622,7 +622,7 @@ Basierend auf der Marktforschung (170+ Skool-Feature-Requests analysiert):
 
 ## 14. Zusammenfassung für KI-Kontext
 
-> **ScienceExperts.ai** ist eine in Next.js 16 gebaute Community-Plattform (Skool-Klon) mit:
+> **ScienceExperts.ai** ist eine in Next.js 16 gebaute Community-Plattform mit:
 >
 > - **Full-Stack TypeScript** — React 19 Frontend, Server Actions Backend, Prisma 7 ORM
 > - **25+ Datenbankmodelle** — Users, Posts, Comments, Courses, Modules, Lessons, Events, Translations, etc.

@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Community Platform",
-  description: "A Skool-clone community platform",
+  title: "ScienceExperts.ai",
+  description: "Where science meets AI — courses, community, and global collaboration.",
 };
 
 export default async function RootLayout({

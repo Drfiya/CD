@@ -19,12 +19,14 @@ import { VideoEmbedPlayer } from '@/components/video/video-embed';
 // --- Types ---
 
 interface MediaItem {
-    type: 'image' | 'video';
+    type: 'image' | 'video' | 'document';
     url: string;
     linkUrl?: string;
     filename?: string;
     service?: string;
     videoId?: string;
+    mimeType?: string;
+    fileSize?: number;
 }
 
 interface Resource {
@@ -132,11 +134,15 @@ function MediaEditor({
     const [videoUrl, setVideoUrl] = useState('');
     const [videoError, setVideoError] = useState('');
     const [uploading, setUploading] = useState(false);
+    const [uploadingDocs, setUploadingDocs] = useState(false);
     const [uploadError, setUploadError] = useState('');
+    const [docUploadError, setDocUploadError] = useState('');
     const imageInputRef = useRef<HTMLInputElement>(null);
+    const docInputRef = useRef<HTMLInputElement>(null);
 
     const images = media.filter((m) => m.type === 'image');
     const videos = media.filter((m) => m.type === 'video');
+    const documents = media.filter((m) => m.type === 'document');
 
     const handleImageUpload = async (files: FileList) => {
         setUploading(true);
@@ -160,6 +166,35 @@ function MediaEditor({
             setUploadError(err instanceof Error ? err.message : 'Upload failed');
         } finally {
             setUploading(false);
+        }
+    };
+
+    const handleDocUpload = async (files: FileList) => {
+        setUploadingDocs(true);
+        setDocUploadError('');
+        const formData = new FormData();
+        Array.from(files).forEach((f) => formData.append('media', f));
+
+        try {
+            const { results } = await uploadResourceMedia(formData);
+            const errors = results.filter((r) => !r.success);
+            if (errors.length > 0) {
+                setDocUploadError(errors.map((e) => `${e.filename}: ${e.error}`).join(', '));
+            }
+            const newDocs: MediaItem[] = results
+                .filter((r) => r.success)
+                .map((r) => ({
+                    type: 'document' as const,
+                    url: r.url,
+                    filename: r.filename,
+                }));
+            if (newDocs.length > 0) {
+                onChange([...media, ...newDocs]);
+            }
+        } catch (err) {
+            setDocUploadError(err instanceof Error ? err.message : 'Upload failed');
+        } finally {
+            setUploadingDocs(false);
         }
     };
 
@@ -192,31 +227,61 @@ function MediaEditor({
         <div className="space-y-3 border border-gray-200 dark:border-neutral-600 rounded-lg p-3 bg-gray-50/50 dark:bg-neutral-700/30">
             <p className="text-xs font-semibold text-gray-500 dark:text-neutral-400 uppercase tracking-wide">Media Attachments</p>
 
-            {/* Image upload */}
-            <div>
-                <input
-                    ref={imageInputRef}
-                    type="file"
-                    multiple
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    className="hidden"
-                    onChange={(e) => {
-                        if (e.target.files && e.target.files.length > 0) handleImageUpload(e.target.files);
-                        e.target.value = '';
-                    }}
-                />
-                <button
-                    type="button"
-                    onClick={() => imageInputRef.current?.click()}
-                    disabled={uploading}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-600 transition-colors disabled:opacity-50"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
-                    </svg>
-                    {uploading ? 'Uploading…' : 'Add Images'}
-                </button>
-                {uploadError && <p className="text-xs text-red-500 mt-1">{uploadError}</p>}
+            {/* Upload buttons row */}
+            <div className="flex flex-wrap gap-2">
+                {/* Image upload */}
+                <div>
+                    <input
+                        ref={imageInputRef}
+                        type="file"
+                        multiple
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        className="hidden"
+                        onChange={(e) => {
+                            if (e.target.files && e.target.files.length > 0) handleImageUpload(e.target.files);
+                            e.target.value = '';
+                        }}
+                    />
+                    <button
+                        type="button"
+                        onClick={() => imageInputRef.current?.click()}
+                        disabled={uploading || uploadingDocs}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-600 transition-colors disabled:opacity-50"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
+                        </svg>
+                        {uploading ? 'Uploading…' : 'Add Images'}
+                    </button>
+                    {uploadError && <p className="text-xs text-red-500 mt-1">{uploadError}</p>}
+                </div>
+
+                {/* Document upload */}
+                <div>
+                    <input
+                        ref={docInputRef}
+                        type="file"
+                        multiple
+                        accept=".pdf,.txt,.md,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.tar,.gz,.7z,audio/*,video/*,application/pdf,text/*"
+                        className="hidden"
+                        onChange={(e) => {
+                            if (e.target.files && e.target.files.length > 0) handleDocUpload(e.target.files);
+                            e.target.value = '';
+                        }}
+                    />
+                    <button
+                        type="button"
+                        onClick={() => docInputRef.current?.click()}
+                        disabled={uploading || uploadingDocs}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-600 transition-colors disabled:opacity-50"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                        </svg>
+                        {uploadingDocs ? 'Uploading…' : 'Add Documents'}
+                    </button>
+                    {docUploadError && <p className="text-xs text-red-500 mt-1">{docUploadError}</p>}
+                </div>
             </div>
 
             {/* Image previews */}
@@ -287,6 +352,51 @@ function MediaEditor({
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
                                 </svg>
                                 <span className="text-xs text-gray-700 dark:text-neutral-300 truncate flex-1">{vid.url}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemove(globalIdx)}
+                                    className="text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                                    title="Remove"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* Document list */}
+            {documents.length > 0 && (
+                <div className="space-y-1.5">
+                    <p className="text-[10px] font-semibold text-gray-400 dark:text-neutral-500 uppercase tracking-wide">Documents</p>
+                    {documents.map((doc, idx) => {
+                        const globalIdx = media.indexOf(doc);
+                        const ext = doc.filename?.split('.').pop()?.toLowerCase() || '';
+                        const docIcon =
+                            ext === 'pdf' ? '📕'
+                            : ['mp4', 'mov', 'avi', 'webm', 'mkv'].includes(ext) ? '🎬'
+                            : ['mp3', 'wav', 'ogg', 'm4a', 'flac'].includes(ext) ? '🎵'
+                            : ['doc', 'docx'].includes(ext) ? '📝'
+                            : ['xls', 'xlsx', 'csv'].includes(ext) ? '📊'
+                            : ['ppt', 'pptx'].includes(ext) ? '📽️'
+                            : ['zip', 'tar', 'gz', '7z'].includes(ext) ? '📦'
+                            : ['txt', 'md'].includes(ext) ? '📃'
+                            : '📄';
+                        return (
+                            <div key={idx} className="flex items-center gap-2 bg-white dark:bg-neutral-700 border border-gray-200 dark:border-neutral-600 rounded-lg px-2.5 py-1.5">
+                                <span className="text-sm shrink-0">{docIcon}</span>
+                                <a
+                                    href={doc.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline truncate flex-1"
+                                    title={doc.filename}
+                                >
+                                    {doc.filename || 'Document'}
+                                </a>
                                 <button
                                     type="button"
                                     onClick={() => handleRemove(globalIdx)}

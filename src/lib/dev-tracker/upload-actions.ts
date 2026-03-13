@@ -196,10 +196,11 @@ export async function uploadResourceFiles(formData: FormData): Promise<{
     return { results };
 }
 
-// --- Media image upload for resource attachments ---
+// --- Media upload for resource attachments (images + documents) ---
 
 const MEDIA_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-const MAX_MEDIA_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_MEDIA_IMAGE_SIZE = 10 * 1024 * 1024;  // 10 MB for images
+const MAX_MEDIA_DOC_SIZE   = 50 * 1024 * 1024;  // 50 MB for documents
 
 /** Upload multiple images as resource media attachments. Returns URLs for storage in the media JSON field. */
 export async function uploadResourceMedia(formData: FormData): Promise<{
@@ -218,15 +219,19 @@ export async function uploadResourceMedia(formData: FormData): Promise<{
     const supabase = createAdminClient();
 
     for (const file of files) {
+        const isImage = MEDIA_IMAGE_TYPES.includes(file.type);
+        const isAllowed = isImage || ALLOWED_MIME_TYPES.includes(file.type);
+
         // Validate type
-        if (!MEDIA_IMAGE_TYPES.includes(file.type)) {
+        if (!isAllowed) {
             results.push({ url: '', filename: file.name, success: false, error: `Unsupported type: ${file.type}` });
             continue;
         }
 
-        // Validate size
-        if (file.size > MAX_MEDIA_SIZE) {
-            results.push({ url: '', filename: file.name, success: false, error: `File too large (max 10MB)` });
+        // Validate size (10 MB for images, 50 MB for everything else)
+        const maxSize = isImage ? MAX_MEDIA_IMAGE_SIZE : MAX_MEDIA_DOC_SIZE;
+        if (file.size > maxSize) {
+            results.push({ url: '', filename: file.name, success: false, error: `File too large (max ${isImage ? '10' : '50'} MB)` });
             continue;
         }
 
