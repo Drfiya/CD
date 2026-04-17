@@ -63,6 +63,7 @@ export const fr: Messages = {
         deletePost: 'Supprimer la publication',
         confirmDelete: 'Êtes-vous sûr ?',
         deleting: 'Suppression...',
+        cancel: 'Annuler',
     },
 
     // Category names (DB-stored categories)

@@ -61,6 +61,7 @@ export const en: Messages = {
         deletePost: 'Delete post',
         confirmDelete: 'Are you sure?',
         deleting: 'Deleting...',
+        cancel: 'Cancel',
     },
 
     // Category names (DB-stored categories)
@@ -208,6 +209,7 @@ export interface Messages {
         deletePost: string;
         confirmDelete: string;
         deleting: string;
+        cancel: string;
     };
     categoryNames: {
         Announcements: string;

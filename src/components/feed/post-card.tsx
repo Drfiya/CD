@@ -36,6 +36,7 @@ interface PostCardProps {
     deletePost: string;
     confirmDelete: string;
     deleting: string;
+    cancel: string;
   };
 }
 
