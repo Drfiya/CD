@@ -92,6 +92,7 @@ async function FeedContent({ searchParams }: FeedPageProps) {
 
   // Get static UI translations from message files (instant, no API call)
   const messages = getMessages(userLanguage);
+  const translatedPostMenuUI = messages.postMenu;
 
   // Translate category names using static i18n (no API call needed)
   const translatedCategories = categories.map(cat => ({
@@ -172,6 +173,7 @@ async function FeedContent({ searchParams }: FeedPageProps) {
                   originalTitle={originals?.title || undefined}
                   originalLanguage={post._originalLanguage || post.languageCode || 'en'}
                   userLanguage={userLanguage}
+                  postMenuUI={translatedPostMenuUI}
                 />
               );
             })}

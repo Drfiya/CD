@@ -29,6 +29,14 @@ interface PostCardProps {
   originalTitle?: string;
   originalLanguage?: string;
   userLanguage?: string;
+  postMenuUI: {
+    copyLink: string;
+    copied: string;
+    editPost: string;
+    deletePost: string;
+    confirmDelete: string;
+    deleting: string;
+  };
 }
 
 function renderContent(content: unknown): string {
@@ -54,6 +62,7 @@ export function PostCard({
   originalTitle,
   originalLanguage,
   userLanguage,
+  postMenuUI,
 }: PostCardProps) {
   const [showOriginal, setShowOriginal] = useState(false);
 
@@ -103,7 +112,7 @@ export function PostCard({
           </Link>
 
           {/* Three-dot menu */}
-          <PostMenu postId={post.id} isAuthor={!!currentUserId && currentUserId === post.authorId} />
+          <PostMenu postId={post.id} isAuthor={!!currentUserId && currentUserId === post.authorId} ui={postMenuUI} />
         </div>
 
         {/*

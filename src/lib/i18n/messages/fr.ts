@@ -55,6 +55,16 @@ export const fr: Messages = {
         link: 'Lien',
     },
 
+    // Post menu (three-dot dropdown)
+    postMenu: {
+        copyLink: 'Copier le lien',
+        copied: 'Copié !',
+        editPost: 'Modifier la publication',
+        deletePost: 'Supprimer la publication',
+        confirmDelete: 'Êtes-vous sûr ?',
+        deleting: 'Suppression...',
+    },
+
     // Category names (DB-stored categories)
     categoryNames: {
         Announcements: 'Annonces',

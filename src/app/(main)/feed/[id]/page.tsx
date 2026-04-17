@@ -17,6 +17,7 @@ import { LazyGif } from '@/components/feed/lazy-gif';
 import type { VideoEmbed } from '@/lib/video-utils';
 import { translatePostForUser, translateCommentsForUser } from '@/lib/translation';
 import { getUserLanguage } from '@/lib/translation/helpers';
+import { getMessages } from '@/lib/i18n';
 
 interface PostDetailPageProps {
   params: Promise<{ id: string }>;
@@ -78,6 +79,8 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
 
   // Get user's language preference for translation (DB, cookie, IP geo, Accept-Language fallbacks)
   const userLanguage = await getUserLanguage();
+  const messages = getMessages(userLanguage);
+  const translatedPostMenuUI = messages.postMenu;
 
   // Save originals before translation
   const originalTitle = post.title;
@@ -164,7 +167,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
               </div>
             </Link>
 
-            <PostMenu postId={post.id} isAuthor={isAuthor} />
+            <PostMenu postId={post.id} isAuthor={isAuthor} ui={translatedPostMenuUI} />
           </div>
 
           {/* Post content with Trues toggle */}

@@ -53,6 +53,16 @@ export const en: Messages = {
         link: 'Link',
     },
 
+    // Post menu (three-dot dropdown)
+    postMenu: {
+        copyLink: 'Copy link',
+        copied: 'Copied!',
+        editPost: 'Edit post',
+        deletePost: 'Delete post',
+        confirmDelete: 'Are you sure?',
+        deleting: 'Deleting...',
+    },
+
     // Category names (DB-stored categories)
     categoryNames: {
         Announcements: 'Announcements',
@@ -190,6 +200,14 @@ export interface Messages {
         contentPlaceholder: string;
         imageVideo: string;
         link: string;
+    };
+    postMenu: {
+        copyLink: string;
+        copied: string;
+        editPost: string;
+        deletePost: string;
+        confirmDelete: string;
+        deleting: string;
     };
     categoryNames: {
         Announcements: string;
