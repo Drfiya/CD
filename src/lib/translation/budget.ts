@@ -71,10 +71,11 @@ export async function checkBudget(): Promise<BudgetCheckResult> {
             killSwitchActive: false,
         };
     } catch (error) {
-        // Fail-closed: if we can't verify the budget, deny the translation
-        // to prevent uncontrolled DeepL spend during DB outages.
-        console.error('[budget] Check failed, blocking request (fail-closed):', error);
-        return { allowed: false, used: 0, budget: 0, killSwitchActive: false };
+        // Fail-open: if we can't verify the budget (e.g. missing table, DB
+        // outage), allow the translation rather than silently degrading UX.
+        // The kill-switch remains the manual safety net for runaway spend.
+        console.warn('[budget] Check failed, allowing request (fail-open):', error);
+        return { allowed: true, used: 0, budget: 50000, killSwitchActive: false };
     }
 }
 

@@ -64,7 +64,12 @@ export function PostCard({
 
   // Determine if this post was translated
   const postLanguage = originalLanguage || (post as { languageCode?: string }).languageCode || 'en';
-  const isTranslated = (!!translatedPlainText || !!translatedTitle) &&
+  // Check that translation actually changed the content — when budget/API
+  // fails, translateForUser returns the original text unchanged.
+  const hasActualTranslation =
+    (!!translatedPlainText && translatedPlainText !== originalPlainText) ||
+    (!!translatedTitle && translatedTitle !== originalTitle);
+  const isTranslated = hasActualTranslation &&
     !!userLanguage &&
     postLanguage !== userLanguage;
 
