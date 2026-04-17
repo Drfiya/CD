@@ -47,7 +47,7 @@ const STATUS_BADGE: Record<string, string> = {
     resolved:
         'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400',
     rejected:
-        'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',
+        'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
 };
 
 const FEEDBACK_TYPE_OPTIONS = [

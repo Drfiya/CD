@@ -118,7 +118,7 @@ export function CourseForm({ course, onSuccess }: CourseFormProps) {
       )}
 
       {/* Error */}
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="text-sm text-red-600 dark:text-red-300">{error}</p>}
 
       {/* Submit */}
       <Button type="submit" disabled={isPending}>

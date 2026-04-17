@@ -11,6 +11,7 @@ import { detectLanguage, hashContent } from '@/lib/translation';
 import { generateAllGifThumbnails, enrichEmbedsWithThumbnails } from '@/lib/thumbnail-actions';
 import type { Prisma } from '@/generated/prisma/client';
 import type { VideoEmbed } from '@/types/post';
+import { preTranslatePost } from '@/lib/translation/pretranslate';
 
 export async function createPost(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -48,7 +49,7 @@ export async function createPost(formData: FormData) {
     enrichEmbedsWithThumbnails(videoEmbeds),
   ]);
 
-  await db.post.create({
+  const newPost = await db.post.create({
     data: {
       title,
       content: content as Prisma.InputJsonValue,
@@ -65,6 +66,9 @@ export async function createPost(formData: FormData) {
 
   // Award points for creating a post
   await awardPoints(session.user.id, 'POST_CREATED');
+
+  // Fire-and-forget: eagerly pre-translate into the other 2 live languages
+  preTranslatePost(newPost.id, title, plainText, languageCode).catch(() => {});
 
   revalidatePath('/feed');
 
@@ -131,6 +135,9 @@ export async function updatePost(postId: string, formData: FormData) {
       contentHash,
     },
   });
+
+  // Fire-and-forget: eagerly pre-translate changed content
+  preTranslatePost(postId, null, plainText, languageCode).catch(() => {});
 
   revalidatePath('/feed');
   revalidatePath(`/feed/${postId}`);

@@ -4,11 +4,29 @@ import { getStripe } from '@/lib/stripe';
 import db from '@/lib/db';
 import type Stripe from 'stripe';
 import { trackStripeEvent } from '@/lib/api-tracking';
+import { checkRateLimit, rateLimitHeaders } from '@/lib/api/rate-limit';
 
 // Disable body parsing — Stripe needs the raw body for signature verification
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
+    // Coarse per-IP flood guard. Signature verification below is the real
+    // auth; this just prevents an open socket from burning CPU on JSON
+    // parsing when something is obviously wrong.
+    const rateLimit = checkRateLimit({
+        scope: 'stripe-webhook',
+        limit: 300,
+        windowMs: 60_000,
+        userId: null,
+        req,
+    });
+    if (!rateLimit.allowed) {
+        return NextResponse.json(
+            { error: 'Rate limit exceeded' },
+            { status: 429, headers: rateLimitHeaders(rateLimit) }
+        );
+    }
+
     const stripe = getStripe();
     const body = await req.text();
     const headersList = await headers();
@@ -20,11 +38,26 @@ export async function POST(req: Request) {
 
     let event: Stripe.Event;
 
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    const allowUnsigned =
+        process.env.NODE_ENV === 'development' &&
+        process.env.ALLOW_UNSIGNED_STRIPE === 'true';
+
+    // Fail-closed: absence of STRIPE_WEBHOOK_SECRET must never grant premium.
+    // The only escape hatch is an explicit dev-only opt-in (ALLOW_UNSIGNED_STRIPE).
+    if (!webhookSecret && !allowUnsigned) {
+        console.error('STRIPE_WEBHOOK_SECRET missing — refusing unsigned webhook');
+        return NextResponse.json(
+            { error: 'Webhook signing secret not configured' },
+            { status: 500 }
+        );
+    }
+
     try {
-        const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
         if (!webhookSecret) {
-            // In development without webhook secret, parse without verification
-            console.warn('STRIPE_WEBHOOK_SECRET not set — skipping signature verification');
+            console.warn(
+                'ALLOW_UNSIGNED_STRIPE=true in development — parsing without verification'
+            );
             event = JSON.parse(body) as Stripe.Event;
         } else {
             event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
@@ -130,10 +163,11 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
         where: { stripeSubscriptionId: subscription.id },
         data: {
             status: newStatus,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            expiresAt: (subscription as any).current_period_end
-                ? new Date((subscription as any).current_period_end * 1000)
-                : null,
+            expiresAt: (() => {
+                // Stripe SDK types vary across versions; current_period_end is present at runtime
+                const periodEnd = (subscription as unknown as { current_period_end?: number }).current_period_end;
+                return periodEnd ? new Date(periodEnd * 1000) : null;
+            })(),
         },
     });
 

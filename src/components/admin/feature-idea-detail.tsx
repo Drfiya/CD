@@ -10,6 +10,7 @@ import {
     deleteFeatureIdea,
     addIdeaComment,
 } from '@/lib/feature-idea-actions';
+import type { FeatureIdeaStatus } from '@/generated/prisma/client';
 import { FeatureIdeaForm } from '@/components/admin/feature-idea-form';
 import { Avatar } from '@/components/ui/avatar';
 
@@ -17,9 +18,9 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
     NEW: { label: 'New', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30' },
     UNDER_REVIEW: { label: 'Under Review', color: 'text-yellow-600 dark:text-yellow-400', bg: 'bg-yellow-100 dark:bg-yellow-900/30' },
     APPROVED: { label: 'Approved', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-100 dark:bg-green-900/30' },
-    IN_PROGRESS: { label: 'In Progress', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/30' },
+    IN_PROGRESS: { label: 'In Progress', color: 'text-purple-600 dark:text-purple-300', bg: 'bg-purple-100 dark:bg-purple-900/30' },
     COMPLETED: { label: 'Completed', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
-    DECLINED: { label: 'Declined', color: 'text-red-600 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-900/30' },
+    DECLINED: { label: 'Declined', color: 'text-red-600 dark:text-red-300', bg: 'bg-red-100 dark:bg-red-900/30' },
 };
 
 interface IdeaDetail {
@@ -66,7 +67,7 @@ export function FeatureIdeaDetail({ idea }: FeatureIdeaDetailProps) {
 
     const handleStatusChange = (status: string) => {
         startTransition(async () => {
-            await updateFeatureIdeaStatus(idea.id, status as any);
+            await updateFeatureIdeaStatus(idea.id, status as FeatureIdeaStatus);
             router.refresh();
         });
     };
@@ -166,7 +167,7 @@ export function FeatureIdeaDetail({ idea }: FeatureIdeaDetailProps) {
                                 {statusCfg.label}
                             </span>
                             {idea.priority && (
-                                <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${idea.priority === 'high' ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' :
+                                <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${idea.priority === 'high' ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-300' :
                                     idea.priority === 'medium' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' :
                                         'bg-gray-100 dark:bg-neutral-700 text-gray-500 dark:text-neutral-400'
                                     }`}>
@@ -232,7 +233,7 @@ export function FeatureIdeaDetail({ idea }: FeatureIdeaDetailProps) {
                                     <button
                                         onClick={handleDelete}
                                         disabled={isPending}
-                                        className="text-sm text-red-600 dark:text-red-400 font-medium"
+                                        className="text-sm text-red-600 dark:text-red-300 font-medium"
                                     >
                                         Confirm Delete
                                     </button>
@@ -246,7 +247,7 @@ export function FeatureIdeaDetail({ idea }: FeatureIdeaDetailProps) {
                             ) : (
                                 <button
                                     onClick={() => setDeleteConfirm(true)}
-                                    className="text-sm text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 font-medium"
+                                    className="text-sm text-red-500 hover:text-red-600 dark:text-red-300 dark:hover:text-red-300 font-medium"
                                 >
                                     Delete
                                 </button>

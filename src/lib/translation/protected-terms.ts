@@ -589,7 +589,7 @@ export async function collectProtectedTerms(
     ]);
 
     // 5. Extract numerical values and get the text with placeholders
-    const { processedText: textWithPlaceholders, values: numericalValues } =
+    const { processedText: _textWithPlaceholders, values: numericalValues } =
         extractNumericalValues(cleanText);
 
     // 6. Run NER detection on the original clean text (before placeholder replacement)

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { signIn } from 'next-auth/react';
 import { type RegisterInput } from '@/lib/validations/auth';
 import { registerWithMembership } from '@/lib/auth-actions';
 import { StepIndicator } from './step-indicator';
@@ -40,12 +41,22 @@ export function RegistrationWizard() {
         return;
       }
 
-      // Step 2: Create Stripe Checkout session and redirect
+      // Step 2: Sign the user in so the checkout route can verify identity
+      const signInResult = await signIn('credentials', {
+        redirect: false,
+        email: accountData.email,
+        password: accountData.password,
+      });
+
+      if (!signInResult?.ok) {
+        throw new Error('Failed to sign in after registration');
+      }
+
+      // Step 3: Create Stripe Checkout session and redirect
       const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: result.userId,
           email: accountData.email,
           promoCode, // Pass promo code for server-side resolution
         }),

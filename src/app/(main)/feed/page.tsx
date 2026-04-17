@@ -7,7 +7,7 @@ import { CategoriesSidebar } from '@/components/feed/categories-sidebar';
 import { RightSidebar } from '@/components/feed/right-sidebar';
 import { CreatePostModal } from '@/components/feed/create-post-modal';
 import { translatePostsForUser } from '@/lib/translation';
-import { translateObjects } from '@/lib/translation/ui';
+
 import { getCachedCommunitySettings, getCachedCategories } from '@/lib/cached-queries';
 import { getMessages } from '@/lib/i18n';
 import { getUserLanguage } from '@/lib/translation/helpers';
@@ -90,17 +90,15 @@ async function FeedContent({ searchParams }: FeedPageProps) {
   });
   const translatedPosts = await translatePostsForUser(postsWithLikeStatus, userLanguage);
 
-  // Translate categories dynamically
-  const translatedCategories = await translateObjects(
-    categories,
-    ['name'],
-    'en', // Categories are stored in English
-    userLanguage,
-    'category'
-  );
-
   // Get static UI translations from message files (instant, no API call)
   const messages = getMessages(userLanguage);
+
+  // Translate category names using static i18n (no API call needed)
+  const translatedCategories = categories.map(cat => ({
+    ...cat,
+    name: (messages.categoryNames as Record<string, string>)[cat.name] || cat.name,
+  }));
+
   const translatedUI = {
     categoriesTitle: messages.categories.title,
     allPosts: messages.categories.allPosts,
@@ -138,6 +136,15 @@ async function FeedContent({ searchParams }: FeedPageProps) {
           writeSomethingPlaceholder={translatedUI.writeSomething}
           postButtonLabel={messages.post.post}
           cancelLabel={messages.post.cancel}
+          createPostTitle={messages.post.createNewPost}
+          categoryLabel={messages.post.category}
+          postTitleLabel={messages.post.postTitle}
+          titlePlaceholder={messages.post.titlePlaceholder}
+          contentLabel={messages.post.content}
+          contentPlaceholder={messages.post.contentPlaceholder}
+          imageVideoLabel={messages.post.imageVideo}
+          linkLabel={messages.post.link}
+          categoryNames={messages.categoryNames}
         />
 
         {/* Posts list */}

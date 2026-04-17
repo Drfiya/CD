@@ -6,6 +6,8 @@ import type { Messages } from './en';
 export const de: Messages = {
     // Navigation
     nav: {
+        home: 'Start',
+        feed: 'Feed',
         community: 'Community',
         classroom: 'Kurse',
         calendar: 'Kalender',
@@ -13,6 +15,7 @@ export const de: Messages = {
         aiTools: 'KI-Tools',
         leaderboards: 'Top-Lernende',
         settings: 'Einstellungen',
+        admin: 'Admin',
     },
 
     // Search
@@ -42,6 +45,22 @@ export const de: Messages = {
         save: 'Speichern',
         cancel: 'Abbrechen',
         delete: 'Löschen',
+        createNewPost: 'Neuen Beitrag erstellen',
+        category: 'Kategorie',
+        postTitle: 'Beitragstitel',
+        titlePlaceholder: 'Titel für deinen Beitrag (optional)',
+        content: 'Inhalt',
+        contentPlaceholder: 'Was möchtest du teilen?',
+        imageVideo: 'Bild/Video',
+        link: 'Link',
+    },
+
+    // Category names (DB-stored categories)
+    categoryNames: {
+        Announcements: 'Ankündigungen',
+        General: 'Allgemein',
+        Introductions: 'Vorstellungen',
+        Questions: 'Fragen',
     },
 
     // Comments
@@ -85,6 +104,23 @@ export const de: Messages = {
         courses: 'Kurse',
     },
 
+    // Events page
+    eventsPage: {
+        aboutThisEvent: 'Über dieses Event',
+        location: 'Ort',
+        weeklyEvent: 'Wöchentliches Event',
+        monthlyEvent: 'Monatliches Event',
+        backToCalendar: 'Zurück zum Kalender',
+        createdBy: 'Erstellt von',
+        noUpcomingEvents: 'Keine kommenden Events',
+        checkBackLater: 'Schau später nochmal vorbei für neue Events.',
+        today: 'Heute',
+        tomorrow: 'Morgen',
+        thisWeek: 'Diese Woche',
+        weekly: 'Wöchentlich',
+        monthly: 'Monatlich',
+    },
+
     // Classroom page
     classroomPage: {
         title: 'Kursbereich',
@@ -107,5 +143,9 @@ export const de: Messages = {
         myProgress: 'Mein Fortschritt',
         enrolled: 'Eingeschrieben',
         lessonsLabel: 'Lektionen',
+        courseContent: 'Kursinhalt',
+        enrollToAccessLessons: 'Melde dich an, um alle Lektionen dieses Kurses freizuschalten.',
+        backToCourse: 'Zurück zum Kurs',
+        nextLesson: 'Nächste Lektion',
     },
 };

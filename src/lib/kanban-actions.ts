@@ -1,21 +1,9 @@
 'use server';
 
-import { getServerSession } from 'next-auth';
 import { revalidatePath } from 'next/cache';
-import { authOptions } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth-guards';
 import db from '@/lib/db';
-import { canEditSettings } from '@/lib/permissions';
 import type { KanbanStatus } from '@/generated/prisma/client';
-
-// ============================================================================
-// Helper: ensure caller is admin+
-// ============================================================================
-async function requireAdmin() {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) throw new Error('Not authenticated');
-    if (!canEditSettings(session.user.role)) throw new Error('Forbidden');
-    return session.user;
-}
 
 // ============================================================================
 // READ
@@ -74,7 +62,7 @@ export async function createKanbanCard(data: {
     imageUrl?: string;
 }): Promise<{ success: boolean; error?: string }> {
     try {
-        const user = await requireAdmin();
+        const session = await requireAdmin();
 
         // Get the max position in TODO column
         const maxPos = await db.kanbanCard.aggregate({
@@ -89,7 +77,7 @@ export async function createKanbanCard(data: {
                 imageUrl: data.imageUrl || null,
                 status: 'TODO',
                 position: (maxPos._max.position ?? -1) + 1,
-                createdById: user.id,
+                createdById: session.user.id,
             },
         });
 

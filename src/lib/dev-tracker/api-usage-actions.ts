@@ -8,6 +8,7 @@
  */
 
 import db from '@/lib/db';
+import { requireAdmin } from '@/lib/auth-guards';
 
 // --- Types ---
 
@@ -103,7 +104,7 @@ async function getDeepLStats(): Promise<ServiceUsage> {
         const costToday = todayChars * costPerChar;
         const costThisMonth = monthChars * costPerChar;
 
-        const totalToday = todayStats._count + todayCacheHits._count;
+        const _totalToday = todayStats._count + todayCacheHits._count;
         const totalMonth = monthStats._count + monthCacheHits._count;
         const cacheHitRate = totalMonth > 0
             ? (monthCacheHits._count / totalMonth) * 100
@@ -523,6 +524,7 @@ async function getSupabaseStats(): Promise<ServiceUsage> {
 // --- Main Aggregator ---
 
 export async function getApiUsageData(): Promise<ApiUsageData> {
+    await requireAdmin();
     const [deepl, gemini, stripe, resend, giphy, supabase] = await Promise.all([
         getDeepLStats(),
         getGeminiStats(),

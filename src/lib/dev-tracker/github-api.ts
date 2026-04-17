@@ -57,7 +57,7 @@ export interface SyncResult {
 
 // --- Fetching helpers ---
 
-async function apiFetch<T>(endpoint: string): Promise<T> {
+async function _apiFetch<T>(endpoint: string): Promise<T> {
     const res = await fetch(`${BASE_URL}${endpoint}`, {
         headers: headers(),
         next: { revalidate: 0 }, // Always fresh in Next.js

@@ -367,10 +367,21 @@ model TranslationUsage {
   sourceLang   String
   targetLang   String
   fromCache    Boolean  @default(false)
+  cacheTier    String?  // 'lru' | 'db' | 'miss' — null for pre-existing rows
   costEstimate Float    @default(0)
 
   @@index([date])
   @@index([sourceLang, targetLang])
+  @@index([cacheTier, date])
+}
+
+model TranslationConfig {
+  id                    String    @id @default("singleton")
+  dailyCharBudget       Int       @default(50000)
+  killSwitchActive      Boolean   @default(false)
+  killSwitchActivatedAt DateTime?
+  budgetAlertSentAt     DateTime?
+  updatedAt             DateTime  @updatedAt
 }
 
 model ApiUsage {

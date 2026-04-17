@@ -9,9 +9,11 @@ import {
 } from 'date-fns';
 import { EventCard } from './event-card';
 import type { EventOccurrence } from '@/lib/event-actions';
+import type { Messages } from '@/lib/i18n/messages/en';
 
 interface EventListProps {
   events: EventOccurrence[];
+  messages: Messages['eventsPage'];
 }
 
 type DateGroup = {
@@ -19,7 +21,7 @@ type DateGroup = {
   events: EventOccurrence[];
 };
 
-export function EventList({ events }: EventListProps) {
+export function EventList({ events, messages }: EventListProps) {
   if (events.length === 0) {
     return (
       <div className="text-center py-12 text-gray-500 dark:text-neutral-500">
@@ -37,8 +39,8 @@ export function EventList({ events }: EventListProps) {
             d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
           />
         </svg>
-        <p className="font-medium">No upcoming events</p>
-        <p className="text-sm">Check back later for new events.</p>
+        <p className="font-medium">{messages.noUpcomingEvents}</p>
+        <p className="text-sm">{messages.checkBackLater}</p>
       </div>
     );
   }
@@ -65,13 +67,13 @@ export function EventList({ events }: EventListProps) {
   }
 
   if (today.length > 0) {
-    groups.push({ label: 'Today', events: today });
+    groups.push({ label: messages.today, events: today });
   }
   if (tomorrow.length > 0) {
-    groups.push({ label: 'Tomorrow', events: tomorrow });
+    groups.push({ label: messages.tomorrow, events: tomorrow });
   }
   if (thisWeek.length > 0) {
-    groups.push({ label: 'This Week', events: thisWeek });
+    groups.push({ label: messages.thisWeek, events: thisWeek });
   }
   if (later.length > 0) {
     // Sub-group later events by month
@@ -102,6 +104,7 @@ export function EventList({ events }: EventListProps) {
               <EventCard
                 key={`${occurrence.event.id}-${startOfDay(occurrence.occurrenceDate).getTime()}-${index}`}
                 occurrence={occurrence}
+                messages={messages}
               />
             ))}
           </div>

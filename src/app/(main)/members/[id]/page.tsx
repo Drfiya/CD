@@ -6,6 +6,7 @@ import db from '@/lib/db';
 import { Avatar } from '@/components/ui/avatar';
 import { LevelBadge } from '@/components/gamification/level-badge';
 import { PointsDisplay } from '@/components/gamification/points-display';
+import { UGCText } from '@/components/translation/UGCText';
 
 interface MemberProfilePageProps {
   params: Promise<{ id: string }>;
@@ -64,9 +65,9 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
           <LevelBadge level={user.level} size="md" />
         </div>
 
-        <p className="text-muted-foreground mb-6">
+        <UGCText as="p" className="text-muted-foreground mb-6">
           {user.bio || 'No bio yet'}
-        </p>
+        </UGCText>
 
         {/* Gamification stats */}
         <div className="border rounded-lg p-4 mb-6 max-w-xs mx-auto">

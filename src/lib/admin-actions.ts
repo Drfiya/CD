@@ -15,6 +15,7 @@ import {
 } from '@/lib/permissions';
 import { logAuditEvent } from '@/lib/audit-actions';
 import type { Prisma } from '@/generated/prisma/client';
+import { requireAdmin } from '@/lib/auth-guards';
 
 const ADMIN_PAGE_SIZE = 20;
 
@@ -51,7 +52,7 @@ export async function editPostAsAdmin(postId: string, content: unknown) {
   });
 
   // Log audit event
-  await logAuditEvent(session.user.id, 'EDIT_POST', {
+  await logAuditEvent('EDIT_POST', {
     targetId: postId,
     targetType: 'POST',
     details: {
@@ -96,7 +97,7 @@ export async function deletePostAsAdmin(postId: string) {
   });
 
   // Log audit event
-  await logAuditEvent(session.user.id, 'DELETE_POST', {
+  await logAuditEvent('DELETE_POST', {
     targetId: postId,
     targetType: 'POST',
     details: {
@@ -152,7 +153,7 @@ export async function editCommentAsAdmin(commentId: string, content: string) {
   });
 
   // Log audit event
-  await logAuditEvent(session.user.id, 'EDIT_COMMENT', {
+  await logAuditEvent('EDIT_COMMENT', {
     targetId: commentId,
     targetType: 'COMMENT',
     details: {
@@ -197,7 +198,7 @@ export async function deleteCommentAsAdmin(commentId: string) {
   });
 
   // Log audit event
-  await logAuditEvent(session.user.id, 'DELETE_COMMENT', {
+  await logAuditEvent('DELETE_COMMENT', {
     targetId: commentId,
     targetType: 'COMMENT',
     details: {
@@ -411,7 +412,7 @@ export async function banUser(
   });
 
   // Log audit event
-  await logAuditEvent(session.user.id, 'BAN_USER', {
+  await logAuditEvent('BAN_USER', {
     targetId: userId,
     targetType: 'USER',
     details: {
@@ -479,7 +480,7 @@ export async function removeUser(
   await db.user.delete({ where: { id: userId } });
 
   // Log audit event
-  await logAuditEvent(session.user.id, 'BAN_USER', {
+  await logAuditEvent('BAN_USER', {
     targetId: userId,
     targetType: 'USER',
     details: {
@@ -562,7 +563,7 @@ export async function changeUserRole(
   });
 
   // Log audit event
-  await logAuditEvent(session.user.id, 'CHANGE_ROLE', {
+  await logAuditEvent('CHANGE_ROLE', {
     targetId: userId,
     targetType: 'USER',
     details: {
@@ -668,6 +669,7 @@ export async function getMembersForAdmin(
  * @returns true if user has an active ban
  */
 export async function isUserBanned(userId: string): Promise<boolean> {
+  await requireAdmin();
   const activeBan = await db.ban.findFirst({
     where: {
       userId,

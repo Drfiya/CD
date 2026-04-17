@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  quality-gate:
+    name: Typecheck · Lint · Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prisma generate
+        run: npx prisma generate
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint (strict)
+        # 0 errors enforced; warnings ratcheted at 60 via --max-warnings.
+        # Reduce the ratchet as warnings are cleaned up.
+        run: npm run lint:ci
+
+      - name: Tests
+        run: npm test
+        env:
+          # Vitest only runs translation-subsystem tests that don't hit the
+          # database; no DATABASE_URL needed.
+          NODE_ENV: test
+
+      - name: Build (smoke)
+        run: npm run build
+        env:
+          # Next.js touches env at build-time; provide harmless dummy values.
+          DATABASE_URL: 'postgresql://u:p@localhost:5432/x'
+          NEXTAUTH_SECRET: 'ci-smoke-secret'
+          NEXTAUTH_URL: 'http://localhost:3000'

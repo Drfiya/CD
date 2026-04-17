@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { canEditSettings } from '@/lib/permissions';
+import { checkRateLimit, rateLimitHeaders } from '@/lib/api/rate-limit';
 import { writeFile, unlink } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
@@ -15,6 +16,20 @@ export async function POST(req: NextRequest) {
 
     if (!canEditSettings(session.user.role)) {
         return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
+    }
+
+    const rateLimit = checkRateLimit({
+        scope: 'upload-logo',
+        limit: 10,
+        windowMs: 60_000,
+        userId: session.user.id,
+        req,
+    });
+    if (!rateLimit.allowed) {
+        return NextResponse.json(
+            { error: 'Rate limit exceeded' },
+            { status: 429, headers: rateLimitHeaders(rateLimit) }
+        );
     }
 
     const formData = await req.formData();

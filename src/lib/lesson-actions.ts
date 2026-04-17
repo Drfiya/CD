@@ -1,29 +1,14 @@
 'use server';
 
-import { getServerSession } from 'next-auth';
 import { revalidatePath } from 'next/cache';
-import { authOptions } from '@/lib/auth';
 import db from '@/lib/db';
 import { lessonSchema, updateLessonSchema } from '@/lib/validations/lesson';
 import { createClient } from '@/lib/supabase/server';
 import type { Prisma } from '@/generated/prisma/client';
-
-async function isAdmin(): Promise<boolean> {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return false;
-  }
-
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { role: true },
-  });
-
-  return user?.role === 'admin' || user?.role === 'owner';
-}
+import { requireAuth, requireAdmin } from '@/lib/auth-guards';
 
 export async function getLesson(id: string) {
+  await requireAuth();
   const lesson = await db.lesson.findUnique({
     where: { id },
     include: {
@@ -42,6 +27,7 @@ export async function getLesson(id: string) {
 }
 
 export async function getLessonsForModule(moduleId: string) {
+  await requireAuth();
   const lessons = await db.lesson.findMany({
     where: { moduleId },
     orderBy: { position: 'asc' },
@@ -51,13 +37,9 @@ export async function getLessonsForModule(moduleId: string) {
 }
 
 export async function createLesson(formData: FormData) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return { error: 'Not authenticated' };
-  }
-
-  if (!(await isAdmin())) {
+  try {
+    await requireAdmin();
+  } catch {
     return { error: 'Not authorized - admin role required' };
   }
 
@@ -76,12 +58,12 @@ export async function createLesson(formData: FormData) {
   const { title, content, videoUrl, status, moduleId } = validatedFields.data;
 
   // Verify module exists
-  const module = await db.module.findUnique({
+  const courseModule = await db.module.findUnique({
     where: { id: moduleId },
     select: { courseId: true },
   });
 
-  if (!module) {
+  if (!courseModule) {
     return { error: 'Module not found' };
   }
 
@@ -105,19 +87,15 @@ export async function createLesson(formData: FormData) {
     },
   });
 
-  revalidatePath(`/admin/courses/${module.courseId}`);
+  revalidatePath(`/admin/courses/${courseModule.courseId}`);
 
   return { success: true, lessonId: lesson.id };
 }
 
 export async function updateLesson(lessonId: string, formData: FormData) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return { error: 'Not authenticated' };
-  }
-
-  if (!(await isAdmin())) {
+  try {
+    await requireAdmin();
+  } catch {
     return { error: 'Not authorized - admin role required' };
   }
 
@@ -160,13 +138,9 @@ export async function updateLesson(lessonId: string, formData: FormData) {
 }
 
 export async function deleteLesson(lessonId: string) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return { error: 'Not authenticated' };
-  }
-
-  if (!(await isAdmin())) {
+  try {
+    await requireAdmin();
+  } catch {
     return { error: 'Not authorized - admin role required' };
   }
 
@@ -215,13 +189,9 @@ export async function deleteLesson(lessonId: string) {
  * Updates positions based on the order of IDs provided.
  */
 export async function reorderLessons(moduleId: string, orderedIds: string[]) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return { error: 'Not authenticated' };
-  }
-
-  if (!(await isAdmin())) {
+  try {
+    await requireAdmin();
+  } catch {
     return { error: 'Not authorized - admin role required' };
   }
 
@@ -258,13 +228,9 @@ export async function moveLessonToModule(
   targetModuleId: string,
   newPosition: number
 ) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return { error: 'Not authenticated' };
-  }
-
-  if (!(await isAdmin())) {
+  try {
+    await requireAdmin();
+  } catch {
     return { error: 'Not authorized - admin role required' };
   }
 

@@ -167,7 +167,7 @@ export async function updateCommunitySettings(
   });
 
   // Log audit event
-  await logAuditEvent(session.user.id, 'UPDATE_SETTINGS', {
+  await logAuditEvent('UPDATE_SETTINGS', {
     targetId: 'singleton',
     targetType: 'SETTINGS',
     details: {
@@ -289,7 +289,7 @@ export async function uploadCommunityLogo(
   });
 
   // Log audit event
-  await logAuditEvent(session.user.id, 'UPDATE_SETTINGS', {
+  await logAuditEvent('UPDATE_SETTINGS', {
     targetId: 'singleton',
     targetType: 'SETTINGS',
     details: {
@@ -335,7 +335,7 @@ export async function removeCommunityLogo(): Promise<{ success?: boolean; error?
   });
 
   // Log audit event
-  await logAuditEvent(session.user.id, 'UPDATE_SETTINGS', {
+  await logAuditEvent('UPDATE_SETTINGS', {
     targetId: 'singleton',
     targetType: 'SETTINGS',
     details: {
@@ -421,7 +421,7 @@ export async function uploadCommunityLogoDark(
     },
   });
 
-  await logAuditEvent(session.user.id, 'UPDATE_SETTINGS', {
+  await logAuditEvent('UPDATE_SETTINGS', {
     targetId: 'singleton',
     targetType: 'SETTINGS',
     details: {
@@ -465,7 +465,7 @@ export async function removeCommunityLogoDark(): Promise<{ success?: boolean; er
     },
   });
 
-  await logAuditEvent(session.user.id, 'UPDATE_SETTINGS', {
+  await logAuditEvent('UPDATE_SETTINGS', {
     targetId: 'singleton',
     targetType: 'SETTINGS',
     details: {
@@ -528,7 +528,7 @@ export async function updateLandingPageSettings(
   });
 
   // Log audit event
-  await logAuditEvent(session.user.id, 'UPDATE_SETTINGS', {
+  await logAuditEvent('UPDATE_SETTINGS', {
     targetId: 'singleton',
     targetType: 'SETTINGS',
     details: {
@@ -564,7 +564,7 @@ export async function updateLandingTranslation(
     data: { landingTranslations: translations },
   });
 
-  await logAuditEvent(session.user.id, 'UPDATE_SETTINGS', {
+  await logAuditEvent('UPDATE_SETTINGS', {
     targetId: 'singleton',
     targetType: 'SETTINGS',
     details: { action: 'landing_translation_update', language: lang },
@@ -696,7 +696,7 @@ export async function uploadSidebarBanner(
     },
   });
 
-  await logAuditEvent(session.user.id, 'UPDATE_SETTINGS', {
+  await logAuditEvent('UPDATE_SETTINGS', {
     targetId: 'singleton',
     targetType: 'SETTINGS',
     details: {
@@ -734,7 +734,7 @@ export async function removeSidebarBanner(): Promise<{ success?: boolean; error?
     },
   });
 
-  await logAuditEvent(session.user.id, 'UPDATE_SETTINGS', {
+  await logAuditEvent('UPDATE_SETTINGS', {
     targetId: 'singleton',
     targetType: 'SETTINGS',
     details: { action: 'sidebar_banner_remove' },
@@ -771,7 +771,7 @@ export async function updateSidebarBannerSettings(
     },
   });
 
-  await logAuditEvent(session.user.id, 'UPDATE_SETTINGS', {
+  await logAuditEvent('UPDATE_SETTINGS', {
     targetId: 'singleton',
     targetType: 'SETTINGS',
     details: { action: 'sidebar_banner_settings_update', ...data },
@@ -813,7 +813,7 @@ export async function updateClassroomVideoUrls(
     data: { classroomVideoUrls: cleaned },
   });
 
-  await logAuditEvent(session.user.id, 'UPDATE_SETTINGS', {
+  await logAuditEvent('UPDATE_SETTINGS', {
     targetId: 'singleton',
     targetType: 'SETTINGS',
     details: {

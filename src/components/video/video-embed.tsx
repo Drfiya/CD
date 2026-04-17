@@ -24,6 +24,7 @@ export function VideoEmbedPlayer({ embed, autoPlay = false, feedMode = false, po
   useEffect(() => {
     // If the embed has a cached Supabase thumbnail, use that first
     if (embed.thumbnailUrl) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Sync prop→state for cached thumbnail; async Loom fetch below needs effect
       setThumbnailUrl(embed.thumbnailUrl);
       return;
     }

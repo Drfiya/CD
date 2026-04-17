@@ -24,6 +24,15 @@ interface CreatePostModalProps {
     writeSomethingPlaceholder?: string;
     postButtonLabel?: string;
     cancelLabel?: string;
+    createPostTitle?: string;
+    categoryLabel?: string;
+    postTitleLabel?: string;
+    titlePlaceholder?: string;
+    contentLabel?: string;
+    contentPlaceholder?: string;
+    imageVideoLabel?: string;
+    linkLabel?: string;
+    categoryNames?: Record<string, string>;
 }
 
 // Category color map for the pill buttons
@@ -60,7 +69,7 @@ function extractPlainText(content: object | null): string {
     }
 }
 
-export function CreatePostModal({ categories, userImage, userName, writeSomethingPlaceholder, postButtonLabel, cancelLabel }: CreatePostModalProps) {
+export function CreatePostModal({ categories, userImage, userName, writeSomethingPlaceholder, postButtonLabel, cancelLabel, createPostTitle, categoryLabel, postTitleLabel, titlePlaceholder, contentLabel, contentPlaceholder, imageVideoLabel, linkLabel, categoryNames }: CreatePostModalProps) {
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -78,6 +87,7 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
     // Set default category when modal opens
     useEffect(() => {
         if (isOpen && categories.length > 0 && !selectedCategory) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional: default selection on modal open
             setSelectedCategory(categories[0].id);
         }
     }, [isOpen, categories, selectedCategory]);
@@ -170,18 +180,27 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
 
             {/* Modal overlay */}
             {isOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center"
+                    onKeyDown={(e) => { if (e.key === 'Escape') setIsOpen(false); }}
+                >
                     {/* Backdrop */}
                     <div
                         className="absolute inset-0 bg-black/50"
                         onClick={() => setIsOpen(false)}
+                        aria-hidden="true"
                     />
 
                     {/* Modal content */}
-                    <div className="relative bg-white dark:bg-neutral-800 rounded-xl w-full max-w-lg mx-4 shadow-xl">
+                    <div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="create-post-title"
+                        className="relative bg-white dark:bg-neutral-800 rounded-xl w-full max-w-lg mx-4 shadow-xl"
+                    >
                         {/* Header */}
                         <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-neutral-700">
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">Create New Post</h2>
+                            <h2 id="create-post-title" className="text-lg font-semibold text-gray-900 dark:text-neutral-100">{createPostTitle || 'Create New Post'}</h2>
                             <button
                                 onClick={() => setIsOpen(false)}
                                 className="text-gray-400 hover:text-gray-600 dark:hover:text-neutral-300 transition-colors"
@@ -196,7 +215,7 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                             <div className="p-5 space-y-5">
                                 {/* Category selection */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Category</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">{categoryLabel || 'Category'}</label>
                                     <div className="flex flex-wrap gap-2">
                                         {categories.map((category) => {
                                             const style = getCategoryStyle(category.name);
@@ -215,7 +234,7 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                           `}
                                                     style={isSelected ? { backgroundColor: '#D94A4A' } : undefined}
                                                 >
-                                                    {category.name}
+                                                    {(categoryNames && categoryNames[category.name]) || category.name}
                                                 </button>
                                             );
                                         })}
@@ -224,12 +243,12 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
 
                                 {/* Post Title */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Post Title</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">{postTitleLabel || 'Post Title'}</label>
                                     <input
                                         type="text"
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
-                                        placeholder="Enter a title for your post (optional)"
+                                        placeholder={titlePlaceholder || 'Enter a title for your post (optional)'}
                                         maxLength={200}
                                         className="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-600 rounded-lg text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-gray-900/10 dark:focus:ring-neutral-500/30 focus:border-gray-300 dark:focus:border-neutral-500 transition-colors"
                                     />
@@ -237,11 +256,11 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
 
                                 {/* Content */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Content *</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">{contentLabel || 'Content'} *</label>
                                     <div className="border border-gray-200 dark:border-neutral-600 rounded-lg">
                                         <PostEditor
                                             onChange={(json) => setContent(json)}
-                                            placeholder="What would you like to share?"
+                                            placeholder={contentPlaceholder || 'What would you like to share?'}
                                         />
                                     </div>
                                 </div>

@@ -123,6 +123,16 @@ export function TranslationPreview({
     // Session-level cache to avoid redundant API calls
     const cacheRef = useRef<CacheEntry[]>([]);
 
+    // Debounce state for Preview button / language switch clicks.
+    // Prevents rapid-fire clicks from spawning parallel /api/translate/preview
+    // requests (each a potential DeepL character charge on first-time text).
+    // The server already caches via the 3-tier lookup, but coalescing on the
+    // client avoids the race where two concurrent clicks both miss the cache
+    // before either write lands.
+    const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const inflightRef = useRef<string | null>(null);
+    const PREVIEW_DEBOUNCE_MS = 400;
+
     // Build the list of available target languages (exclude source language)
     const availableTargetLanguages = useMemo(() => {
         return (Object.keys(SUPPORTED_LANGUAGES) as LanguageCode[]).filter(
@@ -194,6 +204,14 @@ export function TranslationPreview({
                 return;
             }
 
+            // Client-side deduplication: if an identical request is already
+            // in flight, skip this invocation and let the first one settle.
+            const reqKey = `${lang}::${sourceText}`;
+            if (inflightRef.current === reqKey) {
+                return;
+            }
+            inflightRef.current = reqKey;
+
             setLoading(true);
             setError(null);
 
@@ -231,9 +249,27 @@ export function TranslationPreview({
                 );
             } finally {
                 setLoading(false);
+                inflightRef.current = null;
             }
         },
         [sourceText, sourceLanguage, getCached, setCache, onPreviewGenerated]
+    );
+
+    /**
+     * Debounced wrapper around fetchPreview. Multiple rapid calls (button
+     * spam, language-switch double-click) collapse into a single API hit.
+     */
+    const scheduleFetchPreview = useCallback(
+        (lang: string) => {
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+            }
+            debounceTimerRef.current = setTimeout(() => {
+                debounceTimerRef.current = null;
+                fetchPreview(lang);
+            }, PREVIEW_DEBOUNCE_MS);
+        },
+        [fetchPreview]
     );
 
     /**
@@ -241,8 +277,8 @@ export function TranslationPreview({
      */
     const handleOpen = useCallback(() => {
         setIsOpen(true);
-        fetchPreview(targetLang);
-    }, [fetchPreview, targetLang]);
+        scheduleFetchPreview(targetLang);
+    }, [scheduleFetchPreview, targetLang]);
 
     /**
      * When the target language changes, re-fetch
@@ -252,9 +288,9 @@ export function TranslationPreview({
             const lang = e.target.value;
             setTargetLang(lang);
             setPreviewText(null);
-            fetchPreview(lang);
+            scheduleFetchPreview(lang);
         },
-        [fetchPreview]
+        [scheduleFetchPreview]
     );
 
     // ─── Collapsed: just a button ────────────────────────────────────────────
@@ -362,7 +398,7 @@ export function TranslationPreview({
                                 </div>
                             </div>
                         ) : error ? (
-                            <div className="text-sm text-red-600 dark:text-red-400">
+                            <div className="text-sm text-red-600 dark:text-red-300">
                                 {error}
                                 <button
                                     type="button"

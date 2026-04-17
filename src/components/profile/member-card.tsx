@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { LevelBadge } from '@/components/gamification/level-badge';
+import { UGCText } from '@/components/translation/UGCText';
 
 interface MemberCardProps {
   member: {
@@ -65,9 +66,9 @@ export function MemberCard({ member }: MemberCardProps) {
 
         {/* Bio */}
         {member.bio && (
-          <p className="text-xs text-gray-500 dark:text-neutral-400 mt-2 line-clamp-2 leading-relaxed">
+          <UGCText as="p" className="text-xs text-gray-500 dark:text-neutral-400 mt-2 line-clamp-2 leading-relaxed">
             {member.bio}
-          </p>
+          </UGCText>
         )}
       </div>
     </Link>

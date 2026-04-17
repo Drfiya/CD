@@ -1,34 +1,28 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { canEditSettings } from '@/lib/permissions';
 import db from '@/lib/db';
+import { requireAuth, requireAdmin } from '@/lib/auth-guards';
 
 /**
  * Get all AI tools, ordered by position (for admin management)
  */
 export async function getAiTools() {
+    await requireAdmin();
     return db.aiTool.findMany({ orderBy: { position: 'asc' } });
 }
 
 /**
- * Get only active AI tools (for frontend display)
+ * Get only active AI tools (for frontend display).
+ * NOTE: This is a public read (sidebar widget). Auth is NOT required here
+ * because this function is called via unstable_cache (which cannot access headers()).
+ * Admin mutations (create/update/delete) are gated with requireAdmin below.
  */
 export async function getActiveAiTools() {
     return db.aiTool.findMany({
         where: { active: true },
         orderBy: { position: 'asc' },
     });
-}
-
-async function requireAdmin() {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id || !canEditSettings(session.user.role)) {
-        throw new Error('Unauthorized');
-    }
-    return session;
 }
 
 /**

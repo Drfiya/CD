@@ -2,6 +2,7 @@
 
 import db from '@/lib/db';
 import { POINTS, calculateLevel } from '@/lib/gamification-config';
+import { requireAuth } from '@/lib/auth-guards';
 
 export type PointAction = keyof typeof POINTS;
 
@@ -9,6 +10,7 @@ export async function awardPoints(
   userId: string,
   action: PointAction
 ): Promise<{ levelUp: boolean; newLevel?: number }> {
+  await requireAuth();
   const amount = POINTS[action];
 
   // Use transaction to ensure atomicity

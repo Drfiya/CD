@@ -1,10 +1,9 @@
 'use server';
 
-import { getServerSession } from 'next-auth';
 import { revalidatePath } from 'next/cache';
-import { authOptions } from '@/lib/auth';
 import db from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
+import { requireAuth, requireAdmin } from '@/lib/auth-guards';
 
 // Allowed file types for attachments
 const ALLOWED_MIME_TYPES = [
@@ -24,21 +23,6 @@ const ALLOWED_MIME_TYPES = [
 // Max file size: 10MB
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-async function isAdmin(): Promise<boolean> {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return false;
-  }
-
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { role: true },
-  });
-
-  return user?.role === 'admin' || user?.role === 'owner';
-}
-
 /**
  * Sanitize filename to remove unsafe characters
  */
@@ -51,6 +35,7 @@ function sanitizeFilename(filename: string): string {
 }
 
 export async function getAttachments(lessonId: string) {
+  await requireAuth();
   const attachments = await db.attachment.findMany({
     where: { lessonId },
     orderBy: { createdAt: 'asc' },
@@ -60,13 +45,9 @@ export async function getAttachments(lessonId: string) {
 }
 
 export async function uploadAttachment(formData: FormData) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return { error: 'Not authenticated' };
-  }
-
-  if (!(await isAdmin())) {
+  try {
+    await requireAdmin();
+  } catch {
     return { error: 'Not authorized - admin role required' };
   }
 
@@ -156,13 +137,9 @@ export async function uploadAttachment(formData: FormData) {
 }
 
 export async function deleteAttachment(attachmentId: string) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return { error: 'Not authenticated' };
-  }
-
-  if (!(await isAdmin())) {
+  try {
+    await requireAdmin();
+  } catch {
     return { error: 'Not authorized - admin role required' };
   }
 

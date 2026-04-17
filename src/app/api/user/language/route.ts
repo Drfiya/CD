@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import db from '@/lib/db';
+import { checkRateLimit, rateLimitHeaders } from '@/lib/api/rate-limit';
 
 export async function POST(request: NextRequest) {
     try {
@@ -18,6 +19,20 @@ export async function POST(request: NextRequest) {
             // Not logged in - that's fine, just return success
             // Language is still saved to localStorage on the client
             return NextResponse.json({ success: true, saved: false });
+        }
+
+        const rateLimit = checkRateLimit({
+            scope: 'user-language',
+            limit: 30,
+            windowMs: 60_000,
+            userId: session.user.id,
+            req: request,
+        });
+        if (!rateLimit.allowed) {
+            return NextResponse.json(
+                { error: 'Rate limit exceeded' },
+                { status: 429, headers: rateLimitHeaders(rateLimit) }
+            );
         }
 
         const body = await request.json();

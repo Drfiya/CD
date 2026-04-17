@@ -17,6 +17,16 @@ import db from '@/lib/db';
 import { getUserLanguage } from '@/lib/translation/helpers';
 
 export async function GET() {
+    // F8: production exposure guard. The route ships behind a dev-only
+    // opt-in so an unintentionally admin-flagged DB row in prod cannot
+    // leak DeepL usage + post metadata.
+    const debugEnabled =
+        process.env.NODE_ENV !== 'production' ||
+        process.env.ENABLE_TRANSLATION_DEBUG === 'true';
+    if (!debugEnabled) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {

@@ -28,7 +28,7 @@ export async function ClassroomRightSidebar({ translatedUI, userId }: ClassroomR
     ]);
 
     // If logged in, get learning stats
-    let stats = { enrolled: 0, completed: 0, lessonsCompleted: 0 };
+    const stats = { enrolled: 0, completed: 0, lessonsCompleted: 0 };
     if (userId) {
         const [enrollmentCount, lessonProgressCount] = await Promise.all([
             db.enrollment.count({ where: { userId } }),

@@ -2,6 +2,7 @@
 
 import db from '@/lib/db';
 import { Prisma } from '@/generated/prisma/client';
+import { requireAdmin } from '@/lib/auth-guards';
 
 /**
  * Audit action types for tracking moderation activities.
@@ -22,12 +23,15 @@ export type AuditTargetType = 'USER' | 'POST' | 'COMMENT' | 'SETTINGS';
 /**
  * Log an audit event for moderation tracking.
  *
- * @param userId - ID of the user performing the action
+ * The acting user (`userId` on the row) is always derived from the server
+ * session — the caller cannot forge another user's audit entry. Only
+ * admin/owner roles can write audit rows; moderator-class actions that must
+ * be auditable should be hoisted into admin-only flows first.
+ *
  * @param action - The type of action performed
  * @param options - Additional details about the action
  */
 export async function logAuditEvent(
-  userId: string,
   action: AuditAction,
   options: {
     targetId?: string;
@@ -35,9 +39,10 @@ export async function logAuditEvent(
     details?: Record<string, unknown>;
   } = {}
 ): Promise<void> {
+  const session = await requireAdmin();
   await db.auditLog.create({
     data: {
-      userId,
+      userId: session.user.id,
       action,
       targetId: options.targetId ?? null,
       targetType: options.targetType ?? null,
@@ -79,6 +84,7 @@ export async function getAuditLogs(
     };
   }>
 > {
+  await requireAdmin();
   const where: Prisma.AuditLogWhereInput = {};
 
   if (options.userId) {
@@ -129,6 +135,7 @@ export async function getAuditLogCount(
     targetType?: AuditTargetType;
   } = {}
 ): Promise<number> {
+  await requireAdmin();
   const where: Prisma.AuditLogWhereInput = {};
 
   if (options.userId) {

@@ -100,6 +100,33 @@ class LRUCache<V> {
 const memoryCache = new LRUCache<string>(LRU_CAPACITY);
 
 // ---------------------------------------------------------------------------
+// In-process per-tier telemetry (admin dashboard)
+// ---------------------------------------------------------------------------
+// Process-local counters — reset on restart. For cross-instance roll-ups
+// we rely on TranslationUsage (DB-backed) already tracked at the caller.
+// These counters feed the "Cache-Health by Tier" panel in the admin UI.
+
+const tierCounters = {
+    memoryHits: 0,
+    postgresHits: 0,
+    misses: 0,
+};
+
+/** Bounded bag of uncached phrases (hottest misses), LRU-evicted by count. */
+const uncachedCounts = new Map<string, number>();
+const UNCACHED_CAPACITY = 200;
+
+function noteUncached(sourceText: string) {
+    const key = sourceText.slice(0, 120); // bound memory per key
+    const current = uncachedCounts.get(key) ?? 0;
+    uncachedCounts.set(key, current + 1);
+    if (uncachedCounts.size > UNCACHED_CAPACITY) {
+        const first = uncachedCounts.keys().next().value;
+        if (first !== undefined) uncachedCounts.delete(first);
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Cache key helpers
 // ---------------------------------------------------------------------------
 
@@ -146,7 +173,7 @@ export async function getCachedTranslation3Tier(
     sourceLocale: string,
     targetLocale: string,
     glossaryId?: string,
-    cacheTtlDays?: number,
+    _cacheTtlDays?: number,
 ): Promise<{ text: string; tier: 'memory' | 'postgres' } | null> {
     const cacheKey = generateCacheKey(sourceText, sourceLocale, targetLocale, glossaryId);
 
@@ -155,6 +182,7 @@ export async function getCachedTranslation3Tier(
         const memoryHit = memoryCache.get(cacheKey);
         if (memoryHit !== undefined) {
             console.debug('[Translation Cache] Tier 1 hit (memory)');
+            tierCounters.memoryHits++;
             return { text: memoryHit, tier: 'memory' };
         }
     } catch (error) {
@@ -195,6 +223,7 @@ export async function getCachedTranslation3Tier(
                     // Non-fatal
                 }
 
+                tierCounters.postgresHits++;
                 return { text: row.translatedText, tier: 'postgres' };
             }
         }
@@ -205,6 +234,8 @@ export async function getCachedTranslation3Tier(
 
     // --- Tier 3: Complete miss — caller should invoke DeepL API ---
     console.debug('[Translation Cache] Cache miss — all tiers');
+    tierCounters.misses++;
+    noteUncached(sourceText);
     return null;
 }
 
@@ -355,6 +386,16 @@ export async function getCacheStats(): Promise<{
     memoryCapacity: number;
     postgresCount: number;
     postgresExpiredCount: number;
+    tierCounters: {
+        memoryHits: number;
+        postgresHits: number;
+        misses: number;
+        total: number;
+        memoryHitRate: number;
+        postgresHitRate: number;
+        missRate: number;
+    };
+    topUncached: Array<{ phrase: string; count: number }>;
 }> {
     let postgresCount = 0;
     let postgresExpiredCount = 0;
@@ -377,11 +418,30 @@ export async function getCacheStats(): Promise<{
         console.error('[Translation Cache] Stats expired count error:', error);
     }
 
+    const { memoryHits, postgresHits, misses } = tierCounters;
+    const total = memoryHits + postgresHits + misses;
+    const pct = (n: number) => (total > 0 ? (n / total) * 100 : 0);
+
+    const topUncached = Array.from(uncachedCounts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 20)
+        .map(([phrase, count]) => ({ phrase, count }));
+
     return {
         memorySize: memoryCache.size,
         memoryCapacity: memoryCache.maxCapacity,
         postgresCount,
         postgresExpiredCount,
+        tierCounters: {
+            memoryHits,
+            postgresHits,
+            misses,
+            total,
+            memoryHitRate: pct(memoryHits),
+            postgresHitRate: pct(postgresHits),
+            missRate: pct(misses),
+        },
+        topUncached,
     };
 }
 

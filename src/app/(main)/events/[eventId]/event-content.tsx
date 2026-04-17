@@ -4,13 +4,16 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import { EventTime } from '@/components/calendar/event-time';
+import { UGCText } from '@/components/translation/UGCText';
 import type { EventWithCreator } from '@/types/event';
+import type { Messages } from '@/lib/i18n/messages/en';
 
 interface EventContentProps {
   event: EventWithCreator;
+  messages: Messages['eventsPage'];
 }
 
-export function EventContent({ event }: EventContentProps) {
+export function EventContent({ event, messages }: EventContentProps) {
   // Initialize Tiptap editor for description (read-only)
   const editor = useEditor({
     extensions: [
@@ -76,7 +79,7 @@ export function EventContent({ event }: EventContentProps) {
               </svg>
             </div>
             <div>
-              <p className="font-medium text-gray-900">Location</p>
+              <p className="font-medium text-gray-900">{messages.location}</p>
               {event.locationUrl ? (
                 <a
                   href={event.locationUrl}
@@ -111,12 +114,14 @@ export function EventContent({ event }: EventContentProps) {
       {/* Description */}
       {event.description && (
         <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold mb-4">About this event</h2>
+          <h2 className="text-lg font-semibold mb-4">{messages.aboutThisEvent}</h2>
           {editor ? (
-            <EditorContent
-              editor={editor}
-              className="prose prose-gray max-w-none [&_.ProseMirror]:outline-none [&_.ProseMirror_a]:text-blue-600 [&_.ProseMirror_a]:underline"
-            />
+            <UGCText>
+              <EditorContent
+                editor={editor}
+                className="prose prose-gray max-w-none [&_.ProseMirror]:outline-none [&_.ProseMirror_a]:text-blue-600 [&_.ProseMirror_a]:underline"
+              />
+            </UGCText>
           ) : (
             <div className="animate-pulse h-20 bg-gray-100 rounded" />
           )}
@@ -125,7 +130,7 @@ export function EventContent({ event }: EventContentProps) {
 
       {/* Created by */}
       <div className="text-sm text-gray-500">
-        Created by {event.createdBy.name || 'Unknown'}
+        {messages.createdBy} {event.createdBy.name || 'Unknown'}
       </div>
     </div>
   );

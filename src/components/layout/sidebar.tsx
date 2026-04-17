@@ -6,17 +6,22 @@ import { SidebarUserMenu } from '@/components/auth/sidebar-user-menu';
 import { getCommunitySettings } from '@/lib/settings-actions';
 import { canModerateContent } from '@/lib/permissions';
 import { ThemeLogo } from '@/components/layout/ThemeLogo';
+import type { Messages } from '@/lib/i18n/messages/en';
 
-const navLinks = [
-  { href: '/', label: 'Home' },
-  { href: '/feed', label: 'Feed' },
-  { href: '/classroom', label: 'Classroom' },
-  { href: '/calendar', label: 'Calendar' },
-  { href: '/leaderboard', label: 'Leaderboard' },
-  { href: '/members', label: 'Members' },
+const navLinks: Array<{ href: string; labelKey: keyof Messages['nav'] }> = [
+  { href: '/', labelKey: 'home' },
+  { href: '/feed', labelKey: 'feed' },
+  { href: '/classroom', labelKey: 'classroom' },
+  { href: '/calendar', labelKey: 'calendar' },
+  { href: '/leaderboard', labelKey: 'leaderboards' },
+  { href: '/members', labelKey: 'members' },
 ];
 
-export async function Sidebar() {
+interface SidebarProps {
+  messages: Messages;
+}
+
+export async function Sidebar({ messages }: SidebarProps) {
   const [settings, session] = await Promise.all([
     getCommunitySettings(),
     getServerSession(authOptions),
@@ -48,9 +53,9 @@ export async function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1">
         {navLinks.map((link) => (
-          <NavLink key={link.href} {...link} />
+          <NavLink key={link.href} href={link.href} label={messages.nav[link.labelKey]} />
         ))}
-        {showAdminLink && <NavLink href="/admin" label="Admin" />}
+        {showAdminLink && <NavLink href="/admin" label={messages.nav.admin} />}
       </nav>
 
       {/* User info from session */}

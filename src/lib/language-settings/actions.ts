@@ -5,6 +5,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { canEditSettings } from '@/lib/permissions';
 import db from '@/lib/db';
+import { getCacheStats } from '@/lib/translation/cache';
+import { getBudgetConfig, updateDailyBudget, activateKillSwitch, deactivateKillSwitch } from '@/lib/translation/budget';
 
 // ─── Auth guard ──────────────────────────────────────────────────────────────
 
@@ -36,6 +38,7 @@ export async function getBlacklistEntries(opts?: {
     category?: string;
     activeOnly?: boolean;
 }) {
+    await requireAdmin();
     const where: Record<string, unknown> = {};
     if (opts?.search) {
         where.term = { contains: opts.search, mode: 'insensitive' };
@@ -54,6 +57,7 @@ export async function getBlacklistEntries(opts?: {
 }
 
 export async function getBlacklistCategories(): Promise<string[]> {
+    await requireAdmin();
     const result = await db.translationBlacklist.findMany({
         select: { category: true },
         distinct: ['category'],
@@ -178,6 +182,7 @@ export async function getGlossaryEntries(opts?: {
     targetLocale?: string;
     domain?: string;
 }) {
+    await requireAdmin();
     const where: Record<string, unknown> = {};
     if (opts?.search) {
         where.OR = [
@@ -196,6 +201,7 @@ export async function getGlossaryEntries(opts?: {
 }
 
 export async function getGlossaryDomains(): Promise<string[]> {
+    await requireAdmin();
     const result = await db.translationGlossaryEntry.findMany({
         select: { domain: true },
         distinct: ['domain'],
@@ -208,6 +214,7 @@ export async function getGlossaryDomains(): Promise<string[]> {
 export async function getGlossaryLanguagePairs(): Promise<
     { sourceLocale: string; targetLocale: string }[]
 > {
+    await requireAdmin();
     const result = await db.translationGlossaryEntry.findMany({
         select: { sourceLocale: true, targetLocale: true },
         distinct: ['sourceLocale', 'targetLocale'],
@@ -345,6 +352,7 @@ export async function bulkImportGlossary(
 }
 
 export async function getGlossaryChangelog(limit = 50) {
+    await requireAdmin();
     return db.glossaryChangeLog.findMany({
         orderBy: { createdAt: 'desc' },
         take: limit,
@@ -370,6 +378,7 @@ export interface TranslationRuleData {
 }
 
 export async function getTranslationRules(): Promise<TranslationRuleData[]> {
+    await requireAdmin();
     return db.translationRule.findMany({
         orderBy: { sectionName: 'asc' },
     });
@@ -456,6 +465,7 @@ export async function getTranslationFeedback(opts?: {
     status?: string;
     feedbackType?: string;
 }) {
+    await requireAdmin();
     const where: Record<string, unknown> = {};
     if (opts?.status) where.status = opts.status;
     if (opts?.feedbackType) where.feedbackType = opts.feedbackType;
@@ -471,6 +481,7 @@ export async function getTranslationFeedback(opts?: {
 }
 
 export async function getFeedbackStats() {
+    await requireAdmin();
     const [total, pending, reviewing, resolved, rejected] = await Promise.all([
         db.translationFeedback.count(),
         db.translationFeedback.count({ where: { status: 'pending' } }),
@@ -613,9 +624,45 @@ export interface TranslationUsageData {
     cacheTotalMisses: number;
     dailyUsage: { date: string; chars: number; cost: number; cached: number }[];
     topLanguagePairs: { pair: string; chars: number }[];
+    /** Per-tier cache telemetry (process-local, resets on restart). */
+    tierCacheStats: {
+        memoryHits: number;
+        postgresHits: number;
+        misses: number;
+        total: number;
+        memoryHitRate: number;
+        postgresHitRate: number;
+        missRate: number;
+        memorySize: number;
+        memoryCapacity: number;
+        postgresCount: number;
+    };
+    /** DB-backed per-tier aggregate (cross-replica, persisted). */
+    dbTierStats: {
+        lruHits: number;
+        dbHits: number;
+        misses: number;
+        total: number;
+        lruHitRate: number;
+        dbHitRate: number;
+        missRate: number;
+        lruChars: number;
+        dbChars: number;
+        missChars: number;
+    };
+    /** Budget config for the kill-switch panel. */
+    budgetConfig: {
+        dailyCharBudget: number;
+        killSwitchActive: boolean;
+        killSwitchActivatedAt: string | null;
+        todayUsed: number;
+    };
+    /** Hottest uncached phrases — candidates for pre-translation. */
+    topUncached: Array<{ phrase: string; count: number }>;
 }
 
 export async function getTranslationUsageData(): Promise<TranslationUsageData> {
+    await requireAdmin();
     const now = new Date();
     const todayStart = new Date(
         now.getFullYear(),
@@ -665,6 +712,27 @@ export async function getTranslationUsageData(): Promise<TranslationUsageData> {
         take: 10,
     });
 
+    // Per-tier cache-health snapshot (process-local, surfaced on the admin
+    // dashboard per Revision Round 1: Must-Have #8 "cache-health observability").
+    const tierStats = await getCacheStats();
+
+    // DB-backed per-tier aggregate (cross-replica, persisted via cacheTier column).
+    const tierGroupRaw = await db.translationUsage.groupBy({
+        by: ['cacheTier'],
+        where: { date: { gte: monthStart }, cacheTier: { not: null } },
+        _count: true,
+        _sum: { charCount: true },
+    });
+    const tierMap: Record<string, { count: number; chars: number }> = {};
+    for (const row of tierGroupRaw) {
+        if (row.cacheTier) tierMap[row.cacheTier] = { count: row._count, chars: row._sum.charCount ?? 0 };
+    }
+    const dbLru = tierMap['lru'] ?? { count: 0, chars: 0 };
+    const dbDb = tierMap['db'] ?? { count: 0, chars: 0 };
+    const dbMiss = tierMap['miss'] ?? { count: 0, chars: 0 };
+    const dbTotal = dbLru.count + dbDb.count + dbMiss.count;
+    const dbPct = (n: number) => (dbTotal > 0 ? Math.round((n / dbTotal) * 100) : 0);
+
     return {
         charsToday: todayAgg._sum.charCount ?? 0,
         charsThisMonth: monthAgg._sum.charCount ?? 0,
@@ -683,5 +751,62 @@ export async function getTranslationUsageData(): Promise<TranslationUsageData> {
             pair: `${p.sourceLang} → ${p.targetLang}`,
             chars: p._sum.charCount ?? 0,
         })),
+        tierCacheStats: {
+            ...tierStats.tierCounters,
+            memorySize: tierStats.memorySize,
+            memoryCapacity: tierStats.memoryCapacity,
+            postgresCount: tierStats.postgresCount,
+        },
+        dbTierStats: {
+            lruHits: dbLru.count,
+            dbHits: dbDb.count,
+            misses: dbMiss.count,
+            total: dbTotal,
+            lruHitRate: dbPct(dbLru.count),
+            dbHitRate: dbPct(dbDb.count),
+            missRate: dbPct(dbMiss.count),
+            lruChars: dbLru.chars,
+            dbChars: dbDb.chars,
+            missChars: dbMiss.chars,
+        },
+        budgetConfig: await (async () => {
+            try {
+                const config = await getBudgetConfig();
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
+                const todayAgg = await db.translationUsage.aggregate({
+                    where: { date: { gte: todayStart }, fromCache: false },
+                    _sum: { charCount: true },
+                });
+                return {
+                    dailyCharBudget: config.dailyCharBudget,
+                    killSwitchActive: config.killSwitchActive,
+                    killSwitchActivatedAt: config.killSwitchActivatedAt?.toISOString() ?? null,
+                    todayUsed: todayAgg._sum.charCount ?? 0,
+                };
+            } catch {
+                return { dailyCharBudget: 50000, killSwitchActive: false, killSwitchActivatedAt: null, todayUsed: 0 };
+            }
+        })(),
+        topUncached: tierStats.topUncached,
     };
+}
+
+// ─── Budget Server Actions ──────────────────────────────────────────────────
+
+export async function toggleKillSwitch(active: boolean) {
+    await requireAdmin();
+    if (active) {
+        await activateKillSwitch();
+    } else {
+        await deactivateKillSwitch();
+    }
+    revalidatePath('/admin/language-settings/usage');
+}
+
+export async function setDailyBudget(budget: number) {
+    await requireAdmin();
+    if (budget < 0 || !Number.isFinite(budget)) throw new Error('Invalid budget');
+    await updateDailyBudget(Math.round(budget));
+    revalidatePath('/admin/language-settings/usage');
 }

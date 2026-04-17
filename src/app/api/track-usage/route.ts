@@ -6,7 +6,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { trackGiphyRequest } from '@/lib/api-tracking';
+import { checkRateLimit, rateLimitHeaders } from '@/lib/api/rate-limit';
 
 interface TrackRequest {
     service: string;
@@ -16,6 +19,21 @@ interface TrackRequest {
 
 export async function POST(request: NextRequest) {
     try {
+        const session = await getServerSession(authOptions);
+        const rateLimit = checkRateLimit({
+            scope: 'track-usage',
+            limit: 300,
+            windowMs: 60_000,
+            userId: session?.user?.id ?? session?.user?.email ?? null,
+            req: request,
+        });
+        if (!rateLimit.allowed) {
+            return NextResponse.json(
+                { error: 'Rate limit exceeded' },
+                { status: 429, headers: rateLimitHeaders(rateLimit) }
+            );
+        }
+
         const body: TrackRequest = await request.json();
         const { service, action, metadata } = body;
 

@@ -23,8 +23,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Allow API auth routes, Stripe webhooks, and translation API (used by public landing page)
-  if (pathname.startsWith('/api/auth') || pathname.startsWith('/api/stripe') || pathname.startsWith('/api/translate')) {
+  // Allow API auth routes and Stripe webhooks.
+  // NOTE: /api/translate is NOT whitelisted — the route itself enforces a
+  // NextAuth session check so anonymous callers cannot poison the shared
+  // translation cache or drain the DeepL budget.
+  if (pathname.startsWith('/api/auth') || pathname.startsWith('/api/stripe')) {
     return NextResponse.next();
   }
 

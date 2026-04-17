@@ -31,8 +31,10 @@ export default async function AdminFeatureIdeasPage({ searchParams }: Props) {
     const status = validStatuses.includes(params.status?.toUpperCase() || '')
         ? (params.status!.toUpperCase() as FeatureIdeaStatus)
         : undefined;
-    const sort = (['upvotes', 'newest', 'oldest'] as const).includes(params.sort as any)
-        ? (params.sort as 'upvotes' | 'newest' | 'oldest')
+    const validSorts = ['upvotes', 'newest', 'oldest'] as const;
+    type SortOption = typeof validSorts[number];
+    const sort: SortOption = validSorts.includes(params.sort as SortOption)
+        ? (params.sort as SortOption)
         : 'upvotes';
 
     const ideas = await getFeatureIdeas({ status, sort });

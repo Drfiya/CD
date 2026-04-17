@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 export function useUserTimezone(): string {
   const [timezone, setTimezone] = useState('UTC');
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR-safe: Intl is browser-only, must read after mount
     setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
   }, []);
   return timezone;
@@ -18,6 +19,7 @@ export function useTimeFormat(): '12' | '24' {
   const [timeFormat, setTimeFormat] = useState<'12' | '24'>('12');
   useEffect(() => {
     const resolved = Intl.DateTimeFormat(undefined, { hour: 'numeric' }).resolvedOptions();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR-safe: Intl is browser-only
     setTimeFormat(resolved.hour12 ? '12' : '24');
   }, []);
   return timeFormat;

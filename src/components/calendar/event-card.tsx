@@ -3,13 +3,16 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { EventTime } from './event-time';
+import { UGCText } from '@/components/translation/UGCText';
 import type { EventOccurrence } from '@/lib/event-actions';
+import type { Messages } from '@/lib/i18n/messages/en';
 
 interface EventCardProps {
   occurrence: EventOccurrence;
+  messages: Messages['eventsPage'];
 }
 
-export function EventCard({ occurrence }: EventCardProps) {
+export function EventCard({ occurrence, messages }: EventCardProps) {
   const { event } = occurrence;
 
   return (
@@ -35,11 +38,11 @@ export function EventCard({ occurrence }: EventCardProps) {
           {/* Title and badges */}
           <div className="flex items-start gap-2 mb-2">
             <h3 className="font-semibold text-gray-900 dark:text-neutral-100 truncate flex-1">
-              {event.title}
+              <UGCText as="span">{event.title}</UGCText>
             </h3>
             {event.recurrence !== 'NONE' && (
               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 flex-shrink-0">
-                {event.recurrence === 'WEEKLY' ? 'Weekly' : 'Monthly'}
+                {event.recurrence === 'WEEKLY' ? messages.weekly : messages.monthly}
               </span>
             )}
           </div>

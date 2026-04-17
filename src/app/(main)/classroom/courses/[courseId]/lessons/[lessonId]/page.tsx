@@ -9,6 +9,9 @@ import { MarkCompleteButton } from '@/components/classroom/mark-complete-button'
 import { LessonContent } from '@/components/classroom/lesson-content';
 import { VideoEmbedPlayer } from '@/components/video/video-embed';
 import { parseVideoUrl } from '@/lib/video-utils';
+import { getUserLanguage } from '@/lib/translation/helpers';
+import { getMessages } from '@/lib/i18n';
+import { UGCText } from '@/components/translation/UGCText';
 
 interface PageProps {
   params: Promise<{ courseId: string; lessonId: string }>;
@@ -52,15 +55,21 @@ export default async function LessonPage({ params }: PageProps) {
   // Parse video URL if present
   const videoEmbed = lesson.videoUrl ? parseVideoUrl(lesson.videoUrl) : null;
 
+  const userLanguage = await getUserLanguage();
+  const messages = getMessages(userLanguage);
+  const cp = messages.classroomPage;
+
   return (
     <div className="max-w-4xl space-y-6">
       {/* Lesson header */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm text-muted-foreground mb-1">
-            {lesson.module.title}
+            <UGCText as="span">{lesson.module.title}</UGCText>
           </p>
-          <h1 className="text-2xl font-bold">{lesson.title}</h1>
+          <h1 className="text-2xl font-bold">
+            <UGCText as="span">{lesson.title}</UGCText>
+          </h1>
         </div>
         <MarkCompleteButton lessonId={lessonId} initialCompleted={isCompleted} />
       </div>
@@ -97,7 +106,7 @@ export default async function LessonPage({ params }: PageProps) {
               d="M15.75 19.5 8.25 12l7.5-7.5"
             />
           </svg>
-          Back to Course
+          {cp.backToCourse}
         </Link>
 
         {nextLesson && nextLesson.lessonId !== lessonId && (
@@ -105,7 +114,7 @@ export default async function LessonPage({ params }: PageProps) {
             href={`/classroom/courses/${courseId}/lessons/${nextLesson.lessonId}`}
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
           >
-            Next Lesson
+            {cp.nextLesson}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"

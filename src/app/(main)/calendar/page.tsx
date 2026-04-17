@@ -1,14 +1,17 @@
 import { Suspense } from 'react';
 import { getEventsForMonth, getUpcomingEvents } from '@/lib/event-actions';
+import { getMessages } from '@/lib/i18n';
+import { getUserLanguage } from '@/lib/translation/helpers';
 import { CalendarClient } from './calendar-client';
-import { tMany } from '@/lib/translation/helpers';
 
 async function CalendarData({
   year,
   month,
+  eventMessages,
 }: {
   year: number;
   month: number;
+  eventMessages: import('@/lib/i18n/messages/en').Messages['eventsPage'];
 }) {
   const [monthEvents, upcomingEvents] = await Promise.all([
     getEventsForMonth(year, month),
@@ -21,6 +24,7 @@ async function CalendarData({
       initialUpcomingEvents={upcomingEvents}
       initialYear={year}
       initialMonth={month}
+      eventMessages={eventMessages}
     />
   );
 }
@@ -53,18 +57,15 @@ export default async function CalendarPage() {
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth();
-
-  // Translate all UI text dynamically via DeepL
-  const ui = await tMany({
-    title: 'Calendar',
-  }, 'calendar');
+  const userLanguage = await getUserLanguage();
+  const messages = getMessages(userLanguage);
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-neutral-100">{ui.title}</h1>
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-neutral-100">{messages.nav.calendar}</h1>
 
       <Suspense fallback={<CalendarSkeleton />}>
-        <CalendarData year={year} month={month} />
+        <CalendarData year={year} month={month} eventMessages={messages.eventsPage} />
       </Suspense>
     </div>
   );

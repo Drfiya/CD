@@ -1,27 +1,13 @@
 'use server';
 
-import { getServerSession } from 'next-auth';
 import { revalidatePath } from 'next/cache';
-import { authOptions } from '@/lib/auth';
 import db from '@/lib/db';
 import { categorySchema } from '@/lib/validations/category';
-
-async function isAdmin(): Promise<boolean> {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return false;
-  }
-
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { role: true },
-  });
-
-  return user?.role === 'admin' || user?.role === 'owner';
-}
+import { preTranslateAdminContent } from '@/lib/translation/pretranslate';
+import { requireAuth, requireAdmin } from '@/lib/auth-guards';
 
 export async function getCategories() {
+  await requireAuth();
   const categories = await db.category.findMany({
     orderBy: { name: 'asc' },
     select: {
@@ -35,13 +21,9 @@ export async function getCategories() {
 }
 
 export async function createCategory(formData: FormData) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return { error: 'Not authenticated' };
-  }
-
-  if (!(await isAdmin())) {
+  try {
+    await requireAdmin();
+  } catch {
     return { error: 'Not authorized - admin role required' };
   }
 
@@ -65,9 +47,12 @@ export async function createCategory(formData: FormData) {
     return { error: 'A category with this name already exists' };
   }
 
-  await db.category.create({
+  const category = await db.category.create({
     data: { name, color },
   });
+
+  // Fire-and-forget: eagerly translate into all live languages
+  preTranslateAdminContent('category', category.id, { name }).catch(() => {});
 
   revalidatePath('/admin/categories');
   revalidatePath('/feed');
@@ -76,13 +61,9 @@ export async function createCategory(formData: FormData) {
 }
 
 export async function updateCategory(categoryId: string, formData: FormData) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return { error: 'Not authenticated' };
-  }
-
-  if (!(await isAdmin())) {
+  try {
+    await requireAdmin();
+  } catch {
     return { error: 'Not authorized - admin role required' };
   }
 
@@ -121,6 +102,11 @@ export async function updateCategory(categoryId: string, formData: FormData) {
     data: { name, color },
   });
 
+  // Fire-and-forget: eagerly re-translate if name changed
+  if (name !== category.name) {
+    preTranslateAdminContent('category', categoryId, { name }).catch(() => {});
+  }
+
   revalidatePath('/admin/categories');
   revalidatePath('/feed');
 
@@ -128,13 +114,9 @@ export async function updateCategory(categoryId: string, formData: FormData) {
 }
 
 export async function deleteCategory(categoryId: string) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return { error: 'Not authenticated' };
-  }
-
-  if (!(await isAdmin())) {
+  try {
+    await requireAdmin();
+  } catch {
     return { error: 'Not authorized - admin role required' };
   }
 

@@ -2,6 +2,7 @@
 
 import db from '@/lib/db';
 import { startOfDay, startOfMonth } from 'date-fns';
+import { requireAuth } from '@/lib/auth-guards';
 
 export type LeaderboardPeriod = 'all-time' | 'this-month' | 'this-day';
 
@@ -16,6 +17,7 @@ export type LeaderboardEntry = {
 
 // All-time leaderboard using cumulative User.points
 export async function getLeaderboardAllTime(limit: number = 5): Promise<LeaderboardEntry[]> {
+  await requireAuth();
   const result = await db.$queryRaw<(Omit<LeaderboardEntry, 'rank'> & { rank: bigint })[]>`
     SELECT id, name, image, points, level,
       RANK() OVER (ORDER BY points DESC) as rank
@@ -32,6 +34,7 @@ export async function getLeaderboardByPeriod(
   period: 'this-month' | 'this-day',
   limit: number = 5
 ): Promise<LeaderboardEntry[]> {
+  await requireAuth();
   const startDate = period === 'this-month' ? startOfMonth(new Date()) : startOfDay(new Date());
 
   const result = await db.$queryRaw<(Omit<LeaderboardEntry, 'rank'> & { rank: bigint })[]>`
@@ -51,6 +54,7 @@ export async function getLeaderboardByPeriod(
 
 // Get current user's rank for any period
 export async function getUserRankAllTime(userId: string): Promise<LeaderboardEntry | null> {
+  await requireAuth();
   const result = await db.$queryRaw<(Omit<LeaderboardEntry, 'rank'> & { rank: bigint })[]>`
     SELECT id, name, image, points, level, rank FROM (
       SELECT id, name, image, points, level,
@@ -67,6 +71,7 @@ export async function getUserRankByPeriod(
   userId: string,
   period: 'this-month' | 'this-day'
 ): Promise<LeaderboardEntry | null> {
+  await requireAuth();
   const startDate = period === 'this-month' ? startOfMonth(new Date()) : startOfDay(new Date());
 
   const result = await db.$queryRaw<(Omit<LeaderboardEntry, 'rank'> & { rank: bigint })[]>`
@@ -89,6 +94,7 @@ export async function getLeaderboard(
   period: LeaderboardPeriod,
   limit: number = 5
 ): Promise<LeaderboardEntry[]> {
+  await requireAuth();
   if (period === 'all-time') {
     return getLeaderboardAllTime(limit);
   }
@@ -99,6 +105,7 @@ export async function getUserRank(
   userId: string,
   period: LeaderboardPeriod
 ): Promise<LeaderboardEntry | null> {
+  await requireAuth();
   if (period === 'all-time') {
     return getUserRankAllTime(userId);
   }

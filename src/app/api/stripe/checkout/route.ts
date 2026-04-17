@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { getStripe } from '@/lib/stripe';
 import db from '@/lib/db';
 import type Stripe from 'stripe';
 import { trackStripeEvent } from '@/lib/api-tracking';
+import { checkRateLimitAsync, rateLimitHeaders } from '@/lib/api/rate-limit';
 
 /**
  * Resolve a customer-facing promo code string (e.g. "ALPHA100") to a Stripe
@@ -31,21 +34,40 @@ async function resolvePromoCode(
  * POST /api/stripe/checkout
  * Creates a Stripe Checkout Session for subscription.
  *
- * Supports two flows:
- * 1. New registration: receives { userId, email } — user was just created
- * 2. Existing user paywall: uses session auth to identify user
- *
- * Optional: pass { promoCode: "ALPHA100" } to pre-apply a discount server-side.
+ * Requires authentication — userId is derived from the server session.
+ * Optional body: { email, promoCode: "ALPHA100" }
  */
 export async function POST(req: Request) {
     try {
         const stripe = getStripe();
-        const body = await req.json();
-        const { userId, email, promoCode } = body;
 
-        if (!userId) {
-            return NextResponse.json({ error: 'userId is required' }, { status: 400 });
+        // Auth gate: only authenticated users can create checkout sessions
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
+
+        // Rate limit: 5 requests per minute per user
+        const rl = await checkRateLimitAsync({
+            scope: 'stripe-checkout',
+            limit: 5,
+            windowMs: 60_000,
+            userId: session.user.id,
+            req,
+        });
+        if (!rl.allowed) {
+            return NextResponse.json(
+                { error: 'Too many requests' },
+                { status: 429, headers: rateLimitHeaders(rl) }
+            );
+        }
+
+        const body = await req.json();
+        const { email, promoCode } = body;
+
+        // Derive userId from the authenticated session — callers cannot
+        // create checkout sessions for arbitrary users.
+        const userId = session.user.id;
 
         // Verify user exists
         const user = await db.user.findUnique({

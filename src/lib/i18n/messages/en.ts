@@ -4,6 +4,8 @@
 export const en: Messages = {
     // Navigation
     nav: {
+        home: 'Home',
+        feed: 'Feed',
         community: 'Community',
         classroom: 'Classroom',
         calendar: 'Calendar',
@@ -11,6 +13,7 @@ export const en: Messages = {
         aiTools: 'AI Tools',
         leaderboards: 'Top Learners',
         settings: 'Settings',
+        admin: 'Admin',
     },
 
     // Search
@@ -40,6 +43,22 @@ export const en: Messages = {
         save: 'Save',
         cancel: 'Cancel',
         delete: 'Delete',
+        createNewPost: 'Create New Post',
+        category: 'Category',
+        postTitle: 'Post Title',
+        titlePlaceholder: 'Enter a title for your post (optional)',
+        content: 'Content',
+        contentPlaceholder: 'What would you like to share?',
+        imageVideo: 'Image/Video',
+        link: 'Link',
+    },
+
+    // Category names (DB-stored categories)
+    categoryNames: {
+        Announcements: 'Announcements',
+        General: 'General',
+        Introductions: 'Introductions',
+        Questions: 'Questions',
     },
 
     // Comments
@@ -84,6 +103,23 @@ export const en: Messages = {
     },
 
     // Classroom page
+    // Events page
+    eventsPage: {
+        aboutThisEvent: 'About this event',
+        location: 'Location',
+        weeklyEvent: 'Weekly Event',
+        monthlyEvent: 'Monthly Event',
+        backToCalendar: 'Back to Calendar',
+        createdBy: 'Created by',
+        noUpcomingEvents: 'No upcoming events',
+        checkBackLater: 'Check back later for new events.',
+        today: 'Today',
+        tomorrow: 'Tomorrow',
+        thisWeek: 'This Week',
+        weekly: 'Weekly',
+        monthly: 'Monthly',
+    },
+
     classroomPage: {
         title: 'Classroom',
         subtitle: 'Browse courses and track your learning progress.',
@@ -105,12 +141,18 @@ export const en: Messages = {
         myProgress: 'My Progress',
         enrolled: 'Enrolled',
         lessonsLabel: 'Lessons',
+        courseContent: 'Course Content',
+        enrollToAccessLessons: 'Enroll to access all lessons in this course.',
+        backToCourse: 'Back to Course',
+        nextLesson: 'Next Lesson',
     },
 };
 
 // Define Messages type with string values (not literal types)
 export interface Messages {
     nav: {
+        home: string;
+        feed: string;
         community: string;
         classroom: string;
         calendar: string;
@@ -118,6 +160,7 @@ export interface Messages {
         aiTools: string;
         leaderboards: string;
         settings: string;
+        admin: string;
     };
     search: {
         placeholder: string;
@@ -139,6 +182,20 @@ export interface Messages {
         save: string;
         cancel: string;
         delete: string;
+        createNewPost: string;
+        category: string;
+        postTitle: string;
+        titlePlaceholder: string;
+        content: string;
+        contentPlaceholder: string;
+        imageVideo: string;
+        link: string;
+    };
+    categoryNames: {
+        Announcements: string;
+        General: string;
+        Introductions: string;
+        Questions: string;
     };
     comment: {
         writeComment: string;
@@ -171,6 +228,21 @@ export interface Messages {
         completed: string;
         courses: string;
     };
+    eventsPage: {
+        aboutThisEvent: string;
+        location: string;
+        weeklyEvent: string;
+        monthlyEvent: string;
+        backToCalendar: string;
+        createdBy: string;
+        noUpcomingEvents: string;
+        checkBackLater: string;
+        today: string;
+        tomorrow: string;
+        thisWeek: string;
+        weekly: string;
+        monthly: string;
+    };
     classroomPage: {
         title: string;
         subtitle: string;
@@ -192,5 +264,9 @@ export interface Messages {
         myProgress: string;
         enrolled: string;
         lessonsLabel: string;
+        courseContent: string;
+        enrollToAccessLessons: string;
+        backToCourse: string;
+        nextLesson: string;
     };
 }

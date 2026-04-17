@@ -5,8 +5,7 @@
  * Uploads files to Supabase Storage and creates a DevTrackerResource record.
  */
 
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth-guards';
 // Admin client is imported dynamically in upload functions
 import db from '@/lib/db';
 import { revalidatePath } from 'next/cache';
@@ -82,7 +81,7 @@ function getFileCategory(mimeType: string): string {
 }
 
 /** Get file extension from name */
-function getExtension(filename: string): string {
+function _getExtension(filename: string): string {
     return filename.split('.').pop()?.toLowerCase() || '';
 }
 
@@ -93,9 +92,11 @@ export async function uploadResourceFile(formData: FormData): Promise<{
     resource?: { id: string; title: string; fileUrl: string };
     error?: string;
 }> {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-        return { error: 'Not authenticated' };
+    let session;
+    try {
+        session = await requireAdmin();
+    } catch {
+        return { error: 'Not authorized - admin role required' };
     }
 
     const file = formData.get('file') as File | null;
@@ -179,6 +180,12 @@ export async function uploadResourceFile(formData: FormData): Promise<{
 export async function uploadResourceFiles(formData: FormData): Promise<{
     results: Array<{ fileName: string; success: boolean; error?: string }>;
 }> {
+    try {
+        await requireAdmin();
+    } catch {
+        return { results: [{ fileName: '', success: false, error: 'Not authorized - admin role required' }] };
+    }
+
     const files = formData.getAll('files') as File[];
     const results: Array<{ fileName: string; success: boolean; error?: string }> = [];
 
@@ -206,9 +213,11 @@ const MAX_MEDIA_DOC_SIZE   = 50 * 1024 * 1024;  // 50 MB for documents
 export async function uploadResourceMedia(formData: FormData): Promise<{
     results: Array<{ url: string; filename: string; success: boolean; error?: string }>;
 }> {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-        return { results: [{ url: '', filename: '', success: false, error: 'Not authenticated' }] };
+    let session;
+    try {
+        session = await requireAdmin();
+    } catch {
+        return { results: [{ url: '', filename: '', success: false, error: 'Not authorized - admin role required' }] };
     }
 
     const files = formData.getAll('media') as File[];

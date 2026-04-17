@@ -8,12 +8,14 @@ import { EventList } from '@/components/calendar/event-list';
 import { ViewToggle } from '@/components/calendar/view-toggle';
 import { getEventsForMonth } from '@/lib/event-actions';
 import type { EventOccurrence } from '@/lib/event-actions';
+import type { Messages } from '@/lib/i18n/messages/en';
 
 interface CalendarClientProps {
   initialMonthEvents: EventOccurrence[];
   initialUpcomingEvents: EventOccurrence[];
   initialYear: number;
   initialMonth: number;
+  eventMessages: Messages['eventsPage'];
 }
 
 export function CalendarClient({
@@ -21,6 +23,7 @@ export function CalendarClient({
   initialUpcomingEvents,
   initialYear,
   initialMonth,
+  eventMessages,
 }: CalendarClientProps) {
   const [view, setView] = useState<'calendar' | 'list'>('calendar');
   const [currentMonth, setCurrentMonth] = useState(
@@ -67,7 +70,7 @@ export function CalendarClient({
             <CalendarGrid events={monthEvents} currentMonth={currentMonth} />
           )}
 
-          {view === 'list' && <EventList events={initialUpcomingEvents} />}
+          {view === 'list' && <EventList events={initialUpcomingEvents} messages={eventMessages} />}
         </>
       )}
     </div>

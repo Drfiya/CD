@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated code (Prisma client) — do not lint
+    "src/generated/**",
     // GSD framework legacy files (CommonJS)
     "bin/**",
     "hooks/**",

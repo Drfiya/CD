@@ -3,12 +3,14 @@
 import sharp from 'sharp';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { VideoEmbed } from '@/types/post';
+import { requireAuth } from '@/lib/auth-guards';
 
 /**
  * Download a GIF, extract its first frame as JPEG, upload to Supabase,
  * and return the public thumbnail URL.
  */
 export async function generateGifThumbnail(gifUrl: string): Promise<string | null> {
+    await requireAuth();
     try {
         // Download the GIF
         const response = await fetch(gifUrl);
@@ -54,6 +56,7 @@ export async function generateGifThumbnail(gifUrl: string): Promise<string | nul
  * and return the public thumbnail URL.
  */
 export async function fetchVideoThumbnail(embed: VideoEmbed): Promise<string | null> {
+    await requireAuth();
     try {
         let thumbnailSourceUrl: string | null = null;
 
@@ -132,6 +135,7 @@ export async function fetchVideoThumbnail(embed: VideoEmbed): Promise<string | n
  * Returns an array of thumbnail URLs parallel to the input GIF URLs.
  */
 export async function generateAllGifThumbnails(gifUrls: string[]): Promise<string[]> {
+    await requireAuth();
     if (!gifUrls.length) return [];
 
     const results = await Promise.allSettled(
@@ -153,6 +157,7 @@ export async function generateAllGifThumbnails(gifUrls: string[]): Promise<strin
  * Returns enriched embeds with thumbnailUrl populated.
  */
 export async function enrichEmbedsWithThumbnails(embeds: VideoEmbed[]): Promise<VideoEmbed[]> {
+    await requireAuth();
     if (!embeds.length) return [];
 
     const results = await Promise.allSettled(

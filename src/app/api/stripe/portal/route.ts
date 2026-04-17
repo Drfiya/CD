@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { getStripe } from '@/lib/stripe';
 import db from '@/lib/db';
 import { trackStripeEvent } from '@/lib/api-tracking';
+import { checkRateLimitAsync, rateLimitHeaders } from '@/lib/api/rate-limit';
 
 export async function POST(req: Request) {
     try {
@@ -11,6 +12,21 @@ export async function POST(req: Request) {
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Rate limit: 10 requests per minute per user
+        const rl = await checkRateLimitAsync({
+            scope: 'stripe-portal',
+            limit: 10,
+            windowMs: 60_000,
+            userId: session.user.id,
+            req,
+        });
+        if (!rl.allowed) {
+            return NextResponse.json(
+                { error: 'Too many requests' },
+                { status: 429, headers: rateLimitHeaders(rl) }
+            );
         }
 
         // Find the user's Stripe customer ID

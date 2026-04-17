@@ -35,13 +35,6 @@ function toDeepLLanguage(code: string, isTarget: boolean = false): string {
     return upperCode;
 }
 
-/**
- * Map DeepL language codes back to ISO 639-1
- */
-function fromDeepLLanguage(code: string): string {
-    return code.split('-')[0].toLowerCase();
-}
-
 export interface TranslationResult {
     text: string;
     detectedSourceLanguage?: string;
@@ -231,8 +224,17 @@ export async function translateBatch(
     try {
         const deeplTarget = toDeepLLanguage(targetLang, true);
 
+        // Wrap protected terms with <keep> tags so DeepL's ignore_tags leaves
+        // them alone. Per-text wrapping preserves the quality guarantees from
+        // the singular translateText path when called in batch mode.
+        const protectedTerms = options.protectedTerms ?? [];
+        const useXml = protectedTerms.length > 0;
+        const textsToSend = useXml
+            ? nonEmptyTexts.map((t) => wrapProtectedTerms(t, protectedTerms))
+            : nonEmptyTexts;
+
         const requestBody: Record<string, unknown> = {
-            text: nonEmptyTexts,
+            text: textsToSend,
             target_lang: deeplTarget,
         };
 
@@ -245,8 +247,11 @@ export async function translateBatch(
             requestBody.context = options.context.trim();
         }
 
-        // Tag handling
-        if (options.tagHandling === 'html') {
+        // Tag handling — XML (for <keep>) takes precedence over HTML.
+        if (useXml) {
+            requestBody.tag_handling = 'xml';
+            requestBody.ignore_tags = ['keep'];
+        } else if (options.tagHandling === 'html') {
             requestBody.tag_handling = 'html';
         }
 
@@ -281,7 +286,8 @@ export async function translateBatch(
         if (data.translations && data.translations.length === nonEmptyTexts.length) {
             const result = [...texts];
             data.translations.forEach((translation: { text: string }, index: number) => {
-                result[nonEmptyIndices[index]] = translation.text;
+                const t = useXml ? unwrapProtectedTerms(translation.text) : translation.text;
+                result[nonEmptyIndices[index]] = t;
             });
             return result;
         }
@@ -393,46 +399,6 @@ export async function getDeepLUsage(): Promise<{
     }
 }
 
-/**
- * Detect language of a text using DeepL
- * Returns the detected language code in lowercase ISO 639-1 format
- */
-export async function detectLanguageViaTranslation(text: string): Promise<string | null> {
-    if (!DEEPL_API_KEY) {
-        return null;
-    }
-
-    if (!text.trim()) {
-        return null;
-    }
-
-    try {
-        const response = await fetch(`${DEEPL_API_URL}/v2/translate`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `DeepL-Auth-Key ${DEEPL_API_KEY}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                text: [text.slice(0, 200)],
-                target_lang: 'EN-US',
-            }),
-        });
-
-        if (!response.ok) {
-            return null;
-        }
-
-        const data = await response.json();
-
-        if (data.translations && data.translations.length > 0) {
-            const detectedLang = data.translations[0].detected_source_language;
-            return detectedLang ? fromDeepLLanguage(detectedLang) : null;
-        }
-
-        return null;
-    } catch (error) {
-        console.error('DeepL language detection error:', error);
-        return null;
-    }
-}
+// `detectLanguageViaTranslation` was removed in Revision Round 1. Language
+// detection is now handled by the local heuristic detector in
+// `src/lib/translation/detect.ts`, which does not spend a paid API call.

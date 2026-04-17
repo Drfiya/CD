@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { authOptions } from '@/lib/auth';
 import db from '@/lib/db';
 import { awardPoints } from '@/lib/gamification-actions';
+import { requireOwnerOrAdmin } from '@/lib/auth-guards';
 
 export async function toggleLessonComplete(lessonId: string) {
   const session = await getServerSession(authOptions);
@@ -74,6 +75,7 @@ export async function toggleLessonComplete(lessonId: string) {
 }
 
 export async function getCompletedLessonIds(userId: string, courseId: string) {
+  await requireOwnerOrAdmin(userId);
   // Get all lessons in course through modules
   const course = await db.course.findUnique({
     where: { id: courseId },
@@ -94,8 +96,8 @@ export async function getCompletedLessonIds(userId: string, courseId: string) {
 
   // Collect all lesson IDs in this course
   const lessonIds: string[] = [];
-  for (const module of course.modules) {
-    for (const lesson of module.lessons) {
+  for (const courseModule of course.modules) {
+    for (const lesson of courseModule.lessons) {
       lessonIds.push(lesson.id);
     }
   }
@@ -113,6 +115,7 @@ export async function getCompletedLessonIds(userId: string, courseId: string) {
 }
 
 export async function getNextIncompleteLesson(userId: string, courseId: string) {
+  await requireOwnerOrAdmin(userId);
   // Get course with modules and lessons ordered by position
   const course = await db.course.findUnique({
     where: { id: courseId },
@@ -138,10 +141,10 @@ export async function getNextIncompleteLesson(userId: string, courseId: string) 
   const completedIds = new Set(await getCompletedLessonIds(userId, courseId));
 
   // Flatten to ordered array of lessons and find first incomplete
-  for (const module of course.modules) {
-    for (const lesson of module.lessons) {
+  for (const courseModule of course.modules) {
+    for (const lesson of courseModule.lessons) {
       if (!completedIds.has(lesson.id)) {
-        return { lessonId: lesson.id, moduleId: module.id };
+        return { lessonId: lesson.id, moduleId: courseModule.id };
       }
     }
   }

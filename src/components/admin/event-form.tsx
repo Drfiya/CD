@@ -44,6 +44,7 @@ export function EventForm({ event, onSuccess }: EventFormProps) {
 
   // Get user's timezone on mount
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR-safe: Intl is browser-only
     setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
   }, []);
 

@@ -1,11 +1,9 @@
 'use server';
 
-import { getServerSession } from 'next-auth';
 import { revalidatePath } from 'next/cache';
-import { authOptions } from '@/lib/auth';
 import db from '@/lib/db';
 import { eventSchema } from '@/lib/validations/event';
-import type { Prisma, Event } from '@/generated/prisma/client';
+import type { Prisma } from '@/generated/prisma/client';
 import { TZDate } from '@date-fns/tz';
 import {
   startOfMonth,
@@ -17,23 +15,10 @@ import {
   isWithinInterval,
 } from 'date-fns';
 import type { EventWithCreator } from '@/types/event';
-
-async function isAdmin(): Promise<boolean> {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return false;
-  }
-
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { role: true },
-  });
-
-  return user?.role === 'admin' || user?.role === 'owner';
-}
+import { requireAuth, requireAdmin } from '@/lib/auth-guards';
 
 export async function getEvents(rangeStart?: Date, rangeEnd?: Date) {
+  await requireAuth();
   const whereClause: Prisma.EventWhereInput = {};
 
   if (rangeStart || rangeEnd) {
@@ -60,6 +45,7 @@ export async function getEvents(rangeStart?: Date, rangeEnd?: Date) {
 }
 
 export async function getEvent(id: string) {
+  await requireAuth();
   const event = await db.event.findUnique({
     where: { id },
     include: {
@@ -73,13 +59,10 @@ export async function getEvent(id: string) {
 }
 
 export async function createEvent(formData: FormData) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return { error: 'Not authenticated' };
-  }
-
-  if (!(await isAdmin())) {
+  let session;
+  try {
+    session = await requireAdmin();
+  } catch {
     return { error: 'Not authorized - admin role required' };
   }
 
@@ -135,13 +118,9 @@ export async function createEvent(formData: FormData) {
 }
 
 export async function updateEvent(eventId: string, formData: FormData) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return { error: 'Not authenticated' };
-  }
-
-  if (!(await isAdmin())) {
+  try {
+    await requireAdmin();
+  } catch {
     return { error: 'Not authorized - admin role required' };
   }
 
@@ -206,13 +185,9 @@ export async function updateEvent(eventId: string, formData: FormData) {
 }
 
 export async function deleteEvent(eventId: string) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return { error: 'Not authenticated' };
-  }
-
-  if (!(await isAdmin())) {
+  try {
+    await requireAdmin();
+  } catch {
     return { error: 'Not authorized - admin role required' };
   }
 
@@ -294,6 +269,7 @@ export async function getEventsForMonth(
   year: number,
   month: number
 ): Promise<EventOccurrence[]> {
+  await requireAuth();
   // month is 0-indexed (0 = January)
   const monthStart = startOfMonth(new Date(year, month, 1));
   const monthEnd = endOfMonth(monthStart);
@@ -352,6 +328,7 @@ export async function getEventsForMonth(
 export async function getUpcomingEvents(
   daysAhead: number = 90
 ): Promise<EventOccurrence[]> {
+  await requireAuth();
   const now = new Date();
   const rangeEnd = addMonths(now, Math.ceil(daysAhead / 30));
 

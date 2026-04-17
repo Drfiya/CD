@@ -6,6 +6,8 @@ import type { Messages } from './en';
 export const es: Messages = {
     // Navigation
     nav: {
+        home: 'Inicio',
+        feed: 'Feed',
         community: 'Comunidad',
         classroom: 'Aula',
         calendar: 'Calendario',
@@ -13,6 +15,7 @@ export const es: Messages = {
         aiTools: 'IA Tools',
         leaderboards: 'Top Aprendices',
         settings: 'Configuración',
+        admin: 'Admin',
     },
 
     // Search
@@ -42,6 +45,22 @@ export const es: Messages = {
         save: 'Guardar',
         cancel: 'Cancelar',
         delete: 'Eliminar',
+        createNewPost: 'Crear nueva publicación',
+        category: 'Categoría',
+        postTitle: 'Título de la publicación',
+        titlePlaceholder: 'Ingresa un título para tu publicación (opcional)',
+        content: 'Contenido',
+        contentPlaceholder: '¿Qué te gustaría compartir?',
+        imageVideo: 'Imagen/Video',
+        link: 'Enlace',
+    },
+
+    // Category names (DB-stored categories)
+    categoryNames: {
+        Announcements: 'Anuncios',
+        General: 'General',
+        Introductions: 'Presentaciones',
+        Questions: 'Preguntas',
     },
 
     // Comments
@@ -85,6 +104,23 @@ export const es: Messages = {
         courses: 'Cursos',
     },
 
+    // Events page
+    eventsPage: {
+        aboutThisEvent: 'Acerca de este evento',
+        location: 'Ubicación',
+        weeklyEvent: 'Evento semanal',
+        monthlyEvent: 'Evento mensual',
+        backToCalendar: 'Volver al calendario',
+        createdBy: 'Creado por',
+        noUpcomingEvents: 'No hay eventos próximos',
+        checkBackLater: 'Vuelve más tarde para nuevos eventos.',
+        today: 'Hoy',
+        tomorrow: 'Mañana',
+        thisWeek: 'Esta semana',
+        weekly: 'Semanal',
+        monthly: 'Mensual',
+    },
+
     // Classroom page
     classroomPage: {
         title: 'Aula',
@@ -107,6 +143,10 @@ export const es: Messages = {
         myProgress: 'Mi progreso',
         enrolled: 'Inscrito',
         lessonsLabel: 'Lecciones',
+        courseContent: 'Contenido del curso',
+        enrollToAccessLessons: 'Inscríbete para acceder a todas las lecciones de este curso.',
+        backToCourse: 'Volver al curso',
+        nextLesson: 'Siguiente lección',
     },
 };
 

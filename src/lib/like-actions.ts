@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { authOptions } from '@/lib/auth';
 import db from '@/lib/db';
 import { awardPoints } from '@/lib/gamification-actions';
+import { requireAuth } from '@/lib/auth-guards';
 
 export async function togglePostLike(postId: string) {
   const session = await getServerSession(authOptions);
@@ -97,6 +98,7 @@ export async function toggleCommentLike(commentId: string) {
 }
 
 export async function getPostLikers(postId: string) {
+  await requireAuth();
   const likes = await db.postLike.findMany({
     where: { postId },
     select: {
@@ -115,6 +117,7 @@ export async function getPostLikers(postId: string) {
 }
 
 export async function getCommentLikers(commentId: string) {
+  await requireAuth();
   const likes = await db.commentLike.findMany({
     where: { commentId },
     select: {

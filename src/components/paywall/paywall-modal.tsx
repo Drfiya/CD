@@ -31,7 +31,6 @@ export function PaywallModal({ isOpen }: PaywallModalProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: session.user.id,
           email: session.user.email,
         }),
       });
@@ -56,10 +55,15 @@ export function PaywallModal({ isOpen }: PaywallModalProps) {
       <div className="absolute inset-0 bg-white/80 backdrop-blur-sm" />
 
       {/* Modal card */}
-      <div className="relative z-10 w-full max-w-md mx-4 bg-white rounded-lg shadow-xl p-8">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="paywall-title"
+        className="relative z-10 w-full max-w-md mx-4 bg-white rounded-lg shadow-xl p-8"
+      >
         <div className="text-center space-y-6">
           {/* Heading */}
-          <h2 className="text-2xl font-bold text-foreground">
+          <h2 id="paywall-title" className="text-2xl font-bold text-foreground">
             Become a Member
           </h2>
 

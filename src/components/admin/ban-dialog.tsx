@@ -48,7 +48,10 @@ export function BanDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50"
@@ -57,8 +60,13 @@ export function BanDialog({
       />
 
       {/* Dialog */}
-      <div className="relative bg-white dark:bg-neutral-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
-        <h2 className="text-lg font-semibold mb-4">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ban-dialog-title"
+        className="relative bg-white dark:bg-neutral-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-6"
+      >
+        <h2 id="ban-dialog-title" className="text-lg font-semibold mb-4">
           Ban {userName || 'User'}
         </h2>
 

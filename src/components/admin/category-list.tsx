@@ -51,7 +51,7 @@ export function CategoryList({ categories }: CategoryListProps) {
   return (
     <div className="space-y-2">
       {error && (
-        <p className="text-sm text-red-600 dark:text-red-400 mb-4">{error}</p>
+        <p className="text-sm text-red-600 dark:text-red-300 mb-4">{error}</p>
       )}
 
       {categories.map((category) => (
@@ -103,7 +103,7 @@ export function CategoryList({ categories }: CategoryListProps) {
                 variant="ghost"
                 size="sm"
                 onClick={() => setConfirmingId(category.id)}
-                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
+                className="text-red-600 dark:text-red-300 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
               >
                 Delete
               </Button>

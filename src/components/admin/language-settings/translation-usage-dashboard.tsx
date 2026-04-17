@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useTransition } from 'react';
 import type { TranslationUsageData } from '@/lib/language-settings/actions';
-import { getTranslationUsageData } from '@/lib/language-settings/actions';
+import { getTranslationUsageData, toggleKillSwitch, setDailyBudget } from '@/lib/language-settings/actions';
 
 // --- Format helpers ---
 
@@ -66,7 +66,7 @@ function CacheHitRateBadge({ rate }: { rate: number }) {
             ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
             : rate >= 50
                 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
-                : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400';
+                : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300';
 
     return (
         <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${badgeClass}`}>
@@ -213,7 +213,7 @@ export function TranslationUsageDashboard({ initialData }: TranslationUsageDashb
                             <p
                                 className={`text-xs mt-0.5 ${
                                     data.charsThisMonth > CRITICAL_THRESHOLD
-                                        ? 'text-red-700 dark:text-red-400'
+                                        ? 'text-red-700 dark:text-red-300'
                                         : 'text-amber-700 dark:text-amber-400'
                                 }`}
                             >
@@ -274,6 +274,158 @@ export function TranslationUsageDashboard({ initialData }: TranslationUsageDashb
                     </div>
                 </div>
             </div>
+
+            {/* ─── Daily Budget + Kill-Switch ─────────────────────────── */}
+            <BudgetPanel budget={data.budgetConfig} />
+
+            {/* ─── Per-Tier Cache Health ───────────────────────────────── */}
+            {/* Surfaces memoryHits / postgresHits / apiCalls that the
+                /api/translate route emits (Revision Round 1). These are
+                process-local counters — they reset on deploy. For cross-
+                instance aggregation we still rely on TranslationUsage. */}
+            <div className="rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800/80 overflow-hidden">
+                <div className="border-b border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 py-2.5 px-4">
+                    <h3 className="text-[11px] font-semibold text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                        Cache Health by Tier (process-local)
+                    </h3>
+                    <p className="mt-1 text-[10px] text-gray-400 dark:text-neutral-500 normal-case tracking-normal">
+                        Current instance, since process start. On horizontally-scaled deploys
+                        each replica reports its own counters — for aggregate hit rate use
+                        TranslationUsage totals above.
+                    </p>
+                </div>
+                <div className="p-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="flex flex-col">
+                        <span className="text-xs text-gray-400 dark:text-neutral-500">
+                            Tier 1 (In-Memory)
+                        </span>
+                        <span className="text-sm font-mono font-semibold text-gray-700 dark:text-neutral-200 mt-0.5">
+                            {formatNumber(data.tierCacheStats.memoryHits)}
+                            <span className="text-xs text-gray-400 dark:text-neutral-500 ml-2">
+                                {data.tierCacheStats.memoryHitRate.toFixed(1)}%
+                            </span>
+                        </span>
+                        <span className="text-[10px] text-gray-400 dark:text-neutral-500 mt-1">
+                            {data.tierCacheStats.memorySize}/{data.tierCacheStats.memoryCapacity} entries
+                        </span>
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-xs text-gray-400 dark:text-neutral-500">
+                            Tier 2 (Postgres)
+                        </span>
+                        <span className="text-sm font-mono font-semibold text-gray-700 dark:text-neutral-200 mt-0.5">
+                            {formatNumber(data.tierCacheStats.postgresHits)}
+                            <span className="text-xs text-gray-400 dark:text-neutral-500 ml-2">
+                                {data.tierCacheStats.postgresHitRate.toFixed(1)}%
+                            </span>
+                        </span>
+                        <span className="text-[10px] text-gray-400 dark:text-neutral-500 mt-1">
+                            {formatNumber(data.tierCacheStats.postgresCount)} stored rows
+                        </span>
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-xs text-gray-400 dark:text-neutral-500">
+                            Tier 3 (DeepL calls)
+                        </span>
+                        <span className="text-sm font-mono font-semibold text-gray-700 dark:text-neutral-200 mt-0.5">
+                            {formatNumber(data.tierCacheStats.misses)}
+                            <span className="text-xs text-gray-400 dark:text-neutral-500 ml-2">
+                                {data.tierCacheStats.missRate.toFixed(1)}%
+                            </span>
+                        </span>
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-xs text-gray-400 dark:text-neutral-500">
+                            Total Lookups
+                        </span>
+                        <span className="text-sm font-mono font-semibold text-gray-700 dark:text-neutral-200 mt-0.5">
+                            {formatNumber(data.tierCacheStats.total)}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {/* ─── DB-Backed Cache Health (aggregate, all replicas) ──────── */}
+            {data.dbTierStats.total > 0 && (
+                <div className="rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800/80 overflow-hidden">
+                    <div className="border-b border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 py-2.5 px-4">
+                        <h3 className="text-[11px] font-semibold text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                            Cache Health by Tier (aggregate, this month)
+                        </h3>
+                        <p className="mt-1 text-[10px] text-gray-400 dark:text-neutral-500 normal-case tracking-normal">
+                            Persisted per-request via <code className="bg-gray-100 dark:bg-neutral-700 px-1 rounded">cacheTier</code> column.
+                            Reflects all replicas.
+                        </p>
+                    </div>
+                    <div className="p-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="flex flex-col">
+                            <span className="text-xs text-gray-400 dark:text-neutral-500">Tier 1 (LRU)</span>
+                            <span className="text-sm font-mono font-semibold text-gray-700 dark:text-neutral-200 mt-0.5">
+                                {formatNumber(data.dbTierStats.lruHits)}
+                                <span className="text-xs text-gray-400 dark:text-neutral-500 ml-2">{data.dbTierStats.lruHitRate}%</span>
+                            </span>
+                            <span className="text-[10px] text-gray-400 dark:text-neutral-500 mt-1">
+                                {formatNumber(data.dbTierStats.lruChars)} chars
+                            </span>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-xs text-gray-400 dark:text-neutral-500">Tier 2 (Postgres)</span>
+                            <span className="text-sm font-mono font-semibold text-gray-700 dark:text-neutral-200 mt-0.5">
+                                {formatNumber(data.dbTierStats.dbHits)}
+                                <span className="text-xs text-gray-400 dark:text-neutral-500 ml-2">{data.dbTierStats.dbHitRate}%</span>
+                            </span>
+                            <span className="text-[10px] text-gray-400 dark:text-neutral-500 mt-1">
+                                {formatNumber(data.dbTierStats.dbChars)} chars
+                            </span>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-xs text-gray-400 dark:text-neutral-500">Tier 3 (DeepL)</span>
+                            <span className="text-sm font-mono font-semibold text-gray-700 dark:text-neutral-200 mt-0.5">
+                                {formatNumber(data.dbTierStats.misses)}
+                                <span className="text-xs text-gray-400 dark:text-neutral-500 ml-2">{data.dbTierStats.missRate}%</span>
+                            </span>
+                            <span className="text-[10px] text-gray-400 dark:text-neutral-500 mt-1">
+                                {formatNumber(data.dbTierStats.missChars)} chars
+                            </span>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-xs text-gray-400 dark:text-neutral-500">Total (this month)</span>
+                            <span className="text-sm font-mono font-semibold text-gray-700 dark:text-neutral-200 mt-0.5">
+                                {formatNumber(data.dbTierStats.total)}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ─── Top Uncached Phrases ─────────────────────────────────── */}
+            {data.topUncached.length > 0 && (
+                <div className="rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800/80 overflow-hidden">
+                    <div className="border-b border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 py-2.5 px-4">
+                        <h3 className="text-[11px] font-semibold text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                            Top Uncached Phrases (pre-translation candidates)
+                        </h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr className="border-b border-gray-200 dark:border-neutral-700 bg-gray-50/60 dark:bg-neutral-800/60">
+                                    <th className="py-2 px-4 text-[11px] font-semibold text-gray-500 dark:text-neutral-400 uppercase tracking-wider">Phrase</th>
+                                    <th className="py-2 px-4 text-[11px] font-semibold text-gray-500 dark:text-neutral-400 uppercase tracking-wider text-right">Misses</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {data.topUncached.slice(0, 10).map((row) => (
+                                    <tr key={row.phrase} className="border-b border-gray-100 dark:border-neutral-700/60">
+                                        <td className="py-2 px-4 text-xs font-mono text-gray-700 dark:text-neutral-200 truncate max-w-md">{row.phrase}</td>
+                                        <td className="py-2 px-4 text-xs font-mono text-right text-gray-700 dark:text-neutral-200">{row.count}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
 
             {/* Top Language Pairs Table */}
             <div className="rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800/80 overflow-hidden">
@@ -350,6 +502,109 @@ export function TranslationUsageDashboard({ initialData }: TranslationUsageDashb
             <p className="text-[11px] text-gray-400 dark:text-neutral-500 text-center">
                 Cost estimates are based on DeepL API pricing. Character counts include cached translations. Auto-refreshes every 30 seconds.
             </p>
+        </div>
+    );
+}
+
+// ─── Budget Panel ─────────────────────────────────────────────────────────
+
+function BudgetPanel({ budget }: { budget: TranslationUsageData['budgetConfig'] }) {
+    const [isPending, startTransition] = useTransition();
+    const [editBudget, setEditBudget] = useState<string>(String(budget.dailyCharBudget));
+    const usagePercent = budget.dailyCharBudget > 0
+        ? Math.min(100, Math.round((budget.todayUsed / budget.dailyCharBudget) * 100))
+        : 0;
+
+    const barColor = budget.killSwitchActive
+        ? 'bg-red-500'
+        : usagePercent >= 90
+            ? 'bg-amber-500'
+            : 'bg-emerald-500';
+
+    return (
+        <div className="rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800/80 overflow-hidden">
+            <div className="border-b border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 py-2.5 px-4">
+                <h3 className="text-[11px] font-semibold text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                    Daily Budget + Kill-Switch
+                </h3>
+            </div>
+
+            {budget.killSwitchActive && (
+                <div className="px-4 py-3 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
+                    <p className="text-sm font-medium text-red-700 dark:text-red-300">
+                        Translation kill-switch active
+                        {budget.killSwitchActivatedAt && (
+                            <span className="font-normal text-red-500 dark:text-red-500 ml-1">
+                                since {new Date(budget.killSwitchActivatedAt).toLocaleString()}
+                            </span>
+                        )}
+                    </p>
+                    <p className="text-xs text-red-600 dark:text-red-500 mt-0.5">
+                        New translations return cached results only. Click below to deactivate.
+                    </p>
+                </div>
+            )}
+
+            <div className="p-4 space-y-4">
+                {/* Progress bar */}
+                <div>
+                    <div className="flex justify-between text-xs text-gray-500 dark:text-neutral-400 mb-1.5">
+                        <span>Today: {formatNumber(budget.todayUsed)} chars</span>
+                        <span>Budget: {formatNumber(budget.dailyCharBudget)} chars</span>
+                    </div>
+                    <div className="h-2.5 bg-gray-100 dark:bg-neutral-700 rounded-full overflow-hidden">
+                        <div
+                            className={`h-full rounded-full transition-all ${barColor}`}
+                            style={{ width: `${usagePercent}%` }}
+                        />
+                    </div>
+                    <p className="text-[10px] text-gray-400 dark:text-neutral-500 mt-1">
+                        {usagePercent}% of daily budget used
+                    </p>
+                </div>
+
+                {/* Controls */}
+                <div className="flex items-end gap-3">
+                    <div className="flex-1">
+                        <label className="text-[10px] font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                            Daily char budget
+                        </label>
+                        <input
+                            type="number"
+                            min={0}
+                            step={10000}
+                            value={editBudget}
+                            onChange={(e) => setEditBudget(e.target.value)}
+                            className="mt-1 w-full rounded-lg border border-gray-200 dark:border-neutral-600 bg-white dark:bg-neutral-700 px-3 py-1.5 text-sm font-mono text-gray-900 dark:text-neutral-100"
+                        />
+                    </div>
+                    <button
+                        disabled={isPending || Number(editBudget) === budget.dailyCharBudget}
+                        onClick={() => {
+                            const val = Number(editBudget);
+                            if (val >= 0 && Number.isFinite(val)) {
+                                startTransition(() => setDailyBudget(val));
+                            }
+                        }}
+                        className="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 dark:bg-neutral-700 text-gray-700 dark:text-neutral-200 hover:bg-gray-200 dark:hover:bg-neutral-600 disabled:opacity-50 transition-colors"
+                    >
+                        Save
+                    </button>
+                    <button
+                        disabled={isPending}
+                        onClick={() => {
+                            startTransition(() => toggleKillSwitch(!budget.killSwitchActive));
+                        }}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                            budget.killSwitchActive
+                                ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50'
+                                : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50'
+                        } disabled:opacity-50`}
+                    >
+                        {budget.killSwitchActive ? 'Deactivate Kill-Switch' : 'Activate Kill-Switch'}
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }

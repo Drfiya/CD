@@ -178,7 +178,7 @@ export function AdminToolManager({ tools }: AdminToolManagerProps) {
                                                 <button
                                                     onClick={() => handleDelete(tool.id)}
                                                     disabled={isPending}
-                                                    className="text-red-600 dark:text-red-400 text-sm font-medium"
+                                                    className="text-red-600 dark:text-red-300 text-sm font-medium"
                                                 >
                                                     Confirm
                                                 </button>
@@ -192,7 +192,7 @@ export function AdminToolManager({ tools }: AdminToolManagerProps) {
                                         ) : (
                                             <button
                                                 onClick={() => setDeleteConfirm(tool.id)}
-                                                className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium"
+                                                className="text-red-500 hover:text-red-600 dark:text-red-300 dark:hover:text-red-300 text-sm font-medium"
                                             >
                                                 Delete
                                             </button>

@@ -10,6 +10,7 @@ import { fullSync, type GitHubCommit } from './github-api';
 import { buildCards, computeStats, type TrackerCard, type TrackerStats, type CardMetadata } from './sync';
 import { revalidatePath } from 'next/cache';
 import type { KanbanStatus, Prisma } from '@/generated/prisma/client';
+import { requireAdmin } from '@/lib/auth-guards';
 
 // --- Sync ---
 
@@ -31,6 +32,7 @@ export interface SyncResponse {
  * Fetch fresh data from GitHub, merge with DB metadata, return enriched cards.
  */
 export async function syncDevTracker(): Promise<SyncResponse> {
+    await requireAdmin();
     const { branches, commitsByBranch, pullRequests } = await fullSync();
 
     // Load all saved card metadata from DB
@@ -119,6 +121,7 @@ function mapKanbanStatus(status: KanbanStatus): 'todo' | 'done' {
  * maps them into a single unified board with 3 columns.
  */
 export async function getUnifiedBoard(): Promise<UnifiedBoardData> {
+    await requireAdmin();
     // Fetch GitHub data
     const syncData = await syncDevTracker();
 
@@ -178,6 +181,7 @@ export async function saveCardMeta(
         notes?: string | null;
     }
 ) {
+    await requireAdmin();
     await db.devTrackerCard.upsert({
         where: { branchName },
         create: {
@@ -195,12 +199,14 @@ export async function saveCardMeta(
 }
 
 export async function updateCardColumn(branchName: string, column: string) {
+    await requireAdmin();
     await saveCardMeta(branchName, { column });
 }
 
 // --- Resources ---
 
 export async function getResources() {
+    await requireAdmin();
     return db.devTrackerResource.findMany({
         orderBy: [{ starred: 'desc' }, { createdAt: 'desc' }],
         include: { createdBy: { select: { name: true } } },
@@ -215,6 +221,7 @@ export async function addResource(data: {
     readme?: string;
     media?: Prisma.InputJsonValue;
 }) {
+    await requireAdmin();
     await db.devTrackerResource.create({ data });
     revalidatePath('/admin/dev-tracker/resources');
 }
@@ -230,11 +237,13 @@ export async function updateResource(
         media?: Prisma.InputJsonValue;
     }
 ) {
+    await requireAdmin();
     await db.devTrackerResource.update({ where: { id }, data });
     revalidatePath('/admin/dev-tracker/resources');
 }
 
 export async function deleteResource(id: string) {
+    await requireAdmin();
     await db.devTrackerResource.delete({ where: { id } });
     revalidatePath('/admin/dev-tracker/resources');
 }
@@ -242,12 +251,14 @@ export async function deleteResource(id: string) {
 // --- Launch checklist ---
 
 export async function getLaunchChecklist() {
+    await requireAdmin();
     return db.launchChecklistItem.findMany({
         orderBy: [{ category: 'asc' }, { position: 'asc' }],
     });
 }
 
 export async function toggleChecklistItem(id: string, checked: boolean) {
+    await requireAdmin();
     await db.launchChecklistItem.update({
         where: { id },
         data: { checked },
@@ -261,11 +272,13 @@ export async function addChecklistItem(data: {
     blocker?: boolean;
     position?: number;
 }) {
+    await requireAdmin();
     await db.launchChecklistItem.create({ data });
     revalidatePath('/admin/dev-tracker/launch');
 }
 
 export async function deleteChecklistItem(id: string) {
+    await requireAdmin();
     await db.launchChecklistItem.delete({ where: { id } });
     revalidatePath('/admin/dev-tracker/launch');
 }

@@ -693,7 +693,7 @@ export default function GlossaryManager({
                                 type="button"
                                 onClick={() => setDeletingId(entry.id)}
                                 disabled={isPending}
-                                className="px-3 py-1.5 text-xs font-medium rounded-lg border border-red-200 dark:border-red-800 bg-white dark:bg-neutral-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                className="px-3 py-1.5 text-xs font-medium rounded-lg border border-red-200 dark:border-red-800 bg-white dark:bg-neutral-700 text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                               >
                                 Delete
                               </button>
@@ -762,7 +762,7 @@ export default function GlossaryManager({
                 {importResults.success} imported
               </span>
               {importResults.failed > 0 && (
-                <span className="text-red-600 dark:text-red-400 font-medium">
+                <span className="text-red-600 dark:text-red-300 font-medium">
                   {importResults.failed} failed
                 </span>
               )}
@@ -772,7 +772,7 @@ export default function GlossaryManager({
                 {importResults.errors.map((err, i) => (
                   <li
                     key={i}
-                    className="text-xs text-red-600 dark:text-red-400"
+                    className="text-xs text-red-600 dark:text-red-300"
                   >
                     {err}
                   </li>

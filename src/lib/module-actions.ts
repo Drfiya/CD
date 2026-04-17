@@ -1,34 +1,14 @@
 'use server';
 
-import { getServerSession } from 'next-auth';
 import { revalidatePath } from 'next/cache';
-import { authOptions } from '@/lib/auth';
 import db from '@/lib/db';
 import { moduleSchema } from '@/lib/validations/course';
-
-async function isAdmin(): Promise<boolean> {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return false;
-  }
-
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { role: true },
-  });
-
-  return user?.role === 'admin' || user?.role === 'owner';
-}
+import { requireAdmin } from '@/lib/auth-guards';
 
 export async function createModule(formData: FormData) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return { error: 'Not authenticated' };
-  }
-
-  if (!(await isAdmin())) {
+  try {
+    await requireAdmin();
+  } catch {
     return { error: 'Not authorized - admin role required' };
   }
 
@@ -75,22 +55,18 @@ export async function createModule(formData: FormData) {
 }
 
 export async function updateModule(moduleId: string, formData: FormData) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return { error: 'Not authenticated' };
-  }
-
-  if (!(await isAdmin())) {
+  try {
+    await requireAdmin();
+  } catch {
     return { error: 'Not authorized - admin role required' };
   }
 
-  const module = await db.module.findUnique({
+  const courseModule = await db.module.findUnique({
     where: { id: moduleId },
     select: { courseId: true },
   });
 
-  if (!module) {
+  if (!courseModule) {
     return { error: 'Module not found' };
   }
 
@@ -111,28 +87,24 @@ export async function updateModule(moduleId: string, formData: FormData) {
     },
   });
 
-  revalidatePath(`/admin/courses/${module.courseId}`);
+  revalidatePath(`/admin/courses/${courseModule.courseId}`);
 
   return { success: true };
 }
 
 export async function deleteModule(moduleId: string) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return { error: 'Not authenticated' };
-  }
-
-  if (!(await isAdmin())) {
+  try {
+    await requireAdmin();
+  } catch {
     return { error: 'Not authorized - admin role required' };
   }
 
-  const module = await db.module.findUnique({
+  const courseModule = await db.module.findUnique({
     where: { id: moduleId },
     select: { courseId: true },
   });
 
-  if (!module) {
+  if (!courseModule) {
     return { error: 'Module not found' };
   }
 
@@ -141,19 +113,15 @@ export async function deleteModule(moduleId: string) {
     where: { id: moduleId },
   });
 
-  revalidatePath(`/admin/courses/${module.courseId}`);
+  revalidatePath(`/admin/courses/${courseModule.courseId}`);
 
   return { success: true };
 }
 
 export async function reorderModules(courseId: string, orderedIds: string[]) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return { error: 'Not authenticated' };
-  }
-
-  if (!(await isAdmin())) {
+  try {
+    await requireAdmin();
+  } catch {
     return { error: 'Not authorized - admin role required' };
   }
 

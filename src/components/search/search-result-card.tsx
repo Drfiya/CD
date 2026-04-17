@@ -25,6 +25,8 @@ export function SearchResultCard({ result }: SearchResultCardProps) {
         </span>
         <div className="min-w-0 flex-1">
           <h3 className="font-medium truncate">{result.title}</h3>
+          {/* Safe: snippet comes from Postgres ts_headline() which escapes HTML entities.
+              Re-audit if ts_headline() config (StartSel/StopSel/HighlightAll) is customized. */}
           <p
             className="mt-1 text-sm text-muted-foreground line-clamp-2 [&_mark]:bg-yellow-200"
             dangerouslySetInnerHTML={{ __html: result.snippet }}

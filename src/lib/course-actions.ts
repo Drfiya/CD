@@ -1,28 +1,14 @@
 'use server';
 
-import { getServerSession } from 'next-auth';
 import { revalidatePath } from 'next/cache';
-import { authOptions } from '@/lib/auth';
 import db from '@/lib/db';
 import { courseSchema, courseImageSchema } from '@/lib/validations/course';
 import { createAdminClient } from '@/lib/supabase/admin';
-
-async function isAdmin(): Promise<boolean> {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return false;
-  }
-
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { role: true },
-  });
-
-  return user?.role === 'admin' || user?.role === 'owner';
-}
+import { preTranslateAdminContent } from '@/lib/translation/pretranslate';
+import { requireAuth, requireAdmin } from '@/lib/auth-guards';
 
 export async function getCourses() {
+  await requireAuth();
   const courses = await db.course.findMany({
     orderBy: { createdAt: 'desc' },
     include: {
@@ -36,6 +22,7 @@ export async function getCourses() {
 }
 
 export async function getCourse(id: string) {
+  await requireAuth();
   const course = await db.course.findUnique({
     where: { id },
     include: {
@@ -49,6 +36,7 @@ export async function getCourse(id: string) {
 }
 
 export async function getCourseWithLessons(id: string) {
+  await requireAuth();
   const course = await db.course.findUnique({
     where: { id },
     include: {
@@ -67,13 +55,9 @@ export async function getCourseWithLessons(id: string) {
 }
 
 export async function createCourse(formData: FormData) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return { error: 'Not authenticated' };
-  }
-
-  if (!(await isAdmin())) {
+  try {
+    await requireAdmin();
+  } catch {
     return { error: 'Not authorized - admin role required' };
   }
 
@@ -97,19 +81,18 @@ export async function createCourse(formData: FormData) {
     },
   });
 
+  // Fire-and-forget: eagerly translate into all live languages
+  preTranslateAdminContent('course', course.id, { title, description }).catch(() => {});
+
   revalidatePath('/admin/courses');
 
   return { success: true, courseId: course.id };
 }
 
 export async function updateCourse(courseId: string, formData: FormData) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return { error: 'Not authenticated' };
-  }
-
-  if (!(await isAdmin())) {
+  try {
+    await requireAdmin();
+  } catch {
     return { error: 'Not authorized - admin role required' };
   }
 
@@ -142,6 +125,11 @@ export async function updateCourse(courseId: string, formData: FormData) {
     },
   });
 
+  // Fire-and-forget: eagerly re-translate if title or description changed
+  if (title !== course.title || description !== course.description) {
+    preTranslateAdminContent('course', courseId, { title, description }).catch(() => {});
+  }
+
   revalidatePath('/admin/courses');
   revalidatePath(`/admin/courses/${courseId}`);
 
@@ -149,13 +137,9 @@ export async function updateCourse(courseId: string, formData: FormData) {
 }
 
 export async function deleteCourse(courseId: string) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return { error: 'Not authenticated' };
-  }
-
-  if (!(await isAdmin())) {
+  try {
+    await requireAdmin();
+  } catch {
     return { error: 'Not authorized - admin role required' };
   }
 
@@ -178,13 +162,9 @@ export async function deleteCourse(courseId: string) {
 }
 
 export async function uploadCourseImage(courseId: string, formData: FormData) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return { error: 'Not authenticated' };
-  }
-
-  if (!(await isAdmin())) {
+  try {
+    await requireAdmin();
+  } catch {
     return { error: 'Not authorized - admin role required' };
   }
 

@@ -11,9 +11,9 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
     NEW: { label: 'New', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30' },
     UNDER_REVIEW: { label: 'Under Review', color: 'text-yellow-600 dark:text-yellow-400', bg: 'bg-yellow-100 dark:bg-yellow-900/30' },
     APPROVED: { label: 'Approved', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-100 dark:bg-green-900/30' },
-    IN_PROGRESS: { label: 'In Progress', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/30' },
+    IN_PROGRESS: { label: 'In Progress', color: 'text-purple-600 dark:text-purple-300', bg: 'bg-purple-100 dark:bg-purple-900/30' },
     COMPLETED: { label: 'Completed', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
-    DECLINED: { label: 'Declined', color: 'text-red-600 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-900/30' },
+    DECLINED: { label: 'Declined', color: 'text-red-600 dark:text-red-300', bg: 'bg-red-100 dark:bg-red-900/30' },
 };
 
 const STATUSES = Object.keys(STATUS_CONFIG);
@@ -184,7 +184,7 @@ export function FeatureIdeasList({ ideas, currentFilter, currentSort }: FeatureI
                                                 {statusCfg.label}
                                             </span>
                                             {idea.priority && (
-                                                <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${idea.priority === 'high' ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' :
+                                                <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${idea.priority === 'high' ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-300' :
                                                     idea.priority === 'medium' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' :
                                                         'bg-gray-100 dark:bg-neutral-700 text-gray-500 dark:text-neutral-400'
                                                     }`}>

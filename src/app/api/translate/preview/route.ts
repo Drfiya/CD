@@ -9,6 +9,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { translateForPreview, detectLanguage } from '@/lib/translation';
+import { checkRateLimitAsync, rateLimitHeaders } from '@/lib/api/rate-limit';
+import { checkBudget, activateKillSwitch } from '@/lib/translation/budget';
 
 interface PreviewRequest {
     text: string;
@@ -25,6 +27,23 @@ export async function POST(request: NextRequest) {
             return NextResponse.json(
                 { error: 'Authentication required' },
                 { status: 401 }
+            );
+        }
+
+        // Preview translations bypass the server cache on first call and each
+        // request can hit DeepL with up to 10k chars — the most expensive
+        // per-call path in the system. Throttle hard per user.
+        const rateLimit = await checkRateLimitAsync({
+            scope: 'translate-preview',
+            limit: 30,
+            windowMs: 60_000,
+            userId: session.user.id ?? session.user.email ?? null,
+            req: request,
+        });
+        if (!rateLimit.allowed) {
+            return NextResponse.json(
+                { error: 'Rate limit exceeded. Please try again later.' },
+                { status: 429, headers: rateLimitHeaders(rateLimit) }
             );
         }
 
@@ -57,6 +76,25 @@ export async function POST(request: NextRequest) {
                 sourceLang: detectedSourceLang,
                 targetLang,
                 sameLanguage: true,
+            });
+        }
+
+        // ── Budget gate ────────────────────────────────────────────────
+        // Must check before any DeepL call — mirrors /api/translate behavior.
+        // When over budget, return originals as fallback so the UI degrades
+        // gracefully instead of silently draining DeepL credits.
+        const budgetCheck = await checkBudget();
+        if (!budgetCheck.allowed) {
+            if (!budgetCheck.killSwitchActive) {
+                activateKillSwitch();
+            }
+            return NextResponse.json({
+                translatedText: text,
+                translatedTitle: title || null,
+                sourceLang: detectedSourceLang,
+                targetLang,
+                fallback: true,
+                reason: 'budget_exceeded',
             });
         }
 

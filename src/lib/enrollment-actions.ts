@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { revalidatePath } from 'next/cache';
 import { authOptions } from '@/lib/auth';
 import db from '@/lib/db';
+import { requireAuth, requireOwnerOrAdmin } from '@/lib/auth-guards';
 
 export async function enrollInCourse(courseId: string) {
   const session = await getServerSession(authOptions);
@@ -82,6 +83,7 @@ export async function unenrollFromCourse(courseId: string) {
 }
 
 export async function getEnrollment(userId: string, courseId: string) {
+  await requireOwnerOrAdmin(userId);
   const enrollment = await db.enrollment.findUnique({
     where: {
       userId_courseId: { userId, courseId },
@@ -92,11 +94,16 @@ export async function getEnrollment(userId: string, courseId: string) {
 }
 
 export async function getPublishedCourses() {
+  await requireAuth();
   const courses = await db.course.findMany({
     where: { status: 'PUBLISHED' },
-    include: {
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      coverImage: true,
       modules: {
-        include: {
+        select: {
           lessons: {
             where: { status: 'PUBLISHED' },
             select: { id: true },
@@ -125,15 +132,22 @@ export async function getPublishedCourses() {
 }
 
 export async function getEnrolledCoursesWithProgress(userId: string) {
+  await requireOwnerOrAdmin(userId);
   // Get all enrollments for user with course details
   const enrollments = await db.enrollment.findMany({
     where: { userId },
     include: {
       course: {
-        include: {
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          coverImage: true,
+          status: true,
           modules: {
             orderBy: { position: 'asc' },
-            include: {
+            select: {
+              id: true,
               lessons: {
                 where: { status: 'PUBLISHED' },
                 orderBy: { position: 'asc' },
@@ -158,8 +172,8 @@ export async function getEnrolledCoursesWithProgress(userId: string) {
   return enrollments.map((enrollment) => {
     // Flatten all lesson IDs in order
     const allLessonIds: string[] = [];
-    for (const module of enrollment.course.modules) {
-      for (const lesson of module.lessons) {
+    for (const courseModule of enrollment.course.modules) {
+      for (const lesson of courseModule.lessons) {
         allLessonIds.push(lesson.id);
       }
     }

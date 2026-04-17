@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ProgressBar } from './progress-bar';
+import { UGCText } from '@/components/translation/UGCText';
 
 export interface EnrolledCourse {
   id: string;
@@ -73,13 +74,13 @@ export function EnrolledCourseCard({ course, ui }: EnrolledCourseCardProps) {
 
       {/* Content */}
       <div className="p-4 space-y-3">
-        <h3 className="font-semibold text-gray-900 dark:text-neutral-100 truncate group-hover:text-[#D94A4A] transition-colors">
-          {course.title}
-        </h3>
+        <UGCText as="div" className="font-semibold text-gray-900 dark:text-neutral-100 truncate group-hover:text-[#D94A4A] transition-colors">
+          <h3 className="truncate">{course.title}</h3>
+        </UGCText>
         {course.description && (
-          <p className="text-sm text-gray-500 dark:text-neutral-400 line-clamp-2">
+          <UGCText as="p" className="text-sm text-gray-500 dark:text-neutral-400 line-clamp-2">
             {course.description}
-          </p>
+          </UGCText>
         )}
 
         {/* Progress */}

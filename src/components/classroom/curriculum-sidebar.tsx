@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { UGCText } from '@/components/translation/UGCText';
 
 interface CurriculumSidebarProps {
   courseId: string;
@@ -99,7 +100,7 @@ export function CurriculumSidebar({
                             className="flex items-center gap-2 py-1.5 px-2 text-sm text-gray-400"
                           >
                             <span className="w-4 h-4 flex-shrink-0" />
-                            <span className="truncate">{lesson.title}</span>
+                            <UGCText as="span" className="truncate">{lesson.title}</UGCText>
                           </li>
                         );
                       }
@@ -132,7 +133,7 @@ export function CurriculumSidebar({
                             ) : (
                               <span className="w-4 h-4 flex-shrink-0 rounded-full border-2 border-gray-300" />
                             )}
-                            <span className="truncate">{lesson.title}</span>
+                            <UGCText as="span" className="truncate">{lesson.title}</UGCText>
                           </Link>
                         </li>
                       );

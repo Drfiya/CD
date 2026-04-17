@@ -15,7 +15,8 @@ export async function trackTranslationUsage(
     characterCount: number,
     sourceLang: string,
     targetLang: string,
-    fromCache: boolean
+    fromCache: boolean,
+    cacheTier?: 'lru' | 'db' | 'miss',
 ): Promise<void> {
     try {
         const costEstimate = fromCache ? 0 : (characterCount / 1_000_000) * 10;
@@ -27,6 +28,7 @@ export async function trackTranslationUsage(
                 sourceLang,
                 targetLang,
                 fromCache,
+                cacheTier: cacheTier ?? null,
                 costEstimate,
             },
         });

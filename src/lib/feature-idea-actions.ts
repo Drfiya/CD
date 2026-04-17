@@ -1,19 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { canEditSettings } from '@/lib/permissions';
+import { requireAdmin } from '@/lib/auth-guards';
 import db from '@/lib/db';
 import type { FeatureIdeaStatus } from '@/generated/prisma/client';
-
-async function requireAdmin() {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id || !canEditSettings(session.user.role)) {
-        throw new Error('Unauthorized');
-    }
-    return session;
-}
 
 function revalidateIdeas() {
     revalidatePath('/admin/feature-ideas');

@@ -31,6 +31,7 @@ export function ThemeLogo({
     const { resolvedTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydration guard: theme unknown on server
     useEffect(() => setMounted(true), []);
 
     // If no dark logo uploaded, always show the light logo

@@ -112,7 +112,7 @@ export function KanbanBoard({ initialData }: KanbanBoardProps) {
 
         const activeCol = findColumn(activeId);
         // over might be a column id or a card id
-        let overCol = (['TODO', 'IN_PROGRESS', 'DONE'] as KanbanStatus[]).includes(overId as KanbanStatus)
+        const overCol = (['TODO', 'IN_PROGRESS', 'DONE'] as KanbanStatus[]).includes(overId as KanbanStatus)
             ? (overId as KanbanStatus)
             : findColumn(overId);
 

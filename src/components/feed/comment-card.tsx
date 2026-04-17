@@ -9,6 +9,7 @@ import { LikeButton } from '@/components/feed/like-button';
 import { LevelBadge } from '@/components/gamification/level-badge';
 import { RoleBadge } from '@/components/admin/role-badge';
 import { updateComment, deleteComment } from '@/lib/comment-actions';
+import { UGCText } from '@/components/translation/UGCText';
 
 interface CommentCardProps {
   comment: {
@@ -135,7 +136,7 @@ export function CommentCard({ comment, postAuthorId, currentUserId, likeCount, i
           </div>
         ) : (
           <>
-            <p className="mt-1 text-sm whitespace-pre-wrap break-words">{comment.content}</p>
+            <UGCText as="p" className="mt-1 text-sm whitespace-pre-wrap break-words">{comment.content}</UGCText>
 
             {/* Footer: like button + author actions */}
             <div className="mt-2 flex items-center gap-3">

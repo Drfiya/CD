@@ -1,6 +1,7 @@
 'use client';
 
 import { isSameMonth, isToday, format } from 'date-fns';
+import { UGCText } from '@/components/translation/UGCText';
 import type { EventOccurrence } from '@/lib/event-actions';
 
 interface CalendarDayCellProps {
@@ -45,7 +46,7 @@ export function CalendarDayCell({
             className="text-xs px-1.5 py-0.5 bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300 rounded truncate cursor-pointer hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors"
             title={occurrence.event.title}
           >
-            {occurrence.event.title}
+            <UGCText as="span">{occurrence.event.title}</UGCText>
           </div>
         ))}
 

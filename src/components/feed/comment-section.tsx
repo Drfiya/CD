@@ -7,6 +7,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Avatar } from '@/components/ui/avatar';
 import { GifPicker } from '@/components/ui/gif-picker';
 import { createComment } from '@/lib/comment-actions';
+import { UGCText } from '@/components/translation/UGCText';
 import dynamic from 'next/dynamic';
 
 // Dynamic import for emoji picker to avoid SSR issues
@@ -73,7 +74,7 @@ export function CommentSection({ postId, currentUserId, userImage, comments }: C
 function CommentContent({ content }: { content: string }) {
     // Parse different types of embedded content
     const parts: React.ReactNode[] = [];
-    let remainingText = content;
+    const remainingText = content;
     let keyIndex = 0;
 
     // Regex patterns for different content types
@@ -188,10 +189,10 @@ function CommentContent({ content }: { content: string }) {
 
     // If no matches found, just return plain text
     if (parts.length === 0) {
-        return <p className="text-sm text-gray-700 dark:text-neutral-300 mt-0.5">{content}</p>;
+        return <UGCText as="p" className="text-sm text-gray-700 dark:text-neutral-300 mt-0.5">{content}</UGCText>;
     }
 
-    return <div className="text-sm text-gray-700 dark:text-neutral-300 mt-0.5">{parts}</div>;
+    return <UGCText as="div" className="text-sm text-gray-700 dark:text-neutral-300 mt-0.5">{parts}</UGCText>;
 }
 
 interface EmojiData {

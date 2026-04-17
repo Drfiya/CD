@@ -11,6 +11,7 @@
 
 import db from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { requireAdmin } from '@/lib/auth-guards';
 
 // --- Types ---
 
@@ -393,6 +394,7 @@ export async function runLaunchChecks(): Promise<{
     results: CheckResult[];
     summary: string;
 }> {
+    await requireAdmin();
     const results = await runAllChecks();
 
     // Upsert each auto-check into the database

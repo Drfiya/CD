@@ -11,9 +11,25 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import db from '@/lib/db';
 import { availableLocales, LANGUAGE_COOKIE_NAME } from '@/lib/i18n/geolocation';
+import { checkRateLimit, rateLimitHeaders } from '@/lib/api/rate-limit';
 
 export async function POST(request: NextRequest) {
     try {
+        const earlySession = await getServerSession(authOptions);
+        const rateLimit = checkRateLimit({
+            scope: 'set-language',
+            limit: 30,
+            windowMs: 60_000,
+            userId: earlySession?.user?.id ?? null,
+            req: request,
+        });
+        if (!rateLimit.allowed) {
+            return NextResponse.json(
+                { error: 'Rate limit exceeded' },
+                { status: 429, headers: rateLimitHeaders(rateLimit) }
+            );
+        }
+
         const body = await request.json();
         const { language } = body;
 
@@ -25,7 +41,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const session = await getServerSession(authOptions);
+        const session = earlySession;
         const userId = session?.user?.id;
 
         // For logged-in users, update database

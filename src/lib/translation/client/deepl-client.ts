@@ -10,7 +10,6 @@
 
 import {
     getFromCache,
-    setToCache,
     setBatchToCache,
     getBatchFromCache
 } from './cache-client';
@@ -177,7 +176,7 @@ async function flushQueue(): Promise<void> {
                 });
                 setBatchToCache(cacheItems);
 
-            } catch (error) {
+            } catch {
                 // Resolve with original text on error
                 chunk.forEach(req => {
                     req.resolve(req.text);
