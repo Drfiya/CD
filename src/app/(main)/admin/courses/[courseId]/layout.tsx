@@ -21,7 +21,7 @@ export default async function CourseLayout({ children, params }: LayoutProps) {
 
   // Requires admin+ role (layout handles moderator+ check)
   if (!canEditSettings(session.user.role)) {
-    redirect('/admin/moderation');
+    redirect('/admin/posts');
   }
 
   const { courseId } = await params;

@@ -2,10 +2,13 @@
 
 import { getServerSession } from 'next-auth';
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
 import { authOptions } from '@/lib/auth';
 import db from '@/lib/db';
 import { profileSchema, avatarSchema } from '@/lib/validations/profile';
 import { createClient } from '@/lib/supabase/server';
+import { checkAndAwardBadgesInternal } from '@/lib/badge-actions-internal';
+import { LANGUAGE_COOKIE_NAME } from '@/lib/i18n/geolocation';
 
 export async function updateProfile(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -25,15 +28,33 @@ export async function updateProfile(formData: FormData) {
   }
 
   const { name, bio, languageCode } = validatedFields.data;
+  const emailNotifications = formData.get('emailNotifications') !== 'false';
 
   await db.user.update({
     where: { id: session.user.id },
     data: {
       name,
       bio,
+      emailNotifications,
       ...(languageCode && { languageCode }),
     },
   });
+
+  // Mirror the saved language to the cookie so SSR (and the next /api/translate
+  // request) sees the new preference without waiting for a separate set-language
+  // round-trip. Keeps DB / cookie / client state in sync after profile save.
+  if (languageCode) {
+    const cookieStore = await cookies();
+    cookieStore.set(LANGUAGE_COOKIE_NAME, languageCode, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 365, // 1 year
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    });
+  }
+
+  // Fire-and-forget: profile update may complete the activation funnel (WELCOME badge)
+  void checkAndAwardBadgesInternal(session.user.id).catch(() => {});
 
   revalidatePath('/profile/edit');
   revalidatePath(`/members/${session.user.id}`);
@@ -87,6 +108,9 @@ export async function uploadAvatar(formData: FormData) {
     where: { id: session.user.id },
     data: { image: publicUrl },
   });
+
+  // Fire-and-forget: new avatar may complete the activation funnel (WELCOME badge)
+  void checkAndAwardBadgesInternal(session.user.id).catch(() => {});
 
   revalidatePath('/profile/edit');
   revalidatePath(`/members/${session.user.id}`);

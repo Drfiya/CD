@@ -13,9 +13,13 @@ interface PageProps {
 
 export default async function EventDetailPage({ params }: PageProps) {
   const { eventId } = await params;
+  // Fail-open: never crash the event page if the language resolver throws
   const [event, userLanguage] = await Promise.all([
     getEvent(eventId),
-    getUserLanguage(),
+    getUserLanguage().catch((err) => {
+      console.error('[EventDetail] getUserLanguage failed, defaulting to en:', err);
+      return 'en';
+    }),
   ]);
   const messages = getMessages(userLanguage);
 

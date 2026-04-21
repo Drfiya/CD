@@ -1,4 +1,4 @@
-import type { Post, User } from '@/generated/prisma/client';
+import type { Post, User, BadgeType } from '@/generated/prisma/client';
 
 export type VideoService = 'youtube' | 'vimeo' | 'loom';
 
@@ -10,5 +10,8 @@ export interface VideoEmbed {
 }
 
 export type PostWithAuthor = Post & {
-  author: Pick<User, 'id' | 'name' | 'image' | 'level' | 'role'>;
+  author: Pick<User, 'id' | 'name' | 'image' | 'level' | 'role'> & {
+    badges?: { type: BadgeType | null; customDefinitionId?: string | null }[];
+    _count?: { badges: number };
+  };
 };

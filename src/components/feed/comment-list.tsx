@@ -16,7 +16,19 @@ export async function CommentList({ postId, postAuthorId, currentUserId }: Comme
     orderBy: { createdAt: 'desc' },
     include: {
       author: {
-        select: { id: true, name: true, image: true, level: true, role: true },
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          level: true,
+          role: true,
+          badges: {
+            select: { type: true, customDefinitionId: true },
+            orderBy: { earnedAt: 'asc' },
+            take: 3,
+          },
+          _count: { select: { badges: true } },
+        },
       },
       _count: {
         select: { likes: true },
@@ -41,6 +53,8 @@ export async function CommentList({ postId, postAuthorId, currentUserId }: Comme
     authorImage: comment.author.image,
     authorLevel: comment.author.level,
     authorRole: comment.author.role,
+    authorBadges: comment.author.badges,
+    authorBadgeCount: comment.author._count.badges,
     createdAt: comment.createdAt,
     updatedAt: comment.updatedAt,
     likeCount: comment._count.likes,

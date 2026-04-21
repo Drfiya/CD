@@ -5,6 +5,7 @@
  * Supports IP-based geolocation detection for automatic language selection.
  */
 
+import { cache } from 'react';
 import { getServerSession } from 'next-auth';
 import { headers, cookies } from 'next/headers';
 import { authOptions } from '@/lib/auth';
@@ -18,15 +19,18 @@ import {
 
 /**
  * Get the current user's preferred language code
- * 
+ *
  * Priority order:
  * 1. Logged-in user's database preference
  * 2. Language cookie (for guests who manually selected a language)
  * 3. IP geolocation (Vercel: x-vercel-ip-country, Cloudflare: cf-ipcountry)
  * 4. Accept-Language header (browser preference)
  * 5. Fallback to English
+ *
+ * Wrapped in React.cache() so the (potentially DB-hitting) resolution runs once
+ * per request, even when called from layout + page + child server components.
  */
-export async function getUserLanguage(): Promise<string> {
+export const getUserLanguage = cache(async function getUserLanguage(): Promise<string> {
     const session = await getServerSession(authOptions);
     const userId = session?.user?.id;
 
@@ -71,7 +75,7 @@ export async function getUserLanguage(): Promise<string> {
 
     // 5. Fallback to English
     return 'en';
-}
+});
 
 /**
  * Translate a UI text string for the current user

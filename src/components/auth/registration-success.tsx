@@ -51,9 +51,9 @@ export function RegistrationSuccess({ email, password }: RegistrationSuccessProp
     <div className="text-center space-y-6">
       {/* Success Checkmark */}
       <div className="flex justify-center">
-        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+        <div className="w-20 h-20 bg-green-100 dark:bg-green-950 rounded-full flex items-center justify-center">
           <svg
-            className="w-10 h-10 text-green-600"
+            className="w-10 h-10 text-green-600 dark:text-green-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -70,16 +70,16 @@ export function RegistrationSuccess({ email, password }: RegistrationSuccessProp
 
       {/* Welcome Message */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">
           Welcome to the Community!
         </h2>
-        <p className="text-gray-600 mt-2">
+        <p className="text-gray-600 dark:text-neutral-400 mt-2">
           Your account has been created successfully.
         </p>
       </div>
 
       {/* Countdown */}
-      <div className="text-sm text-gray-500">
+      <div className="text-sm text-gray-500 dark:text-neutral-400">
         {isSigningIn ? (
           <span>Signing you in...</span>
         ) : (

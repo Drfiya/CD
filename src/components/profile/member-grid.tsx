@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { MemberCard } from './member-card';
+import type { BadgeType } from '@/generated/prisma/client';
 
 interface Member {
   id: string;
@@ -10,6 +11,7 @@ interface Member {
   bio: string | null;
   level: number;
   points: number;
+  badges?: { type: BadgeType | null; customDefinitionId?: string | null }[];
 }
 
 interface MemberGridProps {

@@ -38,7 +38,19 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
     where: { id },
     include: {
       author: {
-        select: { id: true, name: true, image: true, level: true, role: true },
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          level: true,
+          role: true,
+          badges: {
+            select: { type: true, customDefinitionId: true },
+            orderBy: { earnedAt: 'asc' },
+            take: 3,
+          },
+          _count: { select: { badges: true } },
+        },
       },
       category: {
         select: { id: true, name: true, color: true },
@@ -66,42 +78,71 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
     isLiked = !!like;
   }
 
-  // Fetch comments
+  // Fetch top-level comments with their replies (max depth 2)
   const comments = await db.comment.findMany({
-    where: { postId: id },
+    where: { postId: id, parentId: null },
     orderBy: { createdAt: 'asc' },
     include: {
       author: {
         select: { id: true, name: true, image: true },
       },
+      replies: {
+        orderBy: { createdAt: 'asc' },
+        include: {
+          author: {
+            select: { id: true, name: true, image: true },
+          },
+        },
+      },
     },
   });
 
   // Get user's language preference for translation (DB, cookie, IP geo, Accept-Language fallbacks)
-  const userLanguage = await getUserLanguage();
+  // Fail-open: if language resolution throws, default to English rather than crashing the page
+  let userLanguage: string;
+  try {
+    userLanguage = await getUserLanguage();
+  } catch (err) {
+    console.error('[PostDetail] getUserLanguage failed, defaulting to en:', err);
+    userLanguage = 'en';
+  }
   const messages = getMessages(userLanguage);
-  const translatedPostMenuUI = messages.postMenu;
 
   // Save originals before translation
   const originalTitle = post.title;
   const originalLanguage = post.languageCode || 'en';
 
   // Translate post and comments to user's preferred language
-  const translatedPost = await translatePostForUser({
+  // Fail-open: if translation throws, fall back to the raw post fields
+  const postSnippet = {
     id: post.id,
     title: post.title,
     plainText: post.plainText,
     languageCode: post.languageCode,
-  }, userLanguage);
+  };
+  let translatedPost: typeof postSnippet & { _originalLanguage?: string };
+  try {
+    translatedPost = await translatePostForUser(postSnippet, userLanguage);
+  } catch (err) {
+    console.error('[PostDetail] translatePostForUser failed, falling back to original:', err);
+    translatedPost = postSnippet;
+  }
 
-  const translatedComments = await translateCommentsForUser(
-    comments.map((c) => ({
-      id: c.id,
-      content: c.content,
-      languageCode: c.languageCode,
-    })),
-    userLanguage
-  );
+  // Flatten top-level + replies for batch translation
+  const allCommentSnippets = [
+    ...comments.map((c) => ({ id: c.id, content: c.content, languageCode: c.languageCode })),
+    ...comments.flatMap((c) =>
+      c.replies.map((r) => ({ id: r.id, content: r.content, languageCode: r.languageCode }))
+    ),
+  ];
+
+  // Fail-open: if translation pipeline throws, show originals rather than crashing the page
+  let translatedComments: typeof allCommentSnippets;
+  try {
+    translatedComments = await translateCommentsForUser(allCommentSnippets, userLanguage);
+  } catch {
+    translatedComments = allCommentSnippets;
+  }
 
   // Create a map for translated comment content
   const translatedContentMap = new Map<string, string>();
@@ -116,6 +157,14 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
     authorName: comment.author.name,
     authorImage: comment.author.image,
     createdAt: comment.createdAt,
+    replies: comment.replies.map((reply) => ({
+      id: reply.id,
+      content: translatedContentMap.get(reply.id) || reply.content,
+      authorId: reply.authorId,
+      authorName: reply.author.name,
+      authorImage: reply.author.image,
+      createdAt: reply.createdAt,
+    })),
   }));
 
   const embeds = (post.embeds as unknown as VideoEmbed[]) || [];
@@ -167,7 +216,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
               </div>
             </Link>
 
-            <PostMenu postId={post.id} isAuthor={isAuthor} ui={translatedPostMenuUI} />
+            <PostMenu postId={post.id} isAuthor={isAuthor} />
           </div>
 
           {/* Post content with Trues toggle */}

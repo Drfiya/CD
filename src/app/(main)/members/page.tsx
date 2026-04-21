@@ -36,6 +36,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
         bio: true,
         level: true,
         points: true,
+        badges: { select: { type: true, customDefinitionId: true }, orderBy: { earnedAt: 'asc' } },
       },
     }),
     db.user.count({ where }),
@@ -47,7 +48,14 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   const maxLevel = maxLevelResult._max.level || 1;
 
   // Get static translations from message files (no API calls!)
-  const userLanguage = await getUserLanguage();
+  // Fail-open language resolution — members directory should never white-screen
+  let userLanguage: string;
+  try {
+    userLanguage = await getUserLanguage();
+  } catch (err) {
+    console.error('[Members] getUserLanguage failed, defaulting to en:', err);
+    userLanguage = 'en';
+  }
   const messages = getMessages(userLanguage);
   const mp = messages.membersPage;
 

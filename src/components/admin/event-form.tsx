@@ -225,7 +225,7 @@ export function EventForm({ event, onSuccess }: EventFormProps) {
             name="recurrence"
             value={recurrence}
             onChange={(e) => setRecurrence(e.target.value as RecurrenceType)}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-3 py-2 border rounded-md bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 border-gray-300 dark:border-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary"
             disabled={isPending}
           >
             <option value="NONE">None (single event)</option>

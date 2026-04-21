@@ -6,7 +6,10 @@ import { Pagination } from '@/components/ui/pagination';
 import { CategoriesSidebar } from '@/components/feed/categories-sidebar';
 import { RightSidebar } from '@/components/feed/right-sidebar';
 import { CreatePostModal } from '@/components/feed/create-post-modal';
+import { FeedEmptyState } from '@/components/feed/feed-empty-state';
+import { ActivationChecklist } from '@/components/onboarding/activation-checklist';
 import { translatePostsForUser } from '@/lib/translation';
+import { getActivationState } from '@/lib/activation-actions-internal';
 
 import { getCachedCommunitySettings, getCachedCategories } from '@/lib/cached-queries';
 import { getMessages } from '@/lib/i18n';
@@ -28,7 +31,14 @@ async function FeedContent({ searchParams }: FeedPageProps) {
   const currentUserId = session?.user?.id;
 
   // Get user's language preference (includes DB, cookie, IP geo, Accept-Language fallbacks)
-  const userLanguage = await getUserLanguage();
+  // Fail-open: if language resolution throws, default to English rather than crashing the page
+  let userLanguage: string;
+  try {
+    userLanguage = await getUserLanguage();
+  } catch (err) {
+    console.error('[Feed] getUserLanguage failed, defaulting to en:', err);
+    userLanguage = 'en';
+  }
 
   // Build where clause for category filter
   const whereClause = category ? { categoryId: category } : {};
@@ -41,7 +51,19 @@ async function FeedContent({ searchParams }: FeedPageProps) {
       orderBy: { createdAt: 'desc' },
       include: {
         author: {
-          select: { id: true, name: true, image: true, level: true, role: true },
+          select: {
+            id: true,
+            name: true,
+            image: true,
+            level: true,
+            role: true,
+            badges: {
+              select: { type: true, customDefinitionId: true },
+              orderBy: { earnedAt: 'asc' },
+              take: 3,
+            },
+            _count: { select: { badges: true } },
+          },
         },
         category: {
           select: { id: true, name: true, color: true },
@@ -88,11 +110,17 @@ async function FeedContent({ searchParams }: FeedPageProps) {
     const willTranslate = postLang !== userLanguage;
     console.log(`[Translation]   Post "${(p.title || p.id).substring(0, 40)}" lang=${postLang} → ${willTranslate ? 'TRANSLATE' : 'SKIP (same lang)'}`);
   });
-  const translatedPosts = await translatePostsForUser(postsWithLikeStatus, userLanguage);
+  // Fail-open: if the translation pipeline throws, render originals instead of crashing the page
+  let translatedPosts: ((typeof postsWithLikeStatus)[number] & { _originalLanguage?: string })[];
+  try {
+    translatedPosts = await translatePostsForUser(postsWithLikeStatus, userLanguage);
+  } catch (err) {
+    console.error('[Feed] translatePostsForUser failed, falling back to originals:', err);
+    translatedPosts = postsWithLikeStatus;
+  }
 
   // Get static UI translations from message files (instant, no API call)
   const messages = getMessages(userLanguage);
-  const translatedPostMenuUI = messages.postMenu;
 
   // Translate category names using static i18n (no API call needed)
   const translatedCategories = categories.map(cat => ({
@@ -100,20 +128,12 @@ async function FeedContent({ searchParams }: FeedPageProps) {
     name: (messages.categoryNames as Record<string, string>)[cat.name] || cat.name,
   }));
 
-  const translatedUI = {
-    categoriesTitle: messages.categories.title,
-    allPosts: messages.categories.allPosts,
-    members: messages.sidebar.members,
-    leaderboard: messages.sidebar.leaderboard,
-    viewAll: messages.sidebar.viewAll,
-    aiToolsTitle: messages.nav.aiTools,
-    level: messages.gamification.level,
-    writeSomething: messages.post.writeSomething,
-    noPosts: messages.common.noResults,
-  };
-
   // Get community settings for sidebar banner (cached)
   const communitySettings = await getCachedCommunitySettings();
+
+  // Activation checklist — only for logged-in users who haven't earned WELCOME or dismissed
+  const activation = currentUserId ? await getActivationState(currentUserId).catch(() => null) : null;
+  const showActivationBanner = !!activation && !activation.welcomeEarned && !activation.dismissed;
 
   return (
     <div className="flex gap-6 max-w-7xl mx-auto">
@@ -121,7 +141,6 @@ async function FeedContent({ searchParams }: FeedPageProps) {
       <CategoriesSidebar
         categories={translatedCategories}
         activeCategory={category}
-        translatedUI={translatedUI}
         sidebarBannerImage={communitySettings.sidebarBannerImage}
         sidebarBannerUrl={communitySettings.sidebarBannerUrl}
         sidebarBannerEnabled={communitySettings.sidebarBannerEnabled}
@@ -129,30 +148,31 @@ async function FeedContent({ searchParams }: FeedPageProps) {
 
       {/* Center - Posts feed */}
       <div className="flex-1 min-w-0 space-y-4">
+        {/* Activation onboarding banner — hides when WELCOME badge earned or user dismissed */}
+        {showActivationBanner && activation && (
+          <ActivationChecklist
+            signals={activation.signals}
+            labels={{
+              title: messages.activation.title,
+              stepSignUp: messages.activation.stepSignUp,
+              stepProfile: messages.activation.stepProfile,
+              stepEnrollment: messages.activation.stepEnrollment,
+              stepFirstPost: messages.activation.stepFirstPost,
+              dismiss: messages.activation.dismiss,
+            }}
+          />
+        )}
+
         {/* Create post trigger */}
         <CreatePostModal
           categories={translatedCategories}
           userImage={session?.user?.image}
           userName={session?.user?.name}
-          writeSomethingPlaceholder={translatedUI.writeSomething}
-          postButtonLabel={messages.post.post}
-          cancelLabel={messages.post.cancel}
-          createPostTitle={messages.post.createNewPost}
-          categoryLabel={messages.post.category}
-          postTitleLabel={messages.post.postTitle}
-          titlePlaceholder={messages.post.titlePlaceholder}
-          contentLabel={messages.post.content}
-          contentPlaceholder={messages.post.contentPlaceholder}
-          imageVideoLabel={messages.post.imageVideo}
-          linkLabel={messages.post.link}
-          categoryNames={messages.categoryNames}
         />
 
         {/* Posts list */}
         {translatedPosts.length === 0 ? (
-          <div className="bg-white dark:bg-neutral-800 rounded-xl p-12 text-center text-gray-500 dark:text-neutral-400 shadow-sm border border-gray-100 dark:border-neutral-700">
-            <p>{translatedUI.noPosts}</p>
-          </div>
+          <FeedEmptyState hasActiveFilter={!!category} />
         ) : (
           <div className="space-y-4">
             {translatedPosts.map((post) => {
@@ -173,7 +193,6 @@ async function FeedContent({ searchParams }: FeedPageProps) {
                   originalTitle={originals?.title || undefined}
                   originalLanguage={post._originalLanguage || post.languageCode || 'en'}
                   userLanguage={userLanguage}
-                  postMenuUI={translatedPostMenuUI}
                 />
               );
             })}
@@ -189,7 +208,7 @@ async function FeedContent({ searchParams }: FeedPageProps) {
       </div>
 
       {/* Right sidebar - Members & Leaderboard */}
-      <RightSidebar translatedUI={translatedUI} />
+      <RightSidebar />
     </div>
   );
 }

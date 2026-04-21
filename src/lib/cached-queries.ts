@@ -57,3 +57,29 @@ export const getCachedMemberCount = unstable_cache(
     ['member-count'],
     { revalidate: 60, tags: ['members'] }
 );
+
+/**
+ * Cached active languages for the platform.
+ * Falls back to static list if LanguageConfig table is empty.
+ * Revalidates on-demand via `revalidateTag('active-languages')`.
+ */
+export const getCachedActiveLanguages = unstable_cache(
+    async () => {
+        const configs = await db.languageConfig.findMany({
+            where: { isActive: true },
+            orderBy: { sortOrder: 'asc' },
+            select: { code: true, name: true, flag: true },
+        });
+        // Seed fallback: if no rows exist yet, return static default
+        if (configs.length === 0) {
+            return [
+                { code: 'en', name: 'English', flag: '🇬🇧' },
+                { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+                { code: 'fr', name: 'Français', flag: '🇫🇷' },
+            ];
+        }
+        return configs;
+    },
+    ['active-languages'],
+    { revalidate: 300, tags: ['active-languages'] }
+);

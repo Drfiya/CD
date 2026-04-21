@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useTranslations } from '@/components/translation/TranslationContext';
 
 interface Category {
     id: string;
@@ -9,21 +10,16 @@ interface Category {
     color: string;
 }
 
-interface TranslatedUI {
-    categoriesTitle: string;
-    allPosts: string;
-}
-
 interface CategoriesSidebarProps {
     categories: Category[];
     activeCategory: string | null;
-    translatedUI: TranslatedUI;
     sidebarBannerImage?: string | null;
     sidebarBannerUrl?: string | null;
     sidebarBannerEnabled?: boolean;
 }
 
-export function CategoriesSidebar({ categories, activeCategory, translatedUI, sidebarBannerImage, sidebarBannerUrl, sidebarBannerEnabled }: CategoriesSidebarProps) {
+export function CategoriesSidebar({ categories, activeCategory, sidebarBannerImage, sidebarBannerUrl, sidebarBannerEnabled }: CategoriesSidebarProps) {
+    const t = useTranslations('categories');
     const searchParams = useSearchParams();
 
     // Build URL with category filter
@@ -43,7 +39,7 @@ export function CategoriesSidebar({ categories, activeCategory, translatedUI, si
     return (
         <aside className="hidden lg:flex lg:flex-col w-64 shrink-0 gap-4">
             <div className="bg-white dark:bg-neutral-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-neutral-700">
-                <h2 className="text-base font-semibold text-gray-900 dark:text-neutral-100 mb-4">{translatedUI.categoriesTitle}</h2>
+                <h2 className="text-base font-semibold text-gray-900 dark:text-neutral-100 mb-4">{t.title}</h2>
 
                 <nav className="space-y-1">
                     {/* All Posts */}
@@ -57,7 +53,7 @@ export function CategoriesSidebar({ categories, activeCategory, translatedUI, si
                             }
             `}
                     >
-                        {translatedUI.allPosts}
+                        {t.allPosts}
                     </Link>
 
                     {/* Category list - names are already translated */}

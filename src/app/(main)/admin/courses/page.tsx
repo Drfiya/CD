@@ -23,7 +23,7 @@ export default async function AdminCoursesPage() {
 
   // Requires admin+ role (layout handles moderator+ check)
   if (!canEditSettings(session.user.role)) {
-    redirect('/admin/moderation');
+    redirect('/admin/posts');
   }
 
   const [courses, communitySettings] = await Promise.all([

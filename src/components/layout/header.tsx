@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { UserMenu } from '@/components/auth/user-menu';
 import { SearchButton } from '@/components/search/search-button';
-import { NotificationBell } from '@/components/layout/notification-bell';
+import { NotificationBellContainer } from '@/components/layout/notification-bell-container';
 import { LanguageSelector } from '@/components/translation/LanguageSelector';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { ThemeLogo } from '@/components/layout/ThemeLogo';
@@ -68,8 +68,8 @@ export async function Header({ messages, showAdminLink }: HeaderProps) {
           </div>
           {/* Search button */}
           <SearchButton placeholder={messages.search.placeholder} />
-          {/* Notification bell with dropdown */}
-          <NotificationBell />
+          {/* Notification bell — polls every 60s for real data */}
+          <NotificationBellContainer />
           {/* User menu */}
           <UserMenu messages={messages} showAdminLink={showAdminLink} />
         </div>

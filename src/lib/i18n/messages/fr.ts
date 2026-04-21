@@ -85,6 +85,9 @@ export const fr: Messages = {
     gamification: {
         level: 'Niveau',
         points: 'points',
+        streakPrompt: 'Commencez votre série ! Publiez ou commentez aujourd’hui.',
+        streakDayLabel: 'jours d’affilée',
+        streakBestLabel: 'Meilleure',
     },
 
     // Auth
@@ -132,6 +135,17 @@ export const fr: Messages = {
         monthly: 'Mensuel',
     },
 
+    // Profile page
+    profilePage: {
+        posts: 'Publications',
+        comments: 'Commentaires',
+        lessonsCompleted: 'Leçons terminées',
+        enrolledCoursesOne: 'Inscrit à 1 cours',
+        enrolledCoursesMany: 'Inscrit à {count} cours',
+        lessonsCompletedSuffixOne: ' · 1 leçon terminée',
+        lessonsCompletedSuffixMany: ' · {count} leçons terminées',
+    },
+
     // Classroom page
     classroomPage: {
         title: 'Salle de classe',
@@ -158,5 +172,38 @@ export const fr: Messages = {
         enrollToAccessLessons: 'Inscrivez-vous pour accéder à toutes les leçons de ce cours.',
         backToCourse: 'Retour au cours',
         nextLesson: 'Leçon suivante',
+    },
+
+    profileNudge: {
+        title: 'Complétez votre profil',
+        setName: 'Renseignez votre nom',
+        addBio: 'Ajoutez une bio',
+        uploadAvatar: 'Ajoutez une photo de profil',
+        finishCta: 'Terminer votre profil →',
+        progressSuffix: 'sur 3 effectués',
+    },
+
+    activation: {
+        title: 'Bienvenue ! Finalisez la mise en route',
+        stepSignUp: 'Inscription',
+        stepProfile: 'Complétez votre profil',
+        stepEnrollment: 'Inscrivez-vous à un cours',
+        stepFirstPost: 'Publiez votre premier post',
+        dismiss: 'Ignorer',
+        welcomeToastTitle: 'Bienvenue dans la communauté !',
+        welcomeToastSubtitle: 'Vous avez obtenu le badge Bienvenue 🎉',
+    },
+    landing_social_proof: {
+        heroJoinCta: 'Rejoindre la communauté',
+        featuredCoursesTitle: 'Cours à la une',
+        featuredCoursesEmpty: 'Cours bientôt disponibles — restez à l\'écoute !',
+        recentPostsTitle: 'Dernières nouvelles de la communauté',
+        recentPostsAuthor: 'Un membre a publié',
+        weekInNumbersTitle: 'Cette semaine',
+        weekNewPosts: 'nouveaux posts',
+        weekActiveDiscussions: 'discussions actives',
+        weekLessonsCompleted: 'leçons terminées',
+        memberCountTemplate: 'Rejoignez {count}+ Science Experts',
+        enrolledCountLabel: 'inscrits',
     },
 };

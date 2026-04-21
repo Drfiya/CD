@@ -14,6 +14,7 @@ const SUB_TABS = [
     { href: '/admin/language-settings/rules', label: 'Translation Rules' },
     { href: '/admin/language-settings/feedback', label: 'Feedback' },
     { href: '/admin/language-settings/usage', label: 'API Usage' },
+    { href: '/admin/language-settings/languages', label: 'Languages' },
 ];
 
 export function LanguageSettingsNav() {

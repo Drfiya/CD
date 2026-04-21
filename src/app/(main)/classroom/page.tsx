@@ -52,7 +52,14 @@ interface ClassroomPageProps {
 export default async function ClassroomPage({ searchParams }: ClassroomPageProps) {
   const params = await searchParams;
   const session = await getServerSession(authOptions);
-  const userLanguage = await getUserLanguage();
+  // Fail-open language resolution — classroom should never white-screen
+  let userLanguage: string;
+  try {
+    userLanguage = await getUserLanguage();
+  } catch (err) {
+    console.error('[Classroom] getUserLanguage failed, defaulting to en:', err);
+    userLanguage = 'en';
+  }
 
   // Get static translations from message files (no API calls!)
   const messages = getMessages(userLanguage);
@@ -97,12 +104,6 @@ export default async function ClassroomPage({ searchParams }: ClassroomPageProps
     <div className="flex gap-6 max-w-7xl mx-auto">
       {/* Left Sidebar - Course Filters */}
       <ClassroomLeftSidebar
-        ui={{
-          allCourses: ui.allCourses,
-          myCourses: ui.myCourses,
-          availableCourses: ui.availableCourses,
-          categoriesTitle: ui.categoriesTitle,
-        }}
         activeFilter={activeFilter}
         isLoggedIn={!!session?.user?.id}
         sidebarBannerImage={communitySettings.sidebarBannerImage}

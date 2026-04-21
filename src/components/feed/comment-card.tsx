@@ -8,8 +8,11 @@ import { Button } from '@/components/ui/button';
 import { LikeButton } from '@/components/feed/like-button';
 import { LevelBadge } from '@/components/gamification/level-badge';
 import { RoleBadge } from '@/components/admin/role-badge';
+import { AuthorBadgeRow } from '@/components/gamification/author-badge-row';
+import type { BadgeType } from '@/generated/prisma/client';
 import { updateComment, deleteComment } from '@/lib/comment-actions';
 import { UGCText } from '@/components/translation/UGCText';
+import { renderTextWithMentions } from '@/components/ui/mention-chip';
 
 interface CommentCardProps {
   comment: {
@@ -20,6 +23,8 @@ interface CommentCardProps {
     authorImage: string | null;
     authorLevel: number;
     authorRole: string;
+    authorBadges?: { type: BadgeType | null; customDefinitionId?: string | null }[];
+    authorBadgeCount?: number;
     createdAt: Date;
     updatedAt: Date;
   };
@@ -96,6 +101,13 @@ export function CommentCard({ comment, postAuthorId, currentUserId, likeCount, i
           <span className="font-medium text-sm">{comment.authorName || 'Anonymous'}</span>
           <RoleBadge role={comment.authorRole} size="sm" />
           <LevelBadge level={comment.authorLevel} size="sm" />
+          {comment.authorBadgeCount ? (
+            <AuthorBadgeRow
+              authorId={comment.authorId}
+              badges={comment.authorBadges ?? []}
+              totalBadges={comment.authorBadgeCount}
+            />
+          ) : null}
           <span className="text-xs text-muted-foreground">
             {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
           </span>
@@ -136,7 +148,7 @@ export function CommentCard({ comment, postAuthorId, currentUserId, likeCount, i
           </div>
         ) : (
           <>
-            <UGCText as="p" className="mt-1 text-sm whitespace-pre-wrap break-words">{comment.content}</UGCText>
+            <UGCText as="p" className="mt-1 text-sm whitespace-pre-wrap break-words">{renderTextWithMentions(comment.content)}</UGCText>
 
             {/* Footer: like button + author actions */}
             <div className="mt-2 flex items-center gap-3">

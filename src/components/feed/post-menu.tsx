@@ -3,22 +3,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { deletePost } from '@/lib/post-actions';
+import { useTranslations } from '@/components/translation/TranslationContext';
 
 interface PostMenuProps {
   postId: string;
   isAuthor: boolean;
-  ui: {
-    copyLink: string;
-    copied: string;
-    editPost: string;
-    deletePost: string;
-    confirmDelete: string;
-    deleting: string;
-    cancel: string;
-  };
 }
 
-export function PostMenu({ postId, isAuthor, ui }: PostMenuProps) {
+export function PostMenu({ postId, isAuthor }: PostMenuProps) {
+  const ui = useTranslations('postMenu');
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);

@@ -25,7 +25,7 @@ export default async function EventEditPage({ params }: EventEditPageProps) {
 
   // Requires admin+ role (layout handles moderator+ check)
   if (!canEditSettings(session.user.role)) {
-    redirect('/admin/moderation');
+    redirect('/admin/posts');
   }
 
   const isNew = eventId === 'new';

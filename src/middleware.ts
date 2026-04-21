@@ -18,6 +18,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Allow public SEO/share-card surfaces (must be reachable by anonymous
+  // crawlers + Twitter/LinkedIn/Facebook share-card validators).
+  // Exact-equality (with optional query string) — never prefix-match, or a
+  // future /robotsXX route would accidentally bypass auth.
+  const publicSeoPaths = ['/robots.txt', '/sitemap.xml', '/opengraph-image'];
+  if (publicSeoPaths.some(p => pathname === p || pathname.startsWith(p + '?'))) {
+    return NextResponse.next();
+  }
+
   // Allow public auth pages
   if (publicPaths.some(path => pathname.startsWith(path))) {
     return NextResponse.next();

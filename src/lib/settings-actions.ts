@@ -34,6 +34,10 @@ export type CommunitySettings = {
   landingCtaText: string | null;
   landingTestimonials: { name: string; text: string; role: string }[];
   landingTranslations: Record<string, LandingTranslation>;
+  // CR9 F1: Landing social-proof toggles (default false)
+  landingShowAvatarMosaic: boolean;
+  landingShowMemberCount: boolean;
+  landingShowRecentPosts: boolean;
   // Classroom video URLs per language
   classroomVideoUrls: Record<string, string>;
 };
@@ -77,6 +81,9 @@ export async function getCommunitySettings(): Promise<CommunitySettings> {
       landingCtaText: true,
       landingTestimonials: true,
       landingTranslations: true,
+      landingShowAvatarMosaic: true,
+      landingShowMemberCount: true,
+      landingShowRecentPosts: true,
       classroomVideoUrls: true,
     },
   });
@@ -107,6 +114,9 @@ export async function getCommunitySettings(): Promise<CommunitySettings> {
         landingCtaText: true,
         landingTestimonials: true,
         landingTranslations: true,
+        landingShowAvatarMosaic: true,
+        landingShowMemberCount: true,
+        landingShowRecentPosts: true,
         classroomVideoUrls: true,
       },
     });
@@ -779,6 +789,65 @@ export async function updateSidebarBannerSettings(
 
   revalidatePath('/admin/settings');
   revalidatePath('/feed');
+
+  return { success: true };
+}
+
+/**
+ * CR9 F1: Update landing-page social-proof toggles.
+ * Each toggle defaults OFF; admins flip them on as the community matures.
+ * Admin-guarded; no IDOR surface (writes the singleton row only).
+ */
+export async function updateLandingSocialProofSettings(
+  data: {
+    landingShowAvatarMosaic?: boolean;
+    landingShowMemberCount?: boolean;
+    landingShowRecentPosts?: boolean;
+  }
+): Promise<{ success?: boolean; error?: string }> {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return { error: 'Not authenticated' };
+  }
+
+  if (!canEditSettings(session.user.role)) {
+    return { error: 'Permission denied' };
+  }
+
+  const update: Record<string, boolean> = {};
+  if (typeof data.landingShowAvatarMosaic === 'boolean') {
+    update.landingShowAvatarMosaic = data.landingShowAvatarMosaic;
+  }
+  if (typeof data.landingShowMemberCount === 'boolean') {
+    update.landingShowMemberCount = data.landingShowMemberCount;
+  }
+  if (typeof data.landingShowRecentPosts === 'boolean') {
+    update.landingShowRecentPosts = data.landingShowRecentPosts;
+  }
+
+  if (Object.keys(update).length === 0) {
+    return { error: 'No changes' };
+  }
+
+  await db.communitySettings.update({
+    where: { id: 'singleton' },
+    data: update,
+  });
+
+  await logAuditEvent('UPDATE_SETTINGS', {
+    targetId: 'singleton',
+    targetType: 'SETTINGS',
+    details: { action: 'landing_social_proof_toggle', ...update },
+  });
+
+  // Invalidate the cached settings so the landing page picks up the new values within its TTL.
+  // Next.js 16 in this project requires the second 'default' profile argument per memory.
+  const { revalidateTag } = await import('next/cache');
+  revalidateTag('community-settings', 'default');
+
+  revalidatePath('/admin/settings');
+  revalidatePath('/');
 
   return { success: true };
 }

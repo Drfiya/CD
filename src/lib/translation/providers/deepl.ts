@@ -165,6 +165,8 @@ export async function translateText(
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(requestBody),
+            // Fail-open: if DeepL hangs, return original text after 10 s
+            signal: AbortSignal.timeout(10_000),
         });
 
         if (!response.ok) {
@@ -273,6 +275,8 @@ export async function translateBatch(
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(requestBody),
+            // Fail-open: if DeepL hangs, return original texts after 10 s
+            signal: AbortSignal.timeout(10_000),
         });
 
         if (!response.ok) {

@@ -2,11 +2,13 @@
 
 /**
  * Translation Context Provider
- * 
+ *
  * Provides global translation state and functions to the entire app.
  * - Manages current language preference
  * - Persists to localStorage and optionally to user profile
  * - Triggers re-translation when language changes
+ * - Exposes static i18n messages via useTranslations() so client
+ *   components read directly from context instead of prop-drilling
  */
 
 import React, {
@@ -20,8 +22,15 @@ import React, {
 } from 'react';
 import { useRouter } from 'next/navigation';
 import { SUPPORTED_LANGUAGES, getBaseLanguage, isLanguageSupported, type LanguageCode } from '@/lib/translation/client/language-codes';
+import { getMessages, type Messages } from '@/lib/i18n';
 
 const STORAGE_KEY = 'preferred_language';
+
+export interface ActiveLanguage {
+    code: string;
+    name: string;
+    flag: string;
+}
 
 interface TranslationContextValue {
     /** Current language code (e.g., 'en', 'es', 'fr') */
@@ -38,6 +47,10 @@ interface TranslationContextValue {
     translationVersion: number;
     /** List of supported languages for the selector UI */
     supportedLanguages: typeof SUPPORTED_LANGUAGES;
+    /** Admin-toggled active languages (from DB, with fallback to static list) */
+    activeLanguages: ActiveLanguage[];
+    /** Static i18n messages for current language — use useTranslations() for namespaced access */
+    messages: Messages;
 }
 
 const TranslationContext = createContext<TranslationContextValue | null>(null);
@@ -46,6 +59,8 @@ interface TranslationProviderProps {
     children: ReactNode;
     /** Initial language from server (user's profile preference) */
     initialLanguage?: string;
+    /** Admin-toggled active languages, threaded from root layout */
+    activeLanguages?: ActiveLanguage[];
 }
 
 /**
@@ -80,9 +95,16 @@ function getInitialLanguage(serverLanguage?: string): string {
     return 'en';
 }
 
+const DEFAULT_ACTIVE_LANGUAGES: ActiveLanguage[] = [
+    { code: 'en', name: 'English', flag: '🇬🇧' },
+    { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+    { code: 'fr', name: 'Français', flag: '🇫🇷' },
+];
+
 export function TranslationProvider({
     children,
-    initialLanguage
+    initialLanguage,
+    activeLanguages = DEFAULT_ACTIVE_LANGUAGES,
 }: TranslationProviderProps) {
     const router = useRouter();
     const [currentLanguage, setCurrentLanguage] = useState(() =>
@@ -90,6 +112,8 @@ export function TranslationProvider({
     );
     const [isTranslating, setIsTranslating] = useState(false);
     const [translationVersion, setTranslationVersion] = useState(0);
+
+    const messages = useMemo(() => getMessages(currentLanguage), [currentLanguage]);
 
     // Persist language changes to localStorage
     useEffect(() => {
@@ -136,17 +160,30 @@ export function TranslationProvider({
             // Trigger retranslation when language changes
             setTranslationVersion(v => v + 1);
 
-            // Set server-side cookie so getUserLanguage() picks it up on next SSR
-            fetch('/api/set-language', {
+            // Optimistic client-side cookie write so SSR on the very next refresh
+            // sees the new language without waiting for the POST round-trip.
+            // Server route also sets the same cookie (canonical) + persists to DB.
+            if (typeof document !== 'undefined') {
+                const oneYear = 60 * 60 * 24 * 365;
+                const secure =
+                    typeof window !== 'undefined' && window.location.protocol === 'https:'
+                        ? '; Secure'
+                        : '';
+                document.cookie = `preferred-language=${normalized}; path=/; max-age=${oneYear}; SameSite=Lax${secure}`;
+            }
+
+            // Re-render server components immediately (layout, nav labels, etc.)
+            router.refresh();
+
+            // Fire-and-forget POST: persists to DB for logged-in users and sets the
+            // canonical cookie server-side. We don't await it — the optimistic cookie
+            // above already unblocked the refresh.
+            void fetch('/api/set-language', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ language: normalized }),
-            }).then(() => {
-                // Re-render server components (layout, nav labels, etc.)
-                router.refresh();
             }).catch(() => {
-                // Still refresh even if cookie-set fails
-                router.refresh();
+                // Silent — optimistic cookie already wrote the value.
             });
         }
     }, [currentLanguage, syncToProfile, router]);
@@ -163,12 +200,16 @@ export function TranslationProvider({
         triggerRetranslation,
         translationVersion,
         supportedLanguages: SUPPORTED_LANGUAGES,
+        activeLanguages,
+        messages,
     }), [
         currentLanguage,
         setLanguage,
         isTranslating,
         triggerRetranslation,
-        translationVersion
+        translationVersion,
+        activeLanguages,
+        messages,
     ]);
 
     return (
@@ -205,4 +246,25 @@ export function useCurrentLanguage(): string {
 export function useShouldTranslate(): boolean {
     const { currentLanguage } = useTranslation();
     return currentLanguage !== 'en';
+}
+
+/**
+ * Hook to access the full Messages object for current language
+ */
+export function useMessages(): Messages {
+    const { messages } = useTranslation();
+    return messages;
+}
+
+/**
+ * Hook to access a specific i18n namespace.
+ * Eliminates prop-drilling of UI strings through server → client boundaries.
+ *
+ * @example
+ *   const ui = useTranslations('classroomPage');
+ *   return <h1>{ui.title}</h1>;
+ */
+export function useTranslations<K extends keyof Messages>(namespace: K): Messages[K] {
+    const { messages } = useTranslation();
+    return messages[namespace];
 }

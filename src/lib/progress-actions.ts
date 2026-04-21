@@ -5,6 +5,8 @@ import { revalidatePath } from 'next/cache';
 import { authOptions } from '@/lib/auth';
 import db from '@/lib/db';
 import { awardPoints } from '@/lib/gamification-actions';
+import { checkAndAwardBadges } from '@/lib/badge-actions';
+import { touchStreak } from '@/lib/streak-actions-internal';
 import { requireOwnerOrAdmin } from '@/lib/auth-guards';
 
 export async function toggleLessonComplete(lessonId: string) {
@@ -54,6 +56,10 @@ export async function toggleLessonComplete(lessonId: string) {
     },
   });
 
+  let newBadges: Awaited<ReturnType<typeof checkAndAwardBadges>> = [];
+  let streakMilestone: number | null = null;
+  let streakSaved: number | null = null;
+
   if (existingProgress) {
     // Uncomplete: delete progress (no point deduction per CONTEXT.md)
     await db.lessonProgress.delete({
@@ -67,11 +73,19 @@ export async function toggleLessonComplete(lessonId: string) {
 
     // Award points for completing a lesson
     await awardPoints(userId, 'LESSON_COMPLETED');
+
+    // Update activity streak BEFORE badge check so STREAK_7 can be awarded now
+    const streak = await touchStreak(userId);
+    streakMilestone = streak.milestone;
+    streakSaved = streak.streakSaved;
+
+    // Check for newly-earned badges (errors silently swallowed — non-blocking UX)
+    newBadges = await checkAndAwardBadges(userId).catch(() => []);
   }
 
   revalidatePath(`/classroom/courses/${courseId}`);
 
-  return { success: true, completed: !existingProgress };
+  return { success: true, completed: !existingProgress, newBadges, streakMilestone, streakSaved };
 }
 
 export async function getCompletedLessonIds(userId: string, courseId: string) {

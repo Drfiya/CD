@@ -107,6 +107,7 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
           </div>
 
           <BioTextarea
+            register={register('bio')}
             defaultValue={user.bio || ''}
             error={errors.bio?.message}
           />

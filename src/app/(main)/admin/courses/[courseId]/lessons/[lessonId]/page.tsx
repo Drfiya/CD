@@ -32,7 +32,7 @@ export default async function LessonEditPage({ params }: PageProps) {
 
   // Requires admin+ role (parent layout handles this, but double-check)
   if (!canEditSettings(session.user.role)) {
-    redirect('/admin/moderation');
+    redirect('/admin/posts');
   }
 
   const { courseId, lessonId } = await params;

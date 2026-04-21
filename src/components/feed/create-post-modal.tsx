@@ -10,6 +10,10 @@ import { createPost } from '@/lib/post-actions';
 import type { VideoEmbed } from '@/types/post';
 import type { MediaUpload } from '@/lib/media-actions';
 import { Avatar } from '@/components/ui/avatar';
+import { useTranslations } from '@/components/translation/TranslationContext';
+import { BADGE_CONFIG } from '@/components/gamification/badge-config';
+import type { BadgeType } from '@/generated/prisma/client';
+import { CREATE_POST_TOAST_OFFSETS } from './comment-toast-offsets';
 
 interface Category {
     id: string;
@@ -21,18 +25,6 @@ interface CreatePostModalProps {
     categories: Category[];
     userImage?: string | null;
     userName?: string | null;
-    writeSomethingPlaceholder?: string;
-    postButtonLabel?: string;
-    cancelLabel?: string;
-    createPostTitle?: string;
-    categoryLabel?: string;
-    postTitleLabel?: string;
-    titlePlaceholder?: string;
-    contentLabel?: string;
-    contentPlaceholder?: string;
-    imageVideoLabel?: string;
-    linkLabel?: string;
-    categoryNames?: Record<string, string>;
 }
 
 // Category color map for the pill buttons
@@ -69,8 +61,10 @@ function extractPlainText(content: object | null): string {
     }
 }
 
-export function CreatePostModal({ categories, userImage, userName, writeSomethingPlaceholder, postButtonLabel, cancelLabel, createPostTitle, categoryLabel, postTitleLabel, titlePlaceholder, contentLabel, contentPlaceholder, imageVideoLabel, linkLabel, categoryNames }: CreatePostModalProps) {
+export function CreatePostModal({ categories, userImage, userName }: CreatePostModalProps) {
     const router = useRouter();
+    const post = useTranslations('post');
+    const categoryNames = useTranslations('categoryNames') as Record<string, string>;
     const [isOpen, setIsOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [title, setTitle] = useState('');
@@ -83,6 +77,9 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [hasPendingVideo, setHasPendingVideo] = useState(false);
+    const [badgeToast, setBadgeToast] = useState<BadgeType | null>(null);
+    const [streakToast, setStreakToast] = useState<number | null>(null);
+    const [streakSavedToast, setStreakSavedToast] = useState<number | null>(null);
 
     // Set default category when modal opens
     useEffect(() => {
@@ -117,16 +114,39 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
             return;
         }
 
-        // Success - close modal and refresh
-        setIsOpen(false);
-        setTitle('');
-        setContent(null);
-        setEmbeds([]);
-        setImages([]);
-        setGifs([]);
-        setSelectedCategory(null);
-        setIsSubmitting(false);
-        router.refresh();
+        // If a badge was unlocked, show it briefly before closing so the user actually sees it
+        const earnedBadge = result.newBadges && result.newBadges.length > 0
+            ? result.newBadges[result.newBadges.length - 1]
+            : null;
+        const earnedStreak = result.streakMilestone ?? null;
+        const savedStreak = ('streakSaved' in result ? result.streakSaved : null) ?? null;
+
+        const closeAndReset = () => {
+            setIsOpen(false);
+            setTitle('');
+            setContent(null);
+            setEmbeds([]);
+            setImages([]);
+            setGifs([]);
+            setSelectedCategory(null);
+            setIsSubmitting(false);
+            setBadgeToast(null);
+            setStreakToast(null);
+            setStreakSavedToast(null);
+            router.refresh();
+        };
+
+        // Delay close when a celebration toast needs to render — take the longest
+        // running animation so no toast is cut short when several fire together.
+        if (earnedBadge || earnedStreak || savedStreak) {
+            if (earnedBadge) setBadgeToast(earnedBadge);
+            if (earnedStreak) setStreakToast(earnedStreak);
+            if (savedStreak) setStreakSavedToast(savedStreak);
+            const delay = earnedBadge ? 2200 : savedStreak ? 2100 : 2000;
+            setTimeout(closeAndReset, delay);
+        } else {
+            closeAndReset();
+        }
     };
 
     const removeEmbed = (index: number) => {
@@ -159,7 +179,7 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                 <div className="flex items-center gap-3 px-4 pt-4 pb-3">
                     <Avatar src={userImage} name={userName} size="sm" />
                     <div className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-neutral-700 rounded-full text-gray-500 dark:text-neutral-400 text-sm">
-                        {writeSomethingPlaceholder || 'Write something...'}
+                        {post.writeSomething}
                     </div>
                 </div>
 
@@ -173,7 +193,7 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#C43E3E'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#D94A4A'}
                     >
-                        {postButtonLabel || 'Post'}
+                        {post.post}
                     </button>
                 </div>
             </div>
@@ -191,6 +211,42 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                         aria-hidden="true"
                     />
 
+                    {/* Streak milestone toast — stacked above badge so both remain readable */}
+                    {streakToast && (
+                        <div
+                            role="status"
+                            aria-live="polite"
+                            className={`absolute ${CREATE_POST_TOAST_OFFSETS.streak} left-1/2 -translate-x-1/2 z-10 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-50 dark:bg-amber-900/60 text-amber-700 dark:text-amber-200 text-sm font-semibold shadow-lg animate-streak-pop`}
+                        >
+                            <span aria-hidden="true" className="text-base">🔥</span>
+                            <span>{streakToast}-day streak!</span>
+                        </div>
+                    )}
+
+                    {/* Streak-saved (freeze token consumed) — distinct blue, between streak and badge */}
+                    {streakSavedToast && (
+                        <div
+                            role="status"
+                            aria-live="polite"
+                            className={`absolute ${CREATE_POST_TOAST_OFFSETS.streakSaved} left-1/2 -translate-x-1/2 z-10 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-900/60 text-blue-700 dark:text-blue-200 text-sm font-semibold shadow-lg animate-streak-saved`}
+                        >
+                            <span aria-hidden="true" className="text-base">🛡️</span>
+                            <span>{streakSavedToast}-day streak saved!</span>
+                        </div>
+                    )}
+
+                    {/* Badge-earned celebration toast — shows above the modal */}
+                    {badgeToast && (
+                        <div
+                            role="status"
+                            aria-live="polite"
+                            className={`absolute ${CREATE_POST_TOAST_OFFSETS.badge} left-1/2 -translate-x-1/2 z-10 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-50 dark:bg-amber-900/60 text-amber-700 dark:text-amber-200 text-sm font-semibold shadow-lg animate-badge-pop`}
+                        >
+                            <span aria-hidden="true" className="text-base">{BADGE_CONFIG[badgeToast].emoji}</span>
+                            <span>Badge unlocked: {BADGE_CONFIG[badgeToast].label}!</span>
+                        </div>
+                    )}
+
                     {/* Modal content */}
                     <div
                         role="dialog"
@@ -200,7 +256,7 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-neutral-700">
-                            <h2 id="create-post-title" className="text-lg font-semibold text-gray-900 dark:text-neutral-100">{createPostTitle || 'Create New Post'}</h2>
+                            <h2 id="create-post-title" className="text-lg font-semibold text-gray-900 dark:text-neutral-100">{post.createNewPost}</h2>
                             <button
                                 onClick={() => setIsOpen(false)}
                                 className="text-gray-400 hover:text-gray-600 dark:hover:text-neutral-300 transition-colors"
@@ -215,7 +271,7 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                             <div className="p-5 space-y-5">
                                 {/* Category selection */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">{categoryLabel || 'Category'}</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">{post.category}</label>
                                     <div className="flex flex-wrap gap-2">
                                         {categories.map((category) => {
                                             const style = getCategoryStyle(category.name);
@@ -243,12 +299,12 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
 
                                 {/* Post Title */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">{postTitleLabel || 'Post Title'}</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">{post.postTitle}</label>
                                     <input
                                         type="text"
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
-                                        placeholder={titlePlaceholder || 'Enter a title for your post (optional)'}
+                                        placeholder={post.titlePlaceholder}
                                         maxLength={200}
                                         className="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-600 rounded-lg text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-gray-900/10 dark:focus:ring-neutral-500/30 focus:border-gray-300 dark:focus:border-neutral-500 transition-colors"
                                     />
@@ -256,11 +312,11 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
 
                                 {/* Content */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">{contentLabel || 'Content'} *</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">{post.content} *</label>
                                     <div className="border border-gray-200 dark:border-neutral-600 rounded-lg">
                                         <PostEditor
                                             onChange={(json) => setContent(json)}
-                                            placeholder={contentPlaceholder || 'What would you like to share?'}
+                                            placeholder={post.contentPlaceholder}
                                         />
                                     </div>
                                 </div>
@@ -373,7 +429,7 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                                         onClick={() => setIsOpen(false)}
                                         className="px-5 py-2 rounded-full text-sm font-medium text-gray-700 dark:text-neutral-300 border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
                                     >
-                                        {cancelLabel || 'Cancel'}
+                                        {post.cancel}
                                     </button>
                                     <button
                                         type="submit"
@@ -384,7 +440,7 @@ export function CreatePostModal({ categories, userImage, userName, writeSomethin
                                         onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.backgroundColor = '#C43E3E'; }}
                                         onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#D94A4A'; }}
                                     >
-                                        {isSubmitting ? '...' : (postButtonLabel || 'Post')}
+                                        {isSubmitting ? '...' : post.post}
                                     </button>
                                 </div>
                             </div>

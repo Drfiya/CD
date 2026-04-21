@@ -1,5 +1,5 @@
 /**
- * Role hierarchy and permission helpers for admin/moderation features.
+ * Role hierarchy and permission helpers for admin and moderation features.
  *
  * Role hierarchy: Owner > Admin > Moderator > Member
  *

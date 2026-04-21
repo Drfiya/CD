@@ -22,7 +22,7 @@ export default async function AdminEventsPage() {
 
   // Requires admin+ role (layout handles moderator+ check)
   if (!canEditSettings(session.user.role)) {
-    redirect('/admin/moderation');
+    redirect('/admin/posts');
   }
 
   const events = await getEvents();

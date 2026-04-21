@@ -83,6 +83,9 @@ export const en: Messages = {
     gamification: {
         level: 'Level',
         points: 'points',
+        streakPrompt: 'Start your streak! Post or comment today.',
+        streakDayLabel: 'day streak',
+        streakBestLabel: 'Best',
     },
 
     // Auth
@@ -131,6 +134,16 @@ export const en: Messages = {
         monthly: 'Monthly',
     },
 
+    profilePage: {
+        posts: 'Posts',
+        comments: 'Comments',
+        lessonsCompleted: 'Lessons completed',
+        enrolledCoursesOne: 'Enrolled in 1 course',
+        enrolledCoursesMany: 'Enrolled in {count} courses',
+        lessonsCompletedSuffixOne: ' · 1 lesson completed',
+        lessonsCompletedSuffixMany: ' · {count} lessons completed',
+    },
+
     classroomPage: {
         title: 'Classroom',
         subtitle: 'Browse courses and track your learning progress.',
@@ -156,6 +169,41 @@ export const en: Messages = {
         enrollToAccessLessons: 'Enroll to access all lessons in this course.',
         backToCourse: 'Back to Course',
         nextLesson: 'Next Lesson',
+    },
+
+    // Profile completion nudge (right sidebar widget, A4)
+    profileNudge: {
+        title: 'Complete your profile',
+        setName: 'Set your name',
+        addBio: 'Add a bio',
+        uploadAvatar: 'Upload an avatar',
+        finishCta: 'Finish your profile →',
+        progressSuffix: 'of 3 complete',
+    },
+
+    // Activation onboarding wizard (feed banner, B1)
+    activation: {
+        title: 'Welcome! Finish setup',
+        stepSignUp: 'Sign up',
+        stepProfile: 'Complete your profile',
+        stepEnrollment: 'Enroll in a course',
+        stepFirstPost: 'Write your first post',
+        dismiss: 'Dismiss',
+        welcomeToastTitle: 'Welcome to the community!',
+        welcomeToastSubtitle: 'You earned the Welcome badge 🎉',
+    },
+    landing_social_proof: {
+        heroJoinCta: 'Join the community',
+        featuredCoursesTitle: 'Featured Courses',
+        featuredCoursesEmpty: 'Courses coming soon — stay tuned!',
+        recentPostsTitle: 'Latest from the community',
+        recentPostsAuthor: 'A member posted',
+        weekInNumbersTitle: 'This Week',
+        weekNewPosts: 'new posts',
+        weekActiveDiscussions: 'active discussions',
+        weekLessonsCompleted: 'lessons completed',
+        memberCountTemplate: 'Join {count}+ Science Experts',
+        enrolledCountLabel: 'enrolled',
     },
 };
 
@@ -225,6 +273,9 @@ export interface Messages {
     gamification: {
         level: string;
         points: string;
+        streakPrompt: string;
+        streakDayLabel: string;
+        streakBestLabel: string;
     };
     auth: {
         signIn: string;
@@ -263,6 +314,15 @@ export interface Messages {
         weekly: string;
         monthly: string;
     };
+    profilePage: {
+        posts: string;
+        comments: string;
+        lessonsCompleted: string;
+        enrolledCoursesOne: string;
+        enrolledCoursesMany: string;
+        lessonsCompletedSuffixOne: string;
+        lessonsCompletedSuffixMany: string;
+    };
     classroomPage: {
         title: string;
         subtitle: string;
@@ -288,5 +348,36 @@ export interface Messages {
         enrollToAccessLessons: string;
         backToCourse: string;
         nextLesson: string;
+    };
+    profileNudge: {
+        title: string;
+        setName: string;
+        addBio: string;
+        uploadAvatar: string;
+        finishCta: string;
+        progressSuffix: string;
+    };
+    activation: {
+        title: string;
+        stepSignUp: string;
+        stepProfile: string;
+        stepEnrollment: string;
+        stepFirstPost: string;
+        dismiss: string;
+        welcomeToastTitle: string;
+        welcomeToastSubtitle: string;
+    };
+    landing_social_proof: {
+        heroJoinCta: string;
+        featuredCoursesTitle: string;
+        featuredCoursesEmpty: string;
+        recentPostsTitle: string;
+        recentPostsAuthor: string;
+        weekInNumbersTitle: string;
+        weekNewPosts: string;
+        weekActiveDiscussions: string;
+        weekLessonsCompleted: string;
+        memberCountTemplate: string;
+        enrolledCountLabel: string;
     };
 }

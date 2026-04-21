@@ -11,7 +11,9 @@ import { VideoEmbedPlayer } from '@/components/video/video-embed';
 import { LazyGif } from '@/components/feed/lazy-gif';
 import { LikeButton } from '@/components/feed/like-button';
 import { PostMenu } from '@/components/feed/post-menu';
+import { AuthorBadgeRow } from '@/components/gamification/author-badge-row';
 import { getLanguageName, getToggleLabel } from '@/lib/translation/constants';
+import { renderTextWithMentions } from '@/components/ui/mention-chip';
 import type { PostWithAuthor } from '@/types/post';
 import type { VideoEmbed } from '@/lib/video-utils';
 
@@ -29,15 +31,6 @@ interface PostCardProps {
   originalTitle?: string;
   originalLanguage?: string;
   userLanguage?: string;
-  postMenuUI: {
-    copyLink: string;
-    copied: string;
-    editPost: string;
-    deletePost: string;
-    confirmDelete: string;
-    deleting: string;
-    cancel: string;
-  };
 }
 
 function renderContent(content: unknown): string {
@@ -63,7 +56,6 @@ export function PostCard({
   originalTitle,
   originalLanguage,
   userLanguage,
-  postMenuUI,
 }: PostCardProps) {
   const [showOriginal, setShowOriginal] = useState(false);
 
@@ -100,20 +92,29 @@ export function PostCard({
       <div className="p-5">
         {/* Header: Avatar, Name, Date, Menu */}
         <div className="flex items-start justify-between mb-3">
-          <Link href={`/members/${post.author.id}`} className="flex items-center gap-3 group">
-            <Avatar src={post.author.image} name={post.author.name} size="md" />
-            <div>
-              <div className="font-medium text-gray-900 dark:text-neutral-100 group-hover:text-blue-600 transition-colors">
-                {post.author.name}
+          <div className="flex items-center gap-3">
+            <Link href={`/members/${post.author.id}`} className="flex items-center gap-3 group">
+              <Avatar src={post.author.image} name={post.author.name} size="md" />
+              <div>
+                <div className="font-medium text-gray-900 dark:text-neutral-100 group-hover:text-blue-600 transition-colors flex items-center gap-1.5">
+                  <span>{post.author.name}</span>
+                  {post.author._count?.badges ? (
+                    <AuthorBadgeRow
+                      authorId={post.author.id}
+                      badges={post.author.badges ?? []}
+                      totalBadges={post.author._count.badges}
+                    />
+                  ) : null}
+                </div>
+                <div className="text-sm text-gray-500 dark:text-neutral-400">
+                  {format(new Date(post.createdAt), 'MMM d, yyyy', { locale: enUS })}
+                </div>
               </div>
-              <div className="text-sm text-gray-500 dark:text-neutral-400">
-                {format(new Date(post.createdAt), 'MMM d, yyyy', { locale: enUS })}
-              </div>
-            </div>
-          </Link>
+            </Link>
+          </div>
 
           {/* Three-dot menu */}
-          <PostMenu postId={post.id} isAuthor={!!currentUserId && currentUserId === post.authorId} ui={postMenuUI} />
+          <PostMenu postId={post.id} isAuthor={!!currentUserId && currentUserId === post.authorId} />
         </div>
 
         {/*
@@ -132,7 +133,7 @@ export function PostCard({
           {/* Post content - show translated plain text or original rich content */}
           {shouldShowPlainText ? (
             <div className="prose prose-sm max-w-none text-gray-700 dark:text-neutral-300 whitespace-pre-wrap">
-              {displayPlainText}
+              {renderTextWithMentions(displayPlainText)}
             </div>
           ) : (
             <div

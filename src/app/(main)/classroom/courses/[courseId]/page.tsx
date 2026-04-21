@@ -47,7 +47,14 @@ export default async function CourseOverviewPage({ params }: PageProps) {
     .flatMap((m) => m.lessons)
     .find((l) => l.status === 'PUBLISHED')?.id;
 
-  const userLanguage = await getUserLanguage();
+  // Fail-open language resolution — course detail should never white-screen
+  let userLanguage: string;
+  try {
+    userLanguage = await getUserLanguage();
+  } catch (err) {
+    console.error('[CourseDetail] getUserLanguage failed, defaulting to en:', err);
+    userLanguage = 'en';
+  }
   const messages = getMessages(userLanguage);
   const cp = messages.classroomPage;
 

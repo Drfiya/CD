@@ -9,7 +9,7 @@ export type PointAction = keyof typeof POINTS;
 export async function awardPoints(
   userId: string,
   action: PointAction
-): Promise<{ levelUp: boolean; newLevel?: number }> {
+): Promise<{ levelUp: boolean; newLevel?: number; leveledUp: number | null }> {
   await requireAuth();
   const amount = POINTS[action];
 
@@ -38,10 +38,10 @@ export async function awardPoints(
         where: { id: userId },
         data: { level: newLevel },
       });
-      return { levelUp: true, newLevel };
+      return { levelUp: true, newLevel, leveledUp: newLevel };
     }
 
-    return { levelUp: false };
+    return { levelUp: false, leveledUp: null };
   });
 
   return result;

@@ -14,6 +14,7 @@ export async function getCategories() {
       id: true,
       name: true,
       color: true,
+      description: true,
     },
   });
 
@@ -30,13 +31,14 @@ export async function createCategory(formData: FormData) {
   const validatedFields = categorySchema.safeParse({
     name: formData.get('name'),
     color: formData.get('color'),
+    description: formData.get('description') ?? undefined,
   });
 
   if (!validatedFields.success) {
     return { error: validatedFields.error.flatten().fieldErrors };
   }
 
-  const { name, color } = validatedFields.data;
+  const { name, color, description } = validatedFields.data;
 
   // Check for duplicate name
   const existing = await db.category.findUnique({
@@ -48,7 +50,7 @@ export async function createCategory(formData: FormData) {
   }
 
   const category = await db.category.create({
-    data: { name, color },
+    data: { name, color, description },
   });
 
   // Fire-and-forget: eagerly translate into all live languages
@@ -78,13 +80,14 @@ export async function updateCategory(categoryId: string, formData: FormData) {
   const validatedFields = categorySchema.safeParse({
     name: formData.get('name'),
     color: formData.get('color'),
+    description: formData.get('description') ?? undefined,
   });
 
   if (!validatedFields.success) {
     return { error: validatedFields.error.flatten().fieldErrors };
   }
 
-  const { name, color } = validatedFields.data;
+  const { name, color, description } = validatedFields.data;
 
   // Check for duplicate name (excluding current category)
   if (name !== category.name) {
@@ -99,7 +102,7 @@ export async function updateCategory(categoryId: string, formData: FormData) {
 
   await db.category.update({
     where: { id: categoryId },
-    data: { name, color },
+    data: { name, color, description: description ?? null },
   });
 
   // Fire-and-forget: eagerly re-translate if name changed

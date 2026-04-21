@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { authOptions } from '@/lib/auth';
 import db from '@/lib/db';
 import { requireAuth, requireOwnerOrAdmin } from '@/lib/auth-guards';
+import { checkAndAwardBadgesInternal } from '@/lib/badge-actions-internal';
 
 export async function enrollInCourse(courseId: string) {
   const session = await getServerSession(authOptions);
@@ -44,6 +45,9 @@ export async function enrollInCourse(courseId: string) {
   await db.enrollment.create({
     data: { userId, courseId },
   });
+
+  // Fire-and-forget: new enrollment may complete the activation funnel (WELCOME badge)
+  void checkAndAwardBadgesInternal(userId).catch(() => {});
 
   revalidatePath('/classroom');
   revalidatePath(`/classroom/courses/${courseId}`);

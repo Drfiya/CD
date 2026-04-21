@@ -3,6 +3,17 @@ import crypto from 'crypto';
 import db from '@/lib/db';
 import { trackResendEmail } from '@/lib/api-tracking';
 
+// Escape user-controlled values before interpolating into HTML email templates.
+// Blocks injection of anchor/script/img tags in display names, post titles, etc.
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // Lazy initialization — only create Resend client when actually needed
 // This prevents crashes when RESEND_API_KEY is not set but other
 // server actions in auth-actions.ts import from this module chain
@@ -80,4 +91,73 @@ export async function sendPasswordResetEmail(email: string) {
   }
 
   return { success: true };
+}
+
+export async function sendActivityEmail({
+  recipientId,
+  type,
+  actorName,
+  postId,
+}: {
+  recipientId: string;
+  type: 'COMMENT' | 'LIKE' | 'MENTION';
+  actorName: string | null | undefined;
+  postId?: string | null;
+}) {
+  // Check recipient's email notification preference
+  const recipient = await db.user.findUnique({
+    where: { id: recipientId },
+    select: { email: true, emailNotifications: true },
+  });
+
+  if (!recipient?.emailNotifications) return;
+
+  const actor = actorName || 'Someone';
+  // Plain-text subject (email header, not HTML-rendered by clients)
+  const subjectMap = {
+    COMMENT: `${actor} commented on your post`,
+    LIKE: `${actor} liked your post`,
+    MENTION: `${actor} mentioned you`,
+  };
+  const subject = subjectMap[type];
+  // HTML-safe equivalent for interpolation into the email body
+  const safeActor = escapeHtml(actor);
+  const safeSubjectMap = {
+    COMMENT: `${safeActor} commented on your post`,
+    LIKE: `${safeActor} liked your post`,
+    MENTION: `${safeActor} mentioned you`,
+  };
+  const htmlSubject = safeSubjectMap[type];
+  const postUrl = postId ? `${process.env.NEXTAUTH_URL}/feed/${postId}` : `${process.env.NEXTAUTH_URL}/feed`;
+
+  if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === 're_your_api_key_here') {
+    console.log(`[Email] Activity notification to ${recipient.email}: ${subject}`);
+    return;
+  }
+
+  try {
+    const resend = getResendClient();
+    if (!resend) return;
+    await resend.emails.send({
+      from: 'Community <onboarding@resend.dev>',
+      to: recipient.email,
+      subject,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          <p style="color: #333;">${htmlSubject}.</p>
+          <p style="margin: 24px 0;">
+            <a href="${postUrl}" style="background: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
+              View Post
+            </a>
+          </p>
+          <p style="color: #999; font-size: 12px;">
+            To stop receiving these emails, update your notification settings in your profile.
+          </p>
+        </div>
+      `,
+    });
+    trackResendEmail(recipient.email);
+  } catch (error) {
+    console.error('[Email] Failed to send activity email:', error);
+  }
 }

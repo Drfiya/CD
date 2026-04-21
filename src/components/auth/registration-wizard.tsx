@@ -86,7 +86,7 @@ export function RegistrationWizard() {
       <StepIndicator currentStep={step} />
 
       {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-sm">
+        <div className="mb-4 p-3 bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400 rounded text-sm border border-red-200 dark:border-red-900">
           {error}
         </div>
       )}

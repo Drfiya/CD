@@ -45,6 +45,18 @@ model User {
   glossaryChanges    GlossaryChangeLog[] @relation("GlossaryChangeBy")
   translationFeedback TranslationFeedback[] @relation("TranslationFeedbackUser")
   resolvedFeedback   TranslationFeedback[] @relation("FeedbackResolvedBy")
+  emailNotifications    Boolean @default(true)
+  notificationsReceived Notification[] @relation("NotificationRecipient")
+  notificationsSent     Notification[] @relation("NotificationActor")
+  badges                Badge[]
+  currentStreak         Int       @default(0)
+  longestStreak         Int       @default(0)
+  lastActivityDate      DateTime?
+  freezeTokens          Int       @default(0)
+  lastEmailDigestAt     DateTime?
+  activationChecklistDismissedAt DateTime?
+  // CR9 F2: Cross-device theme preference. Nullable so a future "system" option can NULL without a second migration.
+  themePreference       String?    @default("dark") @db.VarChar(10)
 
   @@index([email])
   @@index([points])
@@ -52,12 +64,13 @@ model User {
 }
 
 model Category {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  color     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  posts     Post[]
+  id          String   @id @default(cuid())
+  name        String   @unique
+  color       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  posts       Post[]
 }
 
 model Post {
@@ -75,14 +88,16 @@ model Post {
   contentHash  String?                  @db.VarChar(64)
   gifs         Json                     @default("[]")
   gifThumbnails Json                     @default("[]")
-  comments     Comment[]
-  author       User                     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  category     Category?                @relation(fields: [categoryId], references: [id])
-  likes        PostLike[]
+  comments      Comment[]
+  author        User                     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category      Category?                @relation(fields: [categoryId], references: [id])
+  likes         PostLike[]
+  notifications Notification[]
 
   @@index([authorId])
   @@index([categoryId])
   @@index([createdAt(sort: Desc)])
+  @@index([categoryId, createdAt(sort: Desc)])
   @@index([searchVector], type: Gin)
 }
 
@@ -91,16 +106,21 @@ model Comment {
   content      String        @db.VarChar(2000)
   authorId     String
   postId       String
+  parentId     String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   contentHash  String?
   languageCode String?
-  author       User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
-  likes        CommentLike[]
+  author        User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  post          Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parent        Comment?      @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies       Comment[]     @relation("CommentReplies")
+  likes         CommentLike[]
+  notifications Notification[]
 
   @@index([postId])
   @@index([authorId])
+  @@index([parentId])
   @@index([createdAt(sort: Desc)])
 }
 
@@ -322,6 +342,10 @@ model CommunitySettings {
   sidebarBannerUrl     String?
   sidebarBannerEnabled Boolean  @default(false)
   classroomVideoUrls   Json     @default("{}")
+  // CR9 F1: Landing page social-proof toggles (default OFF so empty community isn't embarrassing)
+  landingShowAvatarMosaic Boolean @default(false)
+  landingShowMemberCount  Boolean @default(false)
+  landingShowRecentPosts  Boolean @default(false)
 }
 
 model Membership {
@@ -358,6 +382,7 @@ model Translation {
 
   @@unique([entityType, entityId, fieldName, targetLanguage])
   @@index([entityType, entityId, targetLanguage])
+  @@index([sourceHash, targetLanguage])
 }
 
 model TranslationUsage {
@@ -373,6 +398,7 @@ model TranslationUsage {
   @@index([date])
   @@index([sourceLang, targetLang])
   @@index([cacheTier, date])
+  @@index([date, fromCache])
 }
 
 model TranslationConfig {
@@ -735,4 +761,111 @@ model FeatureIdeaComment {
 
   @@index([ideaId])
   @@index([authorId])
+}
+
+/// Dynamically toggled active languages for the platform.
+/// English (code: 'en') is always active and cannot be deactivated.
+model LanguageConfig {
+  id        String   @id @default(cuid())
+  code      String   @unique @db.VarChar(10)
+  name      String
+  flag      String
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([sortOrder])
+}
+
+enum NotificationType {
+  COMMENT
+  LIKE
+  MENTION
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  type        NotificationType
+  recipientId String
+  actorId     String
+  postId      String?
+  commentId   String?
+  isRead      Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+
+  recipient   User     @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  actor       User     @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
+  post        Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment     Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId, isRead, createdAt(sort: Desc)])
+  @@index([recipientId, createdAt(sort: Desc)])
+}
+
+enum BadgeType {
+  FIRST_POST
+  CONVERSATIONALIST
+  POPULAR
+  SCHOLAR
+  LEVEL_5
+  TOP_10
+  STREAK_7
+  WELCOME
+}
+
+/// Badge presentation + grant-condition metadata.
+///
+/// Kept separate from `Badge` (the user-to-badge join) so admins can rename,
+/// recolor, or replace icons without touching award logic — the `BadgeType`
+/// enum keeps compile-time safety on auto-award rules.
+///
+/// `condition = "auto"` — awarded by `checkAndAwardBadgesInternal` against
+///   a fixed computed rule keyed by `type`.
+/// `condition = "manual"` — only granted via admin UI. Has a `customDefinitionId`
+///   (not a BadgeType) and is stored on Badge via the FK.
+model BadgeDefinition {
+  id          String   @id @default(cuid())
+  /// One of the system-seeded 8 BadgeType values, or null for admin-authored custom badges.
+  /// Partial unique (non-null only) enforced via raw SQL index, since @@unique would treat NULL as unique-per-row.
+  type        BadgeType?
+  /// Admin-chosen slug (unique) — used for URL params + ordering stability.
+  key         String   @unique
+  label       String
+  description String
+  emoji       String
+  /// Optional uploaded icon URL (Supabase Storage). Falls back to emoji when null.
+  iconUrl     String?
+  /// "auto" (BadgeType-keyed rule) or "manual" (admin-granted only)
+  condition   String   @default("auto")
+  /// Accent color (hex); defaults to brand red.
+  colorHex    String   @default("#D94A4A")
+  sortOrder   Int      @default(100)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  badges      Badge[]
+
+  @@index([type])
+  @@index([condition])
+  @@index([sortOrder])
+}
+
+model Badge {
+  id                  String           @id @default(cuid())
+  userId              String
+  /// BadgeType for system-seeded badges (auto-awarded). NULL for custom admin-authored badges.
+  type                BadgeType?
+  /// FK to BadgeDefinition for custom badges. NULL for system badges (which key by `type`).
+  /// App-layer invariant: exactly one of {type, customDefinitionId} is non-null.
+  customDefinitionId  String?
+  earnedAt            DateTime         @default(now())
+  user                User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customDefinition    BadgeDefinition? @relation(fields: [customDefinitionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type])
+  @@unique([userId, customDefinitionId])
+  @@index([userId])
+  @@index([customDefinitionId])
 }

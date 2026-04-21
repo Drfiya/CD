@@ -11,6 +11,12 @@ export const categorySchema = z.object({
   color: z
     .string()
     .regex(hexColorRegex, 'Color must be a valid hex color (e.g., #6366f1)'),
+  description: z
+    .string()
+    .max(280, 'Description must be under 280 characters')
+    .trim()
+    .optional()
+    .transform((v) => (v && v.length > 0 ? v : undefined)),
 });
 
 export type CategoryInput = z.infer<typeof categorySchema>;

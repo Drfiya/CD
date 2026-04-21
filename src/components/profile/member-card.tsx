@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { LevelBadge } from '@/components/gamification/level-badge';
+import { BADGE_CONFIG } from '@/components/gamification/badge-config';
 import { UGCText } from '@/components/translation/UGCText';
+import type { BadgeType } from '@/generated/prisma/client';
 
 interface MemberCardProps {
   member: {
@@ -11,6 +13,7 @@ interface MemberCardProps {
     bio: string | null;
     level: number;
     points: number;
+    badges?: { type: BadgeType | null; customDefinitionId?: string | null }[];
   };
 }
 
@@ -63,6 +66,43 @@ export function MemberCard({ member }: MemberCardProps) {
             {member.points} pts
           </span>
         </div>
+
+        {/* Earned badges — fast path uses static config.
+            Custom admin-authored badges (type=null) are summarized with a
+            sparkle placeholder; the detailed profile page renders them fully. */}
+        {member.badges && member.badges.length > 0 && (
+          <div
+            className="inline-flex items-center gap-1 mt-2"
+            aria-label={`${member.badges.length} earned badge${member.badges.length === 1 ? '' : 's'}`}
+          >
+            {member.badges.slice(0, 3).map((b, idx) =>
+              b.type ? (
+                <span
+                  key={`${b.type}-${idx}`}
+                  title={BADGE_CONFIG[b.type].label}
+                  aria-label={BADGE_CONFIG[b.type].label}
+                  className="text-base leading-none"
+                >
+                  {BADGE_CONFIG[b.type].emoji}
+                </span>
+              ) : (
+                <span
+                  key={`custom-${b.customDefinitionId ?? idx}`}
+                  title="Custom badge"
+                  aria-label="Custom badge"
+                  className="text-base leading-none"
+                >
+                  ✨
+                </span>
+              )
+            )}
+            {member.badges.length > 3 && (
+              <span className="text-xs text-gray-500 dark:text-neutral-400">
+                +{member.badges.length - 3}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Bio */}
         {member.bio && (

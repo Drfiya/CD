@@ -57,7 +57,14 @@ export default async function CalendarPage() {
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth();
-  const userLanguage = await getUserLanguage();
+  // Fail-open language resolution — calendar should never white-screen
+  let userLanguage: string;
+  try {
+    userLanguage = await getUserLanguage();
+  } catch (err) {
+    console.error('[Calendar] getUserLanguage failed, defaulting to en:', err);
+    userLanguage = 'en';
+  }
   const messages = getMessages(userLanguage);
 
   return (

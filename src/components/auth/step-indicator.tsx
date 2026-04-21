@@ -34,9 +34,9 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
               <div
                 className={cn(
                   'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium border-2 transition-colors',
-                  isCompleted && 'bg-blue-600 border-blue-600 text-white',
-                  isCurrent && 'border-blue-600 text-blue-600 bg-white',
-                  !isCompleted && !isCurrent && 'border-gray-300 text-gray-400 bg-white'
+                  isCompleted && 'bg-[var(--color-brand,#D94A4A)] border-[var(--color-brand,#D94A4A)] text-white',
+                  isCurrent && 'border-[var(--color-brand,#D94A4A)] text-[var(--color-brand,#D94A4A)] bg-white dark:bg-neutral-900',
+                  !isCompleted && !isCurrent && 'border-gray-300 dark:border-neutral-600 text-gray-400 dark:text-neutral-500 bg-white dark:bg-neutral-900'
                 )}
               >
                 {isCompleted ? (
@@ -60,7 +60,7 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
               <span
                 className={cn(
                   'text-xs mt-1 font-medium',
-                  isCurrent || isCompleted ? 'text-blue-600' : 'text-gray-400'
+                  isCurrent || isCompleted ? 'text-[var(--color-brand,#D94A4A)]' : 'text-gray-400 dark:text-neutral-500'
                 )}
               >
                 {step.label}
@@ -72,7 +72,7 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
               <div
                 className={cn(
                   'w-16 h-0.5 mx-2',
-                  index < currentIndex ? 'bg-blue-600' : 'bg-gray-300'
+                  index < currentIndex ? 'bg-[var(--color-brand,#D94A4A)]' : 'bg-gray-300 dark:bg-neutral-600'
                 )}
               />
             )}

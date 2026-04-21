@@ -6,12 +6,16 @@ import { authOptions } from '@/lib/auth';
 import db from '@/lib/db';
 import { postSchema } from '@/lib/validations/post';
 import { awardPoints } from '@/lib/gamification-actions';
+import { checkAndAwardBadges } from '@/lib/badge-actions';
 import { extractPlainText } from '@/lib/tiptap-utils';
 import { detectLanguage, hashContent } from '@/lib/translation';
 import { generateAllGifThumbnails, enrichEmbedsWithThumbnails } from '@/lib/thumbnail-actions';
 import type { Prisma } from '@/generated/prisma/client';
 import type { VideoEmbed } from '@/types/post';
 import { preTranslatePost } from '@/lib/translation/pretranslate';
+import { extractMentions } from '@/lib/mentions';
+import { createActivityNotification } from '@/lib/notification-actions-internal';
+import { touchStreak } from '@/lib/streak-actions-internal';
 
 export async function createPost(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -67,12 +71,46 @@ export async function createPost(formData: FormData) {
   // Award points for creating a post
   await awardPoints(session.user.id, 'POST_CREATED');
 
+  // Update activity streak BEFORE badge check so STREAK_7 can be awarded in the
+  // same pass. Awaited (not fire-and-forget) because we want the milestone
+  // value for the success response toast.
+  const streak = await touchStreak(session.user.id);
+
+  // Check for newly-earned badges (errors silently swallowed — non-blocking UX)
+  const newBadges = await checkAndAwardBadges(session.user.id).catch(() => []);
+
   // Fire-and-forget: eagerly pre-translate into the other 2 live languages
   preTranslatePost(newPost.id, title, plainText, languageCode).catch(() => {});
 
+  // MENTION notifications from title + plain body — fire-and-forget, hard-capped at 20
+  const mentionNames = extractMentions(`${title ?? ''} ${plainText ?? ''}`, 20);
+  if (mentionNames.length > 0) {
+    const actorName = session.user.name ?? null;
+    const mentionedUsers = await db.user.findMany({
+      where: { name: { in: mentionNames } },
+      select: { id: true },
+    });
+    for (const u of mentionedUsers) {
+      if (u.id === session.user.id) continue; // no self-notify
+      void createActivityNotification({
+        type: 'MENTION',
+        recipientId: u.id,
+        actorId: session.user.id,
+        actorName,
+        postId: newPost.id,
+        commentId: null,
+      });
+    }
+  }
+
   revalidatePath('/feed');
 
-  return { success: true };
+  return {
+    success: true,
+    newBadges,
+    streakMilestone: streak.milestone,
+    streakSaved: streak.streakSaved,
+  };
 }
 
 export async function updatePost(postId: string, formData: FormData) {

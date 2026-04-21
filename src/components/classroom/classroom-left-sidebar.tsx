@@ -3,16 +3,9 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { ReactNode } from 'react';
-
-interface ClassroomSidebarUI {
-    allCourses: string;
-    myCourses: string;
-    availableCourses: string;
-    categoriesTitle: string;
-}
+import { useTranslations } from '@/components/translation/TranslationContext';
 
 interface ClassroomLeftSidebarProps {
-    ui: ClassroomSidebarUI;
     activeFilter: string | null;
     isLoggedIn: boolean;
     sidebarBannerImage?: string | null;
@@ -40,7 +33,6 @@ const PlusCircleIcon = (
 );
 
 export function ClassroomLeftSidebar({
-    ui,
     activeFilter,
     isLoggedIn,
     sidebarBannerImage,
@@ -48,6 +40,7 @@ export function ClassroomLeftSidebar({
     sidebarBannerEnabled,
 }: ClassroomLeftSidebarProps) {
     const searchParams = useSearchParams();
+    const cp = useTranslations('classroomPage');
 
     const buildFilterUrl = (filter: string | null) => {
         const params = new URLSearchParams(searchParams.toString());
@@ -62,11 +55,11 @@ export function ClassroomLeftSidebar({
     const showBanner = sidebarBannerEnabled && sidebarBannerImage;
 
     const filters: { key: string | null; label: string; icon: ReactNode }[] = [
-        { key: null, label: ui.allCourses, icon: BookOpenIcon },
+        { key: null, label: cp.allCourses, icon: BookOpenIcon },
         ...(isLoggedIn
             ? [
-                { key: 'enrolled', label: ui.myCourses, icon: AcademicCapIcon },
-                { key: 'available', label: ui.availableCourses, icon: PlusCircleIcon },
+                { key: 'enrolled', label: cp.myCourses, icon: AcademicCapIcon },
+                { key: 'available', label: cp.availableCourses, icon: PlusCircleIcon },
             ]
             : []),
     ];
@@ -75,7 +68,7 @@ export function ClassroomLeftSidebar({
         <aside className="hidden lg:block w-64 shrink-0 space-y-4">
             <div className="bg-white dark:bg-neutral-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-neutral-700">
                 <h2 className="text-base font-semibold text-gray-900 dark:text-neutral-100 mb-4">
-                    {ui.categoriesTitle}
+                    {cp.coursesCategory}
                 </h2>
 
                 <nav className="space-y-1">

@@ -16,7 +16,14 @@ export default async function MainLayout({
   const session = await getServerSession(authOptions);
 
   // Get user's language preference (now includes IP geolocation detection)
-  const userLanguage = await getUserLanguage();
+  // Fail-open: never crash the app shell if the language resolver throws
+  let userLanguage: string;
+  try {
+    userLanguage = await getUserLanguage();
+  } catch (err) {
+    console.error('[MainLayout] getUserLanguage failed, defaulting to en:', err);
+    userLanguage = 'en';
+  }
 
   // Get translated messages
   const messages = getMessages(userLanguage);

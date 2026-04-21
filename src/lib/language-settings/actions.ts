@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { canEditSettings } from '@/lib/permissions';
@@ -809,4 +809,65 @@ export async function setDailyBudget(budget: number) {
     if (budget < 0 || !Number.isFinite(budget)) throw new Error('Invalid budget');
     await updateDailyBudget(Math.round(budget));
     revalidatePath('/admin/language-settings/usage');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LANGUAGE CONFIG ACTIONS (NEW-LANG)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export interface LanguageConfigEntry {
+    id: string;
+    code: string;
+    name: string;
+    flag: string;
+    isActive: boolean;
+    sortOrder: number;
+}
+
+const STATIC_LANGUAGES = [
+    { code: 'en', name: 'English', flag: '🇬🇧', sortOrder: 0 },
+    { code: 'de', name: 'Deutsch', flag: '🇩🇪', sortOrder: 1 },
+    { code: 'fr', name: 'Français', flag: '🇫🇷', sortOrder: 2 },
+];
+
+export async function getLanguageConfigs(): Promise<LanguageConfigEntry[]> {
+    await requireAdmin();
+    const configs = await db.languageConfig.findMany({
+        orderBy: { sortOrder: 'asc' },
+    });
+
+    // If table is empty, seed with static defaults
+    if (configs.length === 0) {
+        await db.languageConfig.createMany({
+            data: STATIC_LANGUAGES.map(l => ({ ...l, isActive: true })),
+            skipDuplicates: true,
+        });
+        return db.languageConfig.findMany({ orderBy: { sortOrder: 'asc' } });
+    }
+
+    return configs;
+}
+
+export async function toggleLanguageActive(code: string, isActive: boolean) {
+    await requireAdmin();
+
+    // English cannot be deactivated
+    if (code === 'en' && !isActive) {
+        throw new Error('English cannot be deactivated — it is the permanent fallback language.');
+    }
+
+    await db.languageConfig.upsert({
+        where: { code },
+        update: { isActive },
+        create: {
+            code,
+            name: code,
+            flag: '',
+            isActive,
+            sortOrder: 99,
+        },
+    });
+
+    revalidateTag('active-languages', 'default');
+    revalidatePath('/admin/language-settings/languages');
 }

@@ -20,7 +20,7 @@ export default async function AdminCategoriesPage() {
 
   // Requires admin+ role (layout handles moderator+ check)
   if (!canEditSettings(session.user.role)) {
-    redirect('/admin/moderation');
+    redirect('/admin/posts');
   }
 
   // Fetch all categories with post count
@@ -30,6 +30,7 @@ export default async function AdminCategoriesPage() {
       id: true,
       name: true,
       color: true,
+      description: true,
       _count: {
         select: { posts: true },
       },

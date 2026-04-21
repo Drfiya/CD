@@ -85,6 +85,9 @@ export const de: Messages = {
     gamification: {
         level: 'Stufe',
         points: 'Punkte',
+        streakPrompt: 'Starte deine Serie! Poste oder kommentiere heute.',
+        streakDayLabel: 'Tage-Serie',
+        streakBestLabel: 'Beste',
     },
 
     // Auth
@@ -132,6 +135,17 @@ export const de: Messages = {
         monthly: 'Monatlich',
     },
 
+    // Profile page
+    profilePage: {
+        posts: 'Beiträge',
+        comments: 'Kommentare',
+        lessonsCompleted: 'Abgeschlossene Lektionen',
+        enrolledCoursesOne: 'In 1 Kurs eingeschrieben',
+        enrolledCoursesMany: 'In {count} Kursen eingeschrieben',
+        lessonsCompletedSuffixOne: ' · 1 Lektion abgeschlossen',
+        lessonsCompletedSuffixMany: ' · {count} Lektionen abgeschlossen',
+    },
+
     // Classroom page
     classroomPage: {
         title: 'Kursbereich',
@@ -158,5 +172,38 @@ export const de: Messages = {
         enrollToAccessLessons: 'Melde dich an, um alle Lektionen dieses Kurses freizuschalten.',
         backToCourse: 'Zurück zum Kurs',
         nextLesson: 'Nächste Lektion',
+    },
+
+    profileNudge: {
+        title: 'Profil vervollständigen',
+        setName: 'Namen festlegen',
+        addBio: 'Kurzbeschreibung hinzufügen',
+        uploadAvatar: 'Profilbild hochladen',
+        finishCta: 'Profil abschließen →',
+        progressSuffix: 'von 3 erledigt',
+    },
+
+    activation: {
+        title: 'Willkommen! Einrichtung abschließen',
+        stepSignUp: 'Registrierung',
+        stepProfile: 'Profil vervollständigen',
+        stepEnrollment: 'In einen Kurs einschreiben',
+        stepFirstPost: 'Ersten Beitrag schreiben',
+        dismiss: 'Ausblenden',
+        welcomeToastTitle: 'Willkommen in der Community!',
+        welcomeToastSubtitle: 'Du hast das Willkommens-Abzeichen erhalten 🎉',
+    },
+    landing_social_proof: {
+        heroJoinCta: 'Der Community beitreten',
+        featuredCoursesTitle: 'Ausgewählte Kurse',
+        featuredCoursesEmpty: 'Kurse bald verfügbar — bleib dran!',
+        recentPostsTitle: 'Neues aus der Community',
+        recentPostsAuthor: 'Ein Mitglied hat gepostet',
+        weekInNumbersTitle: 'Diese Woche',
+        weekNewPosts: 'neue Beiträge',
+        weekActiveDiscussions: 'aktive Diskussionen',
+        weekLessonsCompleted: 'abgeschlossene Lektionen',
+        memberCountTemplate: 'Werde Teil von {count}+ Science Experts',
+        enrolledCountLabel: 'eingeschrieben',
     },
 };

@@ -55,7 +55,14 @@ export default async function LessonPage({ params }: PageProps) {
   // Parse video URL if present
   const videoEmbed = lesson.videoUrl ? parseVideoUrl(lesson.videoUrl) : null;
 
-  const userLanguage = await getUserLanguage();
+  // Fail-open language resolution — lesson detail should never white-screen
+  let userLanguage: string;
+  try {
+    userLanguage = await getUserLanguage();
+  } catch (err) {
+    console.error('[LessonDetail] getUserLanguage failed, defaulting to en:', err);
+    userLanguage = 'en';
+  }
   const messages = getMessages(userLanguage);
   const cp = messages.classroomPage;
 

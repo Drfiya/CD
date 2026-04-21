@@ -1,7 +1,9 @@
 'use client';
 
 import { useTheme } from 'next-themes';
+import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
+import { updateThemePreference } from '@/lib/theme-actions';
 
 /**
  * Sun/moon toggle for switching between light and dark themes.
@@ -10,6 +12,7 @@ import { useEffect, useState } from 'react';
  */
 export function ThemeToggle() {
     const { resolvedTheme, setTheme } = useTheme();
+    const { data: session } = useSession();
     const [mounted, setMounted] = useState(false);
 
     // Avoid hydration mismatch — theme is unknown on the server
@@ -23,9 +26,20 @@ export function ThemeToggle() {
 
     const isDark = resolvedTheme === 'dark';
 
+    const handleToggle = () => {
+        const next: 'dark' | 'light' = isDark ? 'light' : 'dark';
+        setTheme(next);
+        // CR9 F2: fire-and-forget DB sync so cross-device login lands in the correct mode.
+        // Anonymous visitors skip this; next-themes persists to localStorage either way.
+        // Never await — keep the toggle instant per CR7 optimistic-UI pattern.
+        if (session?.user) {
+            void updateThemePreference(next).catch(() => { /* non-blocking: localStorage remains source of truth for this tab */ });
+        }
+    };
+
     return (
         <button
-            onClick={() => setTheme(isDark ? 'light' : 'dark')}
+            onClick={handleToggle}
             className="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
             aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}

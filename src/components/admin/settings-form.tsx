@@ -15,6 +15,7 @@ import {
   uploadSidebarBanner,
   removeSidebarBanner,
   updateSidebarBannerSettings,
+  updateLandingSocialProofSettings,
   type CommunitySettings,
 } from '@/lib/settings-actions';
 
@@ -48,6 +49,33 @@ export function SettingsForm({ settings }: SettingsFormProps) {
   const [bannerPreview, setBannerPreview] = useState<string | null>(settings.sidebarBannerImage);
   const [bannerUrl, setBannerUrl] = useState(settings.sidebarBannerUrl || '');
   const [bannerEnabled, setBannerEnabled] = useState(settings.sidebarBannerEnabled);
+
+  // CR9 F1: Social-proof toggles — optimistic local state, fire-and-forget persistence.
+  const [showAvatarMosaic, setShowAvatarMosaic] = useState(settings.landingShowAvatarMosaic);
+  const [showMemberCount, setShowMemberCount] = useState(settings.landingShowMemberCount);
+  const [showRecentPosts, setShowRecentPosts] = useState(settings.landingShowRecentPosts);
+  const [isSocialProofPending, startSocialProofTransition] = useTransition();
+
+  const handleSocialProofToggle = useCallback(
+    (field: 'landingShowAvatarMosaic' | 'landingShowMemberCount' | 'landingShowRecentPosts', next: boolean) => {
+      if (field === 'landingShowAvatarMosaic') setShowAvatarMosaic(next);
+      if (field === 'landingShowMemberCount') setShowMemberCount(next);
+      if (field === 'landingShowRecentPosts') setShowRecentPosts(next);
+      startSocialProofTransition(async () => {
+        const result = await updateLandingSocialProofSettings({ [field]: next });
+        if (result.error) {
+          toast.error(result.error);
+          // Revert on error
+          if (field === 'landingShowAvatarMosaic') setShowAvatarMosaic(!next);
+          if (field === 'landingShowMemberCount') setShowMemberCount(!next);
+          if (field === 'landingShowRecentPosts') setShowRecentPosts(!next);
+        } else {
+          router.refresh();
+        }
+      });
+    },
+    [router]
+  );
 
   const handleLogoSizeChange = useCallback((newSize: number) => {
     setLogoSize(newSize);
@@ -543,6 +571,34 @@ export function SettingsForm({ settings }: SettingsFormProps) {
             </button>
           </div>
         )}
+      </div>
+
+      {/* CR9 F1: Landing Page — Social Proof toggles. Default OFF; admins enable per-section as the community matures. */}
+      <div className="bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-lg p-6 space-y-4">
+        <h2 className="text-lg font-medium text-gray-900 dark:text-neutral-100">Landing Page — Social Proof</h2>
+        {[
+          { key: 'landingShowAvatarMosaic' as const, value: showAvatarMosaic, label: 'Show avatar mosaic on landing page', helper: 'Only enable once you have 20+ members with profile images.' },
+          { key: 'landingShowMemberCount' as const, value: showMemberCount, label: 'Show member count on landing page', helper: 'Only enable once you have 50+ members.' },
+          { key: 'landingShowRecentPosts' as const, value: showRecentPosts, label: 'Show recent posts ticker on landing page', helper: 'Only enable once your feed has steady activity.' },
+        ].map(row => (
+          <div key={row.key} className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-900 dark:text-neutral-100">{row.label}</p>
+              <p className="text-xs text-gray-500 dark:text-neutral-400">{row.helper}</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={row.value}
+              aria-label={row.label}
+              onClick={() => handleSocialProofToggle(row.key, !row.value)}
+              disabled={isSocialProofPending}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${row.value ? 'bg-[var(--color-brand,#D94A4A)]' : 'bg-gray-300 dark:bg-neutral-600'}`}
+            >
+              <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${row.value ? 'translate-x-6' : 'translate-x-1'}`} />
+            </button>
+          </div>
+        ))}
       </div>
 
       {/* Details Form */}

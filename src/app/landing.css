@@ -667,3 +667,394 @@
     text-align: center;
   }
 }
+
+/* CR9 F1 — Social-Proof Sections
+ * Tailwind handles dark: variants via class names on the JSX;
+ * layout-only rules live here to match the pattern of existing .landing-* classes.
+ */
+.landing-featured-courses .landing-section-title,
+.landing-posts-ticker .landing-section-title,
+.landing-week .landing-section-title {
+  margin-bottom: 1.5rem;
+}
+
+.landing-courses-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .landing-courses-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.landing-course-card {
+  display: block;
+  text-decoration: none;
+}
+
+.landing-course-thumb,
+.landing-course-thumb-fallback {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.landing-course-title {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.landing-courses-empty {
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.landing-ticker-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.landing-ticker-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.625rem;
+}
+
+.landing-ticker-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.landing-ticker-title {
+  font-weight: 500;
+  flex: 1;
+}
+
+.landing-ticker-meta {
+  font-size: 0.8125rem;
+}
+
+.landing-week-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.landing-week-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1rem;
+}
+
+.landing-week-value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.landing-week-label {
+  font-size: 0.875rem;
+}
+
+.landing-mosaic-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  justify-content: center;
+}
+
+.landing-mosaic-item {
+  width: 56px;
+  height: 56px;
+}
+
+.landing-mosaic-avatar,
+.landing-mosaic-avatar-fallback {
+  width: 56px;
+  height: 56px;
+  border-radius: 9999px;
+  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.landing-member-count-text {
+  font-size: 1.125rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ==========================================================================
+   DARK MODE — Landing Page
+   Matches the logged-in area's #171717 / neutral palette.
+   Triggered by next-themes adding class="dark" to <html>.
+   ========================================================================== */
+
+/* --- Page --- */
+html.dark .landing-page {
+  background: #171717;
+  color: #f5f5f5;
+}
+
+/* --- Navigation --- */
+html.dark .landing-nav {
+  background: rgba(23, 23, 23, 0.95);
+  border-bottom-color: #262626;
+}
+
+html.dark .landing-logo-text {
+  color: #f5f5f5;
+}
+
+html.dark .landing-nav-login {
+  color: #a3a3a3;
+}
+
+html.dark .landing-nav-login:hover {
+  color: #f5f5f5;
+  background: #262626;
+}
+
+html.dark .landing-nav-join {
+  background: #D94A4A;
+  color: #ffffff;
+}
+
+html.dark .landing-nav-join:hover {
+  background: #c43e3e;
+}
+
+/* --- Video Hero --- */
+html.dark .landing-video-hero {
+  background: #1c1c1c;
+}
+
+/* --- Hero Section --- */
+html.dark .landing-hero {
+  background: #1c1c1c;
+  border-bottom-color: #262626;
+}
+
+html.dark .landing-hero-bg {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 20%, rgba(217, 74, 74, 0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 50% at 80% 80%, rgba(217, 74, 74, 0.05) 0%, transparent 60%);
+}
+
+html.dark .landing-hero-badge {
+  background: #262626;
+  border-color: #333333;
+  color: #a3a3a3;
+}
+
+html.dark .landing-hero-title {
+  color: #f5f5f5;
+}
+
+html.dark .landing-hero-subtitle {
+  color: #a3a3a3;
+}
+
+html.dark .landing-hero-cta-primary {
+  background: #D94A4A;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(217, 74, 74, 0.25);
+}
+
+html.dark .landing-hero-cta-primary:hover {
+  background: #c43e3e;
+  box-shadow: 0 4px 16px rgba(217, 74, 74, 0.35);
+}
+
+html.dark .landing-hero-cta-secondary {
+  background: #262626;
+  border-color: #333333;
+  color: #f5f5f5;
+}
+
+html.dark .landing-hero-cta-secondary:hover {
+  background: #333333;
+  border-color: #404040;
+}
+
+/* --- Stats Section --- */
+html.dark .landing-stats {
+  background: #1c1c1c;
+  border-top-color: #262626;
+  border-bottom-color: #262626;
+}
+
+html.dark .landing-stat-value {
+  color: #f5f5f5;
+}
+
+html.dark .landing-stat-label {
+  color: #a3a3a3;
+}
+
+html.dark .landing-stat-divider {
+  background: #333333;
+}
+
+/* --- Section Titles --- */
+html.dark .landing-section-title {
+  color: #f5f5f5;
+}
+
+/* --- Benefits --- */
+html.dark .landing-benefit-item {
+  color: #d4d4d4;
+}
+
+/* --- Pricing Sidebar --- */
+html.dark .landing-pricing-sidebar {
+  background: #1c1c1c;
+  border-color: #262626;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+html.dark .landing-pricing-logo-fallback {
+  background: #D94A4A;
+}
+
+html.dark .landing-pricing-name {
+  color: #f5f5f5;
+}
+
+html.dark .landing-pricing-desc {
+  color: #a3a3a3;
+}
+
+html.dark .landing-pricing-stats-mini {
+  color: #a3a3a3;
+}
+
+html.dark .landing-pricing-card {
+  background: #262626;
+  border-color: #333333;
+}
+
+html.dark .landing-pricing-badge {
+  color: #a3a3a3;
+}
+
+html.dark .landing-pricing-currency {
+  color: #a3a3a3;
+}
+
+html.dark .landing-pricing-value {
+  color: #f5f5f5;
+}
+
+html.dark .landing-pricing-period {
+  color: #a3a3a3;
+}
+
+html.dark .landing-pricing-cta {
+  background: #D94A4A;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(217, 74, 74, 0.25);
+}
+
+html.dark .landing-pricing-cta:hover {
+  background: #c43e3e;
+  box-shadow: 0 4px 16px rgba(217, 74, 74, 0.35);
+}
+
+/* --- Video Section --- */
+html.dark .landing-video-main {
+  background: #262626;
+  border-color: #333333;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+}
+
+html.dark .landing-video-thumb {
+  background: #262626;
+}
+
+html.dark .landing-video-thumb:hover {
+  border-color: #525252;
+}
+
+html.dark .landing-video-thumb-placeholder {
+  color: #a3a3a3;
+}
+
+/* --- About Section --- */
+html.dark .landing-about {
+  background: #1c1c1c;
+  border-color: #262626;
+}
+
+html.dark .landing-about-text {
+  color: #a3a3a3;
+}
+
+/* --- Footer --- */
+html.dark .landing-footer {
+  border-top-color: #262626;
+}
+
+html.dark .landing-footer-links a {
+  color: #a3a3a3;
+}
+
+html.dark .landing-footer-links a:hover {
+  color: #f5f5f5;
+}
+
+html.dark .landing-footer-legal {
+  color: #525252;
+}
+
+html.dark .landing-footer-sep {
+  color: #333333;
+}
+
+/* --- Courses Grid (dark cards handled via Tailwind dark: in JSX) --- */
+html.dark .landing-courses-empty {
+  color: #a3a3a3;
+}
+
+/* --- Ticker Items --- */
+html.dark .landing-ticker-item {
+  background: #1c1c1c;
+}
+
+/* --- Week Stats --- */
+html.dark .landing-week-stat {
+  background: #1c1c1c;
+  border-radius: 12px;
+}
+
+/* --- General section backgrounds --- */
+html.dark .landing-section {
+  background: transparent;
+}
+
+html.dark .landing-featured-courses,
+html.dark .landing-posts-ticker,
+html.dark .landing-week,
+html.dark .landing-avatar-mosaic,
+html.dark .landing-member-count {
+  background: transparent;
+}

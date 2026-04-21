@@ -6,7 +6,7 @@ import db from '@/lib/db';
 
 import type { Role } from '@/lib/permissions';
 
-// Extend NextAuth types to include user.id, role, and hasMembership in session
+// Extend NextAuth types to include user.id, role, hasMembership, and themePreference in session
 declare module 'next-auth' {
   interface Session {
     user: {
@@ -16,6 +16,8 @@ declare module 'next-auth' {
       image?: string | null;
       role: Role;
       hasMembership: boolean;
+      // CR9 F2: cross-device theme preference. Always resolved (never undefined) at session read.
+      themePreference: 'dark' | 'light';
     };
   }
 }
@@ -25,6 +27,8 @@ declare module 'next-auth/jwt' {
     id: string;
     role: Role;
     hasMembership: boolean;
+    // CR9 F2: mirror DB preference into the JWT so the session callback doesn't re-fetch.
+    themePreference: 'dark' | 'light';
   }
 }
 
@@ -82,21 +86,29 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = (user as { role?: Role }).role ?? 'member';
-        // Fetch membership status on initial login
-        const membership = await db.membership.findUnique({
-          where: { userId: user.id },
-          select: { status: true },
-        });
+        // Fetch membership + theme preference on initial login
+        const [membership, dbUser] = await Promise.all([
+          db.membership.findUnique({
+            where: { userId: user.id },
+            select: { status: true },
+          }),
+          db.user.findUnique({
+            where: { id: user.id },
+            select: { themePreference: true },
+          }),
+        ]);
         token.hasMembership = membership?.status === 'ACTIVE';
+        token.themePreference = (dbUser?.themePreference === 'light' ? 'light' : 'dark');
       }
-      // Refresh role and membership from database on session update
+      // Refresh role, membership, and theme from database on session update
       if (trigger === 'update') {
         const dbUser = await db.user.findUnique({
           where: { id: token.id },
-          select: { role: true },
+          select: { role: true, themePreference: true },
         });
         if (dbUser) {
           token.role = dbUser.role as Role;
+          token.themePreference = (dbUser.themePreference === 'light' ? 'light' : 'dark');
         }
         const membership = await db.membership.findUnique({
           where: { userId: token.id },
@@ -111,6 +123,8 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.role = token.role;
         session.user.hasMembership = token.hasMembership as boolean;
+        // CR9 F2: mirror DB theme preference into the session so root layout can seed SSR <html class="...">
+        session.user.themePreference = (token.themePreference === 'light' ? 'light' : 'dark');
       }
       return session;
     },
