@@ -73,7 +73,7 @@ export function GamificationProgress({
       {/* Streak row */}
       <div className="mt-3 pt-3 border-t border-gray-100 dark:border-neutral-700">
         {currentStreak > 0 ? (
-          <div className="flex items-center gap-1.5 text-sm text-amber-700 dark:text-amber-400">
+          <div className="flex items-center gap-1.5 text-sm text-red-600 dark:text-red-400">
             <span aria-hidden="true">🔥</span>
             <span>{currentStreak}-{streakDayLabel}</span>
             {longestStreak > currentStreak && (

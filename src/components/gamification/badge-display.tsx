@@ -71,7 +71,7 @@ export async function BadgeDisplay({
 
   return (
     <div
-      className={`inline-flex items-center gap-1 ${className}`}
+      className={`inline-flex items-center gap-2 ${className}`}
       aria-label={`${resolved.length} earned badge${resolved.length === 1 ? '' : 's'}`}
     >
       {visible.map(({ view }, idx) => (
