@@ -256,8 +256,8 @@ export async function uploadCommunityLogo(
   }
 
   // Upload to Supabase Storage (works on Vercel's read-only filesystem)
-  const { createClient } = await import('@/lib/supabase/server');
-  const supabase = await createClient();
+  const { createAdminClient } = await import('@/lib/supabase/admin');
+  const supabase = createAdminClient();
 
   const ext = file.name.split('.').pop() || 'png';
   const filename = `community-logo-${Date.now()}.${ext}`;
@@ -391,8 +391,8 @@ export async function uploadCommunityLogoDark(
   }
 
   // Upload to Supabase Storage
-  const { createClient } = await import('@/lib/supabase/server');
-  const supabase = await createClient();
+  const { createAdminClient } = await import('@/lib/supabase/admin');
+  const supabase = createAdminClient();
 
   const ext = file.name.split('.').pop() || 'png';
   const filename = `community-logo-dark-${Date.now()}.${ext}`;
@@ -666,8 +666,8 @@ export async function uploadSidebarBanner(
   }
 
   // Upload to Supabase Storage
-  const { createClient } = await import('@/lib/supabase/server');
-  const supabase = await createClient();
+  const { createAdminClient } = await import('@/lib/supabase/admin');
+  const supabase = createAdminClient();
 
   const ext = file.name.split('.').pop() || 'png';
   const filename = `sidebar-banner-${Date.now()}.${ext}`;

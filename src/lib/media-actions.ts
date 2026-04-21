@@ -2,7 +2,7 @@
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -35,7 +35,7 @@ export async function uploadPostMedia(formData: FormData): Promise<{ success: tr
         return { error: 'File too large. Maximum size is 5MB' };
     }
 
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     // Build storage path
     const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';

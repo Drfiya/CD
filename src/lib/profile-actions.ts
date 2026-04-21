@@ -6,7 +6,7 @@ import { cookies } from 'next/headers';
 import { authOptions } from '@/lib/auth';
 import db from '@/lib/db';
 import { profileSchema, avatarSchema } from '@/lib/validations/profile';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { checkAndAwardBadgesInternal } from '@/lib/badge-actions-internal';
 import { LANGUAGE_COOKIE_NAME } from '@/lib/i18n/geolocation';
 
@@ -81,7 +81,7 @@ export async function uploadAvatar(formData: FormData) {
     return { error: validatedFields.error.flatten().fieldErrors };
   }
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // Generate unique filename
   const ext = file.name.split('.').pop() || 'jpg';

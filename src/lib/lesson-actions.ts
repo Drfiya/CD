@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import db from '@/lib/db';
 import { lessonSchema, updateLessonSchema } from '@/lib/validations/lesson';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { Prisma } from '@/generated/prisma/client';
 import { requireAuth, requireAdmin } from '@/lib/auth-guards';
 
@@ -158,7 +158,7 @@ export async function deleteLesson(lessonId: string) {
 
   // Delete attachments from Supabase Storage
   if (lesson.attachments.length > 0) {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     // Extract storage paths from URLs
     const paths = lesson.attachments

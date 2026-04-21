@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import db from '@/lib/db';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { requireAuth, requireAdmin } from '@/lib/auth-guards';
 
 // Allowed file types for attachments
@@ -84,7 +84,7 @@ export async function uploadAttachment(formData: FormData) {
     return { error: 'Lesson not found' };
   }
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // Build storage path
   const sanitizedName = sanitizeFilename(file.name);
@@ -156,7 +156,7 @@ export async function deleteAttachment(attachmentId: string) {
     return { error: 'Attachment not found' };
   }
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // Extract path from URL
   // URL format: https://<project>.supabase.co/storage/v1/object/public/attachments/lessons/<lessonId>/<filename>
