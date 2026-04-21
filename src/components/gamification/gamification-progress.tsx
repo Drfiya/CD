@@ -9,9 +9,18 @@ interface GamificationProgressProps {
   badges?: { type: BadgeType | null; customDefinitionId?: string | null }[];
   currentStreak?: number;
   longestStreak?: number;
-  streakPromptLabel?: string;
-  streakDayLabel?: string;
-  streakBestLabel?: string;
+  labels?: {
+    progress?: string;
+    level?: string;
+    points?: string;
+    streakPrompt?: string;
+    streakDayLabel?: string;
+    streakBestLabel?: string;
+    badges?: string;
+    ptsToLevel?: string;
+    pointsToLevelFull?: string;
+    maxLevelReached?: string;
+  };
 }
 
 export function GamificationProgress({
@@ -21,9 +30,7 @@ export function GamificationProgress({
   badges = [],
   currentStreak = 0,
   longestStreak = 0,
-  streakPromptLabel = 'Start your streak! Post or comment today.',
-  streakDayLabel = 'day streak',
-  streakBestLabel = 'Best',
+  labels,
 }: GamificationProgressProps) {
   const progress = getPointsToNextLevel(points, level);
 
@@ -33,7 +40,7 @@ export function GamificationProgress({
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-500 dark:text-neutral-400">
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
         </svg>
-        <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100">Your Progress</h3>
+        <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100">{labels?.progress || 'Your Progress'}</h3>
       </div>
 
       <div className="flex items-center justify-between mb-2">
@@ -41,15 +48,17 @@ export function GamificationProgress({
           {name ? name.split(' ')[0] : 'You'}
         </span>
         <span className="text-sm font-semibold text-gray-900 dark:text-neutral-100">
-          Level {level}
+          {labels?.level || 'Level'} {level}
         </span>
       </div>
 
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-xs text-gray-500 dark:text-neutral-500">{points} pts total</span>
+        <span className="text-xs text-gray-500 dark:text-neutral-500">{points} {labels?.points || 'pts total'}</span>
         {progress && (
           <span className="text-xs text-gray-500 dark:text-neutral-500">
-            {progress.current}/{progress.required} to Level {level + 1}
+            {labels?.pointsToLevelFull
+                ? labels.pointsToLevelFull.replace('{current}', progress.current.toString()).replace('{required}', progress.required.toString()).replace('{level}', (level + 1).toString())
+                : `${progress.current}/${progress.required} to Level ${level + 1}`}
           </span>
         )}
       </div>
@@ -66,7 +75,7 @@ export function GamificationProgress({
         </div>
       ) : (
         <div className="text-xs text-center text-gray-500 dark:text-neutral-400 py-1">
-          Max level reached 🎉
+          {labels?.maxLevelReached || 'Max level reached!'} 🎉
         </div>
       )}
 
@@ -75,13 +84,13 @@ export function GamificationProgress({
         {currentStreak > 0 ? (
           <div className="flex items-center gap-1.5 text-sm text-red-600 dark:text-red-400">
             <span aria-hidden="true">🔥</span>
-            <span>{currentStreak}-{streakDayLabel}</span>
+            <span>{currentStreak}-{labels?.streakDayLabel || 'day streak'}</span>
             {longestStreak > currentStreak && (
-              <span className="text-xs text-muted-foreground ml-auto">{streakBestLabel}: {longestStreak}</span>
+              <span className="text-xs text-muted-foreground ml-auto">{labels?.streakBestLabel || 'Best'}: {longestStreak}</span>
             )}
           </div>
         ) : (
-          <div className="text-xs text-gray-500 dark:text-neutral-400">{streakPromptLabel}</div>
+          <div className="text-xs text-gray-500 dark:text-neutral-400">{labels?.streakPrompt || 'Start your streak! Post or comment today.'}</div>
         )}
       </div>
 

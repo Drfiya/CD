@@ -61,9 +61,7 @@ export async function RightSidebar() {
                     badges={currentUser.badges}
                     currentStreak={currentUser.currentStreak}
                     longestStreak={currentUser.longestStreak}
-                    streakPromptLabel={gamification.streakPrompt}
-                    streakDayLabel={gamification.streakDayLabel}
-                    streakBestLabel={gamification.streakBestLabel}
+                    labels={gamification}
                 />
             )}
 
