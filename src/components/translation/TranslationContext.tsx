@@ -145,7 +145,7 @@ export function TranslationProvider({
         }
     }, []);
 
-    const setLanguage = useCallback((lang: string) => {
+    const setLanguage = useCallback(async (lang: string) => {
         const normalized = getBaseLanguage(lang);
 
         if (!isLanguageSupported(normalized)) {
@@ -156,13 +156,12 @@ export function TranslationProvider({
 
         if (normalized !== currentLanguage) {
             setCurrentLanguage(normalized);
-            syncToProfile(normalized);
-            // Trigger retranslation when language changes
+
+            // Trigger retranslation when language changes for client components immediately
             setTranslationVersion(v => v + 1);
 
             // Optimistic client-side cookie write so SSR on the very next refresh
             // sees the new language without waiting for the POST round-trip.
-            // Server route also sets the same cookie (canonical) + persists to DB.
             if (typeof document !== 'undefined') {
                 const oneYear = 60 * 60 * 24 * 365;
                 const secure =
@@ -172,19 +171,19 @@ export function TranslationProvider({
                 document.cookie = `preferred-language=${normalized}; path=/; max-age=${oneYear}; SameSite=Lax${secure}`;
             }
 
+            // Wait for database updates to complete before triggering RSC refresh,
+            // otherwise getUserLanguage() on the server might read the stale DB value.
+            await Promise.allSettled([
+                syncToProfile(normalized),
+                fetch('/api/set-language', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ language: normalized }),
+                })
+            ]);
+
             // Re-render server components immediately (layout, nav labels, etc.)
             router.refresh();
-
-            // Fire-and-forget POST: persists to DB for logged-in users and sets the
-            // canonical cookie server-side. We don't await it — the optimistic cookie
-            // above already unblocked the refresh.
-            void fetch('/api/set-language', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ language: normalized }),
-            }).catch(() => {
-                // Silent — optimistic cookie already wrote the value.
-            });
         }
     }, [currentLanguage, syncToProfile, router]);
 
