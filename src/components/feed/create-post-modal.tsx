@@ -252,7 +252,7 @@ export function CreatePostModal({ categories, userImage, userName }: CreatePostM
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby="create-post-title"
-                        className="relative bg-white dark:bg-neutral-800 rounded-xl w-full max-w-lg mx-4 shadow-xl"
+                        className="relative bg-white dark:bg-neutral-800 rounded-xl w-full max-w-lg mx-4 shadow-xl flex flex-col max-h-[90vh] sm:max-h-[85vh]"
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-neutral-700">
@@ -267,8 +267,8 @@ export function CreatePostModal({ categories, userImage, userName }: CreatePostM
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit}>
-                            <div className="p-5 space-y-5">
+                        <form onSubmit={handleSubmit} className="flex flex-col min-h-0">
+                            <div className="p-5 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
                                 {/* Category selection */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">{post.category}</label>
@@ -387,7 +387,7 @@ export function CreatePostModal({ categories, userImage, userName }: CreatePostM
                             </div>
 
                             {/* Footer with action buttons */}
-                            <div className="p-5 border-t border-gray-100 dark:border-neutral-700 space-y-3">
+                            <div className="p-5 border-t border-gray-100 dark:border-neutral-700 space-y-3 shrink-0">
                                 {/* Media inputs row */}
                                 <div className="flex items-center gap-2">
                                     {/* Video/Image input */}
