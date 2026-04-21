@@ -88,6 +88,11 @@ export const es: Messages = {
         streakPrompt: '¡Empieza tu racha! Publica o comenta hoy.',
         streakDayLabel: 'días de racha',
         streakBestLabel: 'Mejor',
+        progress: 'Progreso',
+        badges: 'Insignias',
+        ptsToLevel: 'pts para Nivel {level}',
+        pointsToLevelFull: '{current} de {required} puntos para Nivel {level}',
+        maxLevelReached: '¡Nivel máximo alcanzado!',
     },
 
     // Auth
@@ -144,6 +149,7 @@ export const es: Messages = {
         enrolledCoursesMany: 'Inscrito en {count} cursos',
         lessonsCompletedSuffixOne: ' · 1 lección completada',
         lessonsCompletedSuffixMany: ' · {count} lecciones completadas',
+        memberSince: 'Miembro desde {date}',
     },
 
     // Classroom page
