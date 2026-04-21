@@ -88,6 +88,11 @@ export const de: Messages = {
         streakPrompt: 'Starte deine Serie! Poste oder kommentiere heute.',
         streakDayLabel: 'Tage-Serie',
         streakBestLabel: 'Beste',
+        progress: 'Fortschritt',
+        badges: 'Abzeichen',
+        ptsToLevel: 'Pkt bis Stufe {level}',
+        pointsToLevelFull: '{current} von {required} Punkten bis Stufe {level}',
+        maxLevelReached: 'Maximale Stufe erreicht!',
     },
 
     // Auth
@@ -144,6 +149,7 @@ export const de: Messages = {
         enrolledCoursesMany: 'In {count} Kursen eingeschrieben',
         lessonsCompletedSuffixOne: ' · 1 Lektion abgeschlossen',
         lessonsCompletedSuffixMany: ' · {count} Lektionen abgeschlossen',
+        memberSince: 'Mitglied seit {date}',
     },
 
     // Classroom page

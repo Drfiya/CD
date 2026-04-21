@@ -1,7 +1,7 @@
 'use server';
 
 import db from '@/lib/db';
-import { POINTS, calculateLevel } from '@/lib/gamification-config';
+import { POINTS, calculateLevel, getGamificationConfig } from '@/lib/gamification-config';
 import { requireAuth } from '@/lib/auth-guards';
 
 export type PointAction = keyof typeof POINTS;
@@ -11,7 +11,10 @@ export async function awardPoints(
   action: PointAction
 ): Promise<{ levelUp: boolean; newLevel?: number; leveledUp: number | null }> {
   await requireAuth();
-  const amount = POINTS[action];
+
+  // Read config from DB (cached per request), fall back to defaults
+  const config = await getGamificationConfig();
+  const amount = config.points[action];
 
   // Use transaction to ensure atomicity
   const result = await db.$transaction(async (tx) => {
@@ -31,8 +34,8 @@ export async function awardPoints(
       select: { points: true, level: true },
     });
 
-    // 3. Check if user crossed level threshold
-    const newLevel = calculateLevel(user.points);
+    // 3. Check if user crossed level threshold (using DB thresholds)
+    const newLevel = calculateLevel(user.points, config.levelThresholds);
     if (newLevel > user.level) {
       await tx.user.update({
         where: { id: userId },
@@ -46,3 +49,4 @@ export async function awardPoints(
 
   return result;
 }
+

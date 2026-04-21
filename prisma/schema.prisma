@@ -346,6 +346,12 @@ model CommunitySettings {
   landingShowAvatarMosaic Boolean @default(false)
   landingShowMemberCount  Boolean @default(false)
   landingShowRecentPosts  Boolean @default(false)
+  // Gamification config (editable from /admin/gamify)
+  gamifyPointsPost       Int    @default(5)
+  gamifyPointsComment    Int    @default(2)
+  gamifyPointsLike       Int    @default(1)
+  gamifyPointsLesson     Int    @default(10)
+  gamifyLevelThresholds  String @default("0,50,120,210,320,450,600,770,960,1170")
 }
 
 model Membership {

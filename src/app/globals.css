@@ -17,6 +17,15 @@
   --color-success: #22c55e;
   --color-brand: #D94A4A;
 
+  /* CR11 Badge palette — visual system for Lucide-line badge pilots.
+     `--color-brand` (#D94A4A) stays the product brand. `--color-badge-prestige`
+     (#D32F2F) is a distinct accent reserved for the 2 prestige badges
+     (Peer Reviewed, and — in R12 — Top 10). Never substitute between them. */
+  --color-badge-prestige: #D32F2F;
+  --color-badge-charcoal: #1F2937;
+  --color-badge-slate:    #6B7280;
+  --color-badge-mist:     #F3F4F6;
+
   /* Category colors */
   --color-category-general: #6b7280;
   --color-category-announcements: #ef4444;
@@ -38,6 +47,26 @@
   --color-muted-foreground: #a3a3a3;
   --color-border: #262626;
 }
+
+/* CR11 — Badge frame: glyph color follows theme via `currentColor`, so
+   inline-React SVGs with `stroke="currentColor"` pick up light/dark. The
+   accent-chip color is a separate CSS variable so it stays constant across
+   modes.
+   Uses hex literals (not `var(--color-badge-*)`) because Tailwind v4
+   `@theme` vars can be out-of-scope for raw CSS rules that fire before
+   Tailwind's generated layer — empirically flaky in dark mode. The
+   hex-literal form is bulletproof.
+   Belt-and-suspenders: BadgeGlyph also sets `text-[#1F2937] dark:text-[#F3F4F6]`
+   Tailwind utilities, so the flip works even if this rule is purged. */
+.badge-frame {
+  color: #1F2937;
+}
+.dark .badge-frame {
+  color: #F3F4F6;
+}
+.badge-accent-charcoal { --badge-accent: #1F2937; }
+.badge-accent-slate    { --badge-accent: #6B7280; }
+.badge-accent-prestige { --badge-accent: #D32F2F; }
 
 /* Base styles */
 body {

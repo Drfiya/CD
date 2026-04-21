@@ -2,8 +2,8 @@
 
 import { useOptimistic, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { BadgeGlyph } from '@/components/gamification/badge-glyph';
 import {
   createCustomBadgeDefinition,
   deleteBadgeDefinition,
@@ -73,20 +73,15 @@ export function BadgeDesigner({ definitions, members }: BadgeDesignerProps) {
                       : 'hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-900 dark:text-neutral-100'
                   }`}
                 >
-                  {d.iconUrl ? (
-                    <Image
-                      src={d.iconUrl}
-                      alt=""
-                      width={24}
-                      height={24}
-                      className="w-6 h-6 object-contain shrink-0"
-                      unoptimized
+                  <span className="shrink-0 w-6 h-6 flex items-center justify-center">
+                    <BadgeGlyph
+                      iconUrl={d.iconUrl}
+                      emoji={d.emoji}
+                      label={d.label}
+                      colorHex={d.colorHex}
+                      size={24}
                     />
-                  ) : (
-                    <span aria-hidden="true" className="text-lg leading-none w-6 text-center">
-                      {d.emoji}
-                    </span>
-                  )}
+                  </span>
                   <span className="flex-1 min-w-0 truncate text-sm">{d.label}</span>
                   <span
                     className={`text-[10px] font-medium uppercase tracking-wide shrink-0 ${

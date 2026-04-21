@@ -86,6 +86,11 @@ export const en: Messages = {
         streakPrompt: 'Start your streak! Post or comment today.',
         streakDayLabel: 'day streak',
         streakBestLabel: 'Best',
+        progress: 'Progress',
+        badges: 'Badges',
+        ptsToLevel: 'pts to Level {level}',
+        pointsToLevelFull: '{current} of {required} points to Level {level}',
+        maxLevelReached: 'Max level reached!',
     },
 
     // Auth
@@ -142,6 +147,7 @@ export const en: Messages = {
         enrolledCoursesMany: 'Enrolled in {count} courses',
         lessonsCompletedSuffixOne: ' · 1 lesson completed',
         lessonsCompletedSuffixMany: ' · {count} lessons completed',
+        memberSince: 'Member since {date}',
     },
 
     classroomPage: {
@@ -276,6 +282,11 @@ export interface Messages {
         streakPrompt: string;
         streakDayLabel: string;
         streakBestLabel: string;
+        progress: string;
+        badges: string;
+        ptsToLevel: string;
+        pointsToLevelFull: string;
+        maxLevelReached: string;
     };
     auth: {
         signIn: string;
@@ -322,6 +333,7 @@ export interface Messages {
         enrolledCoursesMany: string;
         lessonsCompletedSuffixOne: string;
         lessonsCompletedSuffixMany: string;
+        memberSince: string;
     };
     classroomPage: {
         title: string;

@@ -1,6 +1,6 @@
-import Image from 'next/image';
 import { BadgeType } from '@/generated/prisma/client';
 import { getBadgeDefinitions, resolveBadgeView } from '@/lib/badge-definitions-internal';
+import { BadgeGlyph } from '@/components/gamification/badge-glyph';
 
 export type DisplayBadge = {
   type: BadgeType | null;
@@ -11,17 +11,18 @@ export interface BadgeDisplayProps {
   badges: DisplayBadge[];
   maxVisible?: number;
   /**
-   * "compact" — inline emoji row (for member cards / sidebars)
-   * "detailed" — emoji + label (for profile pages)
+   * "compact" — inline row (for member cards / sidebars)
+   * "detailed" — icon/emoji + label (for profile pages)
    */
   variant?: 'compact' | 'detailed';
   className?: string;
 }
 
 /**
- * Server component — awaits the request-scoped BadgeDefinition map so that
- * admin edits (new label, new icon, new color) propagate instantly without
- * redeploy. Custom (non-BadgeType) badges are resolved via customDefinitionId.
+ * Rendering is delegated to <BadgeGlyph>, which owns the three-way branch:
+ *   pilot iconUrl → inline React SVG (currentColor light/dark)
+ *   admin-uploaded iconUrl → <Image> (currentColor lost; acceptable)
+ *   null iconUrl → emoji (pre-CR11 fallback)
  */
 export async function BadgeDisplay({
   badges,
@@ -33,8 +34,6 @@ export async function BadgeDisplay({
 
   const defs = await getBadgeDefinitions();
 
-  // Resolve each badge to its definition; drop badges with neither a known type
-  // nor a known customDefinitionId (e.g. deleted custom definition).
   const resolved = badges
     .map((b) => ({ badge: b, view: resolveBadgeView(b, defs) }))
     .filter((r): r is { badge: DisplayBadge; view: NonNullable<typeof r.view> } => r.view !== null);
@@ -53,19 +52,13 @@ export async function BadgeDisplay({
             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 dark:bg-neutral-800 text-xs text-gray-700 dark:text-neutral-200"
             title={view.description}
           >
-            {view.iconUrl ? (
-              <Image
-                src={view.iconUrl}
-                alt=""
-                aria-hidden="true"
-                width={16}
-                height={16}
-                className="w-4 h-4 object-contain"
-                unoptimized
-              />
-            ) : (
-              <span aria-hidden="true" className="text-sm leading-none">{view.emoji}</span>
-            )}
+            <BadgeGlyph
+              iconUrl={view.iconUrl}
+              emoji={view.emoji}
+              label={view.label}
+              colorHex={view.colorHex}
+              size={16}
+            />
             <span>{view.label}</span>
           </li>
         ))}
@@ -82,28 +75,19 @@ export async function BadgeDisplay({
       aria-label={`${resolved.length} earned badge${resolved.length === 1 ? '' : 's'}`}
     >
       {visible.map(({ view }, idx) => (
-        view.iconUrl ? (
-          <Image
-            key={`${view.id}-${idx}`}
-            src={view.iconUrl}
-            alt=""
-            title={view.label}
-            aria-label={view.label}
-            width={16}
-            height={16}
-            className="w-4 h-4 object-contain"
-            unoptimized
+        <span
+          key={`${view.id}-${idx}`}
+          title={view.label}
+          className="inline-flex items-center"
+        >
+          <BadgeGlyph
+            iconUrl={view.iconUrl}
+            emoji={view.emoji}
+            label={view.label}
+            colorHex={view.colorHex}
+            size={16}
           />
-        ) : (
-          <span
-            key={`${view.id}-${idx}`}
-            title={view.label}
-            aria-label={view.label}
-            className="text-base leading-none"
-          >
-            {view.emoji}
-          </span>
-        )
+        </span>
       ))}
       {overflow > 0 && (
         <span className="text-xs text-gray-500 dark:text-neutral-400">+{overflow}</span>

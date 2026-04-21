@@ -70,7 +70,12 @@ const tabs: Tab[] = [
   },
   {
     href: '/admin/language-settings',
-    label: 'Language Settings',
+    label: 'Language',
+    canAccess: (role) => canEditSettings(role),
+  },
+  {
+    href: '/admin/gamify',
+    label: 'Gamify',
     canAccess: (role) => canEditSettings(role),
   },
   {

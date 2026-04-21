@@ -74,7 +74,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
   }
 
   const isOwnProfile = session?.user?.id === user.id;
-  const memberSince = user.createdAt.toLocaleDateString('en-US', {
+  const memberSince = user.createdAt.toLocaleDateString(userLanguage === 'de' ? 'de-DE' : 'en-US', {
     month: 'long',
     year: 'numeric',
   });
@@ -130,14 +130,14 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
 
         {/* Gamification stats */}
         <div className="border rounded-lg p-4 mb-6 max-w-xs mx-auto">
-          <h3 className="font-medium mb-3">Progress</h3>
-          <PointsDisplay points={user.points} level={user.level} />
+          <h3 className="font-medium mb-3">{messages.gamification.progress}</h3>
+          <PointsDisplay points={user.points} level={user.level} messages={messages} />
         </div>
 
         {/* Earned badges (full list with labels) */}
         {user.badges.length > 0 && (
           <div className="mb-6">
-            <h3 className="font-medium mb-3 text-sm text-muted-foreground">Badges</h3>
+            <h3 className="font-medium mb-3 text-sm text-muted-foreground">{messages.gamification.badges}</h3>
             <div className="flex justify-center">
               <BadgeDisplay badges={user.badges} variant="detailed" />
             </div>
@@ -145,7 +145,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
         )}
 
         <p className="text-sm text-muted-foreground">
-          Member since {memberSince}
+          {messages.profilePage.memberSince.replace('{date}', memberSince)}
         </p>
 
         {isOwnProfile && (
@@ -153,7 +153,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
             href="/profile/edit"
             className="inline-block mt-6 text-blue-600 hover:text-blue-800 text-sm"
           >
-            Edit Profile
+            {messages.auth.editProfile}
           </Link>
         )}
       </div>

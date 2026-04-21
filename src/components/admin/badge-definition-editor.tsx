@@ -1,8 +1,8 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { BadgeGlyph } from '@/components/gamification/badge-glyph';
 import { DESCRIPTION_MAX, type Definition } from './badge-designer-types';
 
 export function BadgeDefinitionEditor({
@@ -63,20 +63,13 @@ export function BadgeDefinitionEditor({
           className="w-14 h-14 rounded-full flex items-center justify-center shrink-0"
           style={{ backgroundColor: colorHex + '20', border: `2px solid ${colorHex}` }}
         >
-          {iconUrl ? (
-            <Image
-              src={iconUrl}
-              alt=""
-              width={32}
-              height={32}
-              className="w-8 h-8 object-contain"
-              unoptimized
-            />
-          ) : (
-            <span className="text-2xl leading-none" aria-hidden="true">
-              {emoji || '?'}
-            </span>
-          )}
+          <BadgeGlyph
+            iconUrl={iconUrl}
+            emoji={emoji || '?'}
+            label={label || 'Badge preview'}
+            colorHex={colorHex}
+            size={32}
+          />
         </div>
         <div className="min-w-0">
           <p className="font-medium text-gray-900 dark:text-neutral-100">{label || '(no label)'}</p>
