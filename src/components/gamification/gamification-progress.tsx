@@ -86,8 +86,7 @@ export function GamificationProgress({
       </div>
 
       {badges.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-neutral-700 flex items-center justify-between">
-          <span className="text-xs text-gray-500 dark:text-neutral-400">Badges</span>
+        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-neutral-700 flex justify-end">
           <BadgeDisplay badges={badges} maxVisible={4} />
         </div>
       )}
