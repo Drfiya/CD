@@ -9,6 +9,6 @@ config({ path: '.env' });
 export default defineConfig({
   schema: 'prisma/schema.prisma',
   datasource: {
-    url: env('DIRECT_URL'), // Use direct connection for CLI (migrations)
+    url: process.env.DIRECT_URL || process.env.DATABASE_URL, // Use whatever is available
   },
 });
