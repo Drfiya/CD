@@ -35,6 +35,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
 
   // Cast Prisma Json fields for TypeScript
   const embeds = (post.embeds as unknown as VideoEmbed[]) || [];
+  const images = (post.images as unknown as string[]) || [];
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -63,6 +64,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
           postId={id}
           initialContent={JSON.stringify(post.content)}
           initialEmbeds={embeds}
+          initialImages={images}
         />
       </div>
     </div>

@@ -63,6 +63,7 @@ export function PostCard({
   const embeds = (post.embeds as unknown as VideoEmbed[]) || [];
   const gifs = (post.gifs as unknown as string[]) || [];
   const gifThumbnails = ((post as unknown as { gifThumbnails: unknown }).gifThumbnails as string[]) || [];
+  const images = (post.images as unknown as string[]) || [];
 
   // Determine if this post was translated
   const postLanguage = originalLanguage || (post as { languageCode?: string }).languageCode || 'en';
@@ -142,6 +143,22 @@ export function PostCard({
             />
           )}
         </div>
+
+        {/* Uploaded Images */}
+        {images.length > 0 && (
+          <div className="mt-4 space-y-3">
+            {images.map((image, i) => (
+              <div key={`img-${i}`} className="rounded-lg overflow-hidden border border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900 cursor-pointer" onClick={() => window.open(image, '_blank')}>
+                <img
+                  src={image}
+                  alt={`Post attachment ${i + 1}`}
+                  className="w-full max-h-[500px] object-contain"
+                  loading="lazy"
+                />
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Video embeds — feed mode: thumbnail only, no iframe */}
         {embeds.length > 0 && (

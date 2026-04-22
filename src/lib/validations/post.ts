@@ -65,6 +65,18 @@ export const postSchema = z.object({
       }
     })
     .pipe(z.array(z.string().url())),
+  images: z
+    .string()
+    .optional()
+    .default('[]')
+    .transform((val) => {
+      try {
+        return JSON.parse(val);
+      } catch {
+        return [];
+      }
+    })
+    .pipe(z.array(z.string().url())),
 });
 
 // Input type for forms (before transforms)

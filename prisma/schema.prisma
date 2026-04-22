@@ -78,6 +78,7 @@ model Post {
   content      Json
   plainText    String?
   embeds       Json                     @default("[]")
+  images       Json                     @default("[]")
   authorId     String
   categoryId   String?
   createdAt    DateTime                 @default(now())

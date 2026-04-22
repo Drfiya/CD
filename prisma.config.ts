@@ -1,4 +1,4 @@
-import { defineConfig, env } from 'prisma/config';
+import { defineConfig, env } from '@prisma/config';
 import { config } from 'dotenv';
 
 // Load .env.local first (dev overrides), then .env as fallback

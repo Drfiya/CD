@@ -14,14 +14,16 @@ interface PostFormProps {
   postId?: string;
   initialContent?: string;
   initialEmbeds?: VideoEmbed[];
+  initialImages?: string[];
 }
 
-export function PostForm({ mode, postId, initialContent, initialEmbeds }: PostFormProps) {
+export function PostForm({ mode, postId, initialContent, initialEmbeds, initialImages }: PostFormProps) {
   const router = useRouter();
   const [content, setContent] = useState<object | null>(
     initialContent ? JSON.parse(initialContent) : null
   );
   const [embeds, setEmbeds] = useState<VideoEmbed[]>(initialEmbeds || []);
+  const [images, setImages] = useState<string[]>(initialImages || []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,6 +35,7 @@ export function PostForm({ mode, postId, initialContent, initialEmbeds }: PostFo
     const formData = new FormData();
     formData.set('content', JSON.stringify(content));
     formData.set('embeds', JSON.stringify(embeds));
+    formData.set('images', JSON.stringify(images));
 
     const result = mode === 'create'
       ? await createPost(formData)
@@ -57,6 +60,10 @@ export function PostForm({ mode, postId, initialContent, initialEmbeds }: PostFo
     setEmbeds(embeds.filter((_, i) => i !== index));
   };
 
+  const removeImage = (index: number) => {
+    setImages(images.filter((_, i) => i !== index));
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <PostEditor
@@ -67,7 +74,7 @@ export function PostForm({ mode, postId, initialContent, initialEmbeds }: PostFo
 
       <VideoInput
         onAddVideo={(embed) => setEmbeds([...embeds, embed])}
-        onAddImage={() => {/* Images handled separately */ }}
+        onAddImage={(image) => setImages([...images, image.url])}
         disabled={isSubmitting}
       />
 
@@ -82,6 +89,25 @@ export function PostForm({ mode, postId, initialContent, initialEmbeds }: PostFo
                 onClick={() => removeEmbed(i)}
                 className="absolute top-2 right-2 bg-black/50 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-black/70"
                 aria-label="Remove video"
+              >
+                &times;
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Display added images with remove button */}
+      {images.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {images.map((img, i) => (
+            <div key={`img-${i}`} className="relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+              <img src={img} alt={`Image ${i + 1}`} className="w-full h-full object-cover" />
+              <button
+                type="button"
+                onClick={() => removeImage(i)}
+                className="absolute top-1 right-1 bg-black/50 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-black/70 text-xs"
+                aria-label="Remove image"
               >
                 &times;
               </button>

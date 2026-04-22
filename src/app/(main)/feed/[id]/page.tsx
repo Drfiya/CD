@@ -169,6 +169,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
 
   const embeds = (post.embeds as unknown as VideoEmbed[]) || [];
   const gifs = (post.gifs as unknown as string[]) || [];
+  const images = (post.images as unknown as string[]) || [];
   const originalContentHtml = renderContent(post.content);
 
   return (
@@ -228,6 +229,22 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
             originalLanguage={translatedPost._originalLanguage || originalLanguage}
             userLanguage={userLanguage}
           />
+
+          {/* Uploaded Images */}
+          {images.length > 0 && (
+            <div className="mt-4 space-y-3">
+              {images.map((image, i) => (
+                <div key={`img-${i}`} className="rounded-lg overflow-hidden border border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900 cursor-pointer" onClick={() => window.open(image, '_blank')}>
+                  <img
+                    src={image}
+                    alt={`Post attachment ${i + 1}`}
+                    className="w-full max-h-[600px] object-contain"
+                    loading="lazy"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Video embeds */}
           {embeds.length > 0 && (
