@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { UserMenu } from '@/components/auth/user-menu';
 import { SearchButton } from '@/components/search/search-button';
 import { NotificationBellContainer } from '@/components/layout/notification-bell-container';
+import { UnreadBadge } from '@/components/messages/unread-badge';
 import { LanguageSelector } from '@/components/translation/LanguageSelector';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { ThemeLogo } from '@/components/layout/ThemeLogo';
@@ -70,6 +71,8 @@ export async function Header({ messages, showAdminLink }: HeaderProps) {
           <SearchButton placeholder={messages.search.placeholder} />
           {/* Notification bell — polls every 60s for real data */}
           <NotificationBellContainer />
+          {/* CR12: Direct Messages unread badge (client component) */}
+          <UnreadBadge ariaLabel={messages.dm.navLabel} />
           {/* User menu */}
           <UserMenu messages={messages} showAdminLink={showAdminLink} />
         </div>

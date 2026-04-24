@@ -198,6 +198,48 @@ export const en: Messages = {
         welcomeToastTitle: 'Welcome to the community!',
         welcomeToastSubtitle: 'You earned the Welcome badge 🎉',
     },
+    dm: {
+        navLabel: 'Messages',
+        inboxTitle: 'Messages',
+        emptyInboxTitle: 'No conversations yet',
+        emptyInboxBody: 'Open a member’s profile and tap "Send message" to start a conversation.',
+        selectConversation: 'Select a conversation to start chatting.',
+        newMessagePlaceholder: 'Write a message…',
+        send: 'Send',
+        sending: 'Sending…',
+        retry: 'Retry',
+        sendFailed: 'Could not send. Tap to retry.',
+        youBlockedThisUser: 'You blocked this user. Unblock to continue.',
+        theyBlockedYou: 'You can no longer send messages in this conversation.',
+        block: 'Block',
+        unblock: 'Unblock',
+        confirmBlockTitle: 'Block this user?',
+        confirmBlockBody: 'They won’t be able to send you messages, and this conversation will be hidden from your inbox.',
+        cancel: 'Cancel',
+        sendMessageCta: 'Send message',
+        backToInbox: 'Back',
+        unreadLabel: 'unread',
+        // Round 3 / A4 — replaces the prior `rateLimited` constant so the UI always
+        // surfaces the exact `retryAfterSec` from the server action.
+        rateLimitedWithSeconds: 'Too fast. Please retry in {seconds} seconds.',
+        loading: 'Loading…',
+        loadOlder: 'Load older messages',
+        messageEmptyError: 'Message cannot be empty.',
+        deliveredAriaLabel: 'Delivered',
+        readAriaLabel: 'Read',
+        connecting: 'Connecting…',
+        reconnecting: 'Reconnecting…',
+        // Round 3 / Item 5 — File Attachments (images + PDFs only)
+        attachmentButton: 'Attach a file',
+        attachmentRemove: 'Remove attachment',
+        attachmentUploading: 'Uploading…',
+        attachmentTooLarge: 'File too large: max {mb} MB.',
+        attachmentInvalidType: 'File type not supported. Images (JPG, PNG, WebP) or PDFs only.',
+        attachmentUploadFailed: 'Upload failed. Please try again.',
+        attachmentDownload: 'Download',
+        attachmentOpenImage: 'Open full-size image',
+        attachmentImageAlt: 'Image attachment: {name}',
+    },
     landing_social_proof: {
         heroJoinCta: 'Join the community',
         featuredCoursesTitle: 'Featured Courses',
@@ -391,5 +433,49 @@ export interface Messages {
         weekLessonsCompleted: string;
         memberCountTemplate: string;
         enrolledCountLabel: string;
+    };
+    // CR12 — Direct Messages
+    dm: {
+        navLabel: string;
+        inboxTitle: string;
+        emptyInboxTitle: string;
+        emptyInboxBody: string;
+        selectConversation: string;
+        newMessagePlaceholder: string;
+        send: string;
+        sending: string;
+        retry: string;
+        sendFailed: string;
+        youBlockedThisUser: string;
+        theyBlockedYou: string;
+        block: string;
+        unblock: string;
+        confirmBlockTitle: string;
+        confirmBlockBody: string;
+        cancel: string;
+        sendMessageCta: string;
+        backToInbox: string;
+        unreadLabel: string;
+        // Round 3 / A4 — template returns "Too fast. Please retry in N seconds." for N>=2
+        // and "… in 1 second." for the singular. All four locales must implement this exact
+        // signature (strict TS enforces parity per feedback/shared_interface_forces_scope_creep.md).
+        rateLimitedWithSeconds: string;
+        loading: string;
+        loadOlder: string;
+        messageEmptyError: string;
+        deliveredAriaLabel: string;
+        readAriaLabel: string;
+        connecting: string;
+        reconnecting: string;
+        // Round 3 / Item 5 — File Attachments (JPG/PNG/WebP/PDF, 10 MB hard cap).
+        attachmentButton: string;
+        attachmentRemove: string;
+        attachmentUploading: string;
+        attachmentTooLarge: string;
+        attachmentInvalidType: string;
+        attachmentUploadFailed: string;
+        attachmentDownload: string;
+        attachmentOpenImage: string;
+        attachmentImageAlt: string;
     };
 }

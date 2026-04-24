@@ -57,6 +57,12 @@ model User {
   activationChecklistDismissedAt DateTime?
   // CR9 F2: Cross-device theme preference. Nullable so a future "system" option can NULL without a second migration.
   themePreference       String?    @default("dark") @db.VarChar(10)
+  // CR12: Direct Messages (append-only relations)
+  conversationsAsUserA  Conversation[] @relation("ConversationUserA")
+  conversationsAsUserB  Conversation[] @relation("ConversationUserB")
+  messagesSent          Message[]      @relation("MessageSender")
+  dmBlocksCreated       DmBlock[]      @relation("DmBlockCreator")
+  dmBlocksReceived      DmBlock[]      @relation("DmBlockTarget")
 
   @@index([email])
   @@index([points])
@@ -875,4 +881,83 @@ model Badge {
   @@unique([userId, customDefinitionId])
   @@index([userId])
   @@index([customDefinitionId])
+}
+
+/// CR12 — Direct Messages (1:1 only).
+///
+/// A conversation is defined by the *unordered* pair of its two participants.
+/// Storage enforces canonical ordering (userAId <= userBId lexicographically)
+/// at the application layer before insert, combined with `@@unique([userAId,
+/// userBId])` so the pair (A, B) and (B, A) resolve to the same row.
+model Conversation {
+  id        String   @id @default(cuid())
+  userAId   String
+  userBId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  /// Denormalised `MAX(Message.createdAt)` for cheap ORDER BY in the inbox.
+  /// Updated by sendMessage action in the same transaction as the message insert.
+  lastMessageAt DateTime?
+
+  userA     User      @relation("ConversationUserA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB     User      @relation("ConversationUserB", fields: [userBId], references: [id], onDelete: Cascade)
+  messages  Message[]
+
+  @@unique([userAId, userBId])
+  @@index([userAId])
+  @@index([userBId])
+  @@index([lastMessageAt(sort: Desc)])
+}
+
+model Message {
+  id              String   @id @default(cuid())
+  conversationId  String
+  senderId        String
+  body            String   @db.Text
+  /// Client-generated UUID echoed back so optimistic UI can reconcile the
+  /// pending bubble with the persisted row via Realtime INSERT payload.
+  clientMessageId String?  @db.VarChar(64)
+  createdAt       DateTime @default(now())
+  readAt          DateTime?
+
+  /// Round 3 / Item 5 — File attachments (JPG/PNG/WebP/PDF, 10 MB hard cap).
+  /// Nullable so text-only messages persist unchanged. All writes go through
+  /// `sendMessage`, which re-verifies MIME + size + magic bytes before insert
+  /// (see `dm-attachment-actions.ts`). No `MessageAttachment` join-table: the
+  /// product constraint is exactly one attachment per message.
+  attachmentPath  String?  @db.VarChar(512)
+  attachmentMime  String?  @db.VarChar(64)
+  attachmentSize  Int?
+  attachmentName  String?  @db.VarChar(255)
+
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender          User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt(sort: Desc)])
+  @@index([conversationId, readAt])
+  @@index([senderId])
+  /// Round 2 / B1 — Declarative placeholder for the partial unique index on
+  /// `(clientMessageId, senderId) WHERE clientMessageId IS NOT NULL`. Prisma 7
+  /// does not support `WHERE` clauses on `@@unique`, so the actual constraint
+  /// is created via raw SQL in `20260425_dm_client_message_id_unique/
+  /// migration.sql` — the migration drops this non-unique index and replaces
+  /// it with the partial UNIQUE index of the same columns. Keeping the
+  /// declaration here makes the intent discoverable from the schema alone.
+  @@index([clientMessageId, senderId], name: "Message_clientMessageId_senderId_idx")
+}
+
+/// One-directional block. Enforced in `sendMessage` and the conversation list.
+/// `@@unique` prevents duplicate block rows on double-click.
+model DmBlock {
+  id         String   @id @default(cuid())
+  blockerId  String
+  blockedId  String
+  createdAt  DateTime @default(now())
+
+  blocker    User @relation("DmBlockCreator", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked    User @relation("DmBlockTarget", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
 }

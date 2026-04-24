@@ -8,6 +8,7 @@ import { LevelBadge } from '@/components/gamification/level-badge';
 import { PointsDisplay } from '@/components/gamification/points-display';
 import { BadgeDisplay } from '@/components/gamification/badge-display';
 import { UGCText } from '@/components/translation/UGCText';
+import { SendMessageButton } from '@/components/messages/send-message-button';
 import { getMessages } from '@/lib/i18n';
 import { getUserLanguage } from '@/lib/translation/helpers';
 
@@ -148,13 +149,19 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
           {messages.profilePage.memberSince.replace('{date}', memberSince)}
         </p>
 
-        {isOwnProfile && (
+        {isOwnProfile ? (
           <Link
             href="/profile/edit"
             className="inline-block mt-6 text-blue-600 hover:text-blue-800 text-sm"
           >
             {messages.auth.editProfile}
           </Link>
+        ) : (
+          session?.user?.id && (
+            <div className="mt-6 flex justify-center">
+              <SendMessageButton targetUserId={user.id} label={messages.dm.sendMessageCta} />
+            </div>
+          )
         )}
       </div>
     </div>
