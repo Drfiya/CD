@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -52,6 +53,8 @@ interface ChatWindowProps {
   conversationId: string;
   otherUser: { id: string; name: string | null; image: string | null };
   initialMessages: ChatMessage[];
+  /** A8 — cursor for loading the preceding page, or null when all messages fit. */
+  initialNextCursor: string | null;
   canSend: boolean;
   iBlocked: boolean;
   theyBlocked: boolean;
@@ -80,6 +83,7 @@ export function ChatWindow({
   conversationId,
   otherUser,
   initialMessages,
+  initialNextCursor,
   canSend: initialCanSend,
   iBlocked: initialIBlocked,
   theyBlocked: initialTheyBlocked,
@@ -90,6 +94,15 @@ export function ChatWindow({
   const router = useRouter();
 
   const [msgs, setMsgs] = useState<ChatMessage[]>(initialMessages);
+  const [nextCursor, setNextCursor] = useState<string | null>(initialNextCursor);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  // Refs for scroll-position preservation during Load-More prepend.
+  // `loadMoreAnchorRef` captures scrollHeight before prepend; the
+  // useLayoutEffect restores the offset after the DOM updates.
+  // `skipNextScrollToBottomRef` prevents the auto-scroll-to-bottom effect
+  // from overriding the restored position on the same render cycle.
+  const loadMoreAnchorRef = useRef<number | null>(null);
+  const skipNextScrollToBottomRef = useRef(false);
   const [iBlocked, setIBlocked] = useState(initialIBlocked);
   // theyBlocked is captured at mount from server props. The parent uses
   // `key={conversationId}` so a re-navigation re-mounts this component with
@@ -124,12 +137,28 @@ export function ChatWindow({
   // Note: parent applies `key={conversationId}` to force a fresh mount when
   // switching conversations, so we intentionally do NOT sync props→state here.
 
-  // Auto-scroll to bottom on message list changes
+  // Auto-scroll to bottom on message list changes.
+  // Skipped when a Load-More prepend is in progress (skipNextScrollToBottomRef
+  // is set before setMsgs so the flag is already true when this effect fires).
   useEffect(() => {
+    if (skipNextScrollToBottomRef.current) {
+      skipNextScrollToBottomRef.current = false;
+      return;
+    }
     const el = scrollRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
   }, [msgs.length]);
+
+  // Restore scroll position synchronously after a Load-More prepend so the
+  // viewport stays anchored to the message the user was reading.
+  useLayoutEffect(() => {
+    if (loadMoreAnchorRef.current !== null && scrollRef.current) {
+      const el = scrollRef.current;
+      el.scrollTop = el.scrollHeight - loadMoreAnchorRef.current;
+      loadMoreAnchorRef.current = null;
+    }
+  }, [msgs]);
 
   // Mark conversation as read on mount and on any incoming message.
   // The UnreadBadge + ConversationList listen to the DM_READ_EVENT broadcast
@@ -479,6 +508,41 @@ export function ChatWindow({
     });
   }, [otherUser.id]);
 
+  const doLoadMore = useCallback(async () => {
+    if (!nextCursor || isLoadingMore) return;
+    setIsLoadingMore(true);
+    try {
+      const result = await getConversation(conversationId, { cursor: nextCursor, limit: 50 });
+      if ('error' in result) return;
+      const older: ChatMessage[] = result.messages.map((m) => ({
+        id: m.id,
+        conversationId: m.conversationId,
+        senderId: m.senderId,
+        body: m.body,
+        clientMessageId: m.clientMessageId,
+        createdAt: new Date(m.createdAt),
+        readAt: m.readAt ? new Date(m.readAt) : null,
+        attachmentPath: m.attachmentPath ?? null,
+        attachmentMime: m.attachmentMime ?? null,
+        attachmentSize: m.attachmentSize ?? null,
+        attachmentName: m.attachmentName ?? null,
+      }));
+      // Flag the auto-scroll-to-bottom effect to skip this render cycle,
+      // then save the current scrollHeight so useLayoutEffect can restore it.
+      skipNextScrollToBottomRef.current = true;
+      loadMoreAnchorRef.current = scrollRef.current?.scrollHeight ?? 0;
+      setMsgs((prev) => {
+        // Deduplicate: the Realtime subscription may have already inserted some
+        // of these rows into `prev`. Keep older messages that aren't already present.
+        const existingIds = new Set(prev.map((m) => m.id));
+        return [...older.filter((m) => !existingIds.has(m.id)), ...prev];
+      });
+      setNextCursor(result.nextCursor);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [conversationId, isLoadingMore, nextCursor]);
+
   // Round 4 / Item 1 — drag-and-drop. Counter-based enter/leave tracking
   // prevents false negatives when the pointer moves over child elements.
   const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -674,6 +738,19 @@ export function ChatWindow({
         className="flex-1 overflow-y-auto px-3 py-4 space-y-2 bg-background"
         aria-live="polite"
       >
+        {/* A8 — Load-More button at the top of the list for older messages. */}
+        {nextCursor && (
+          <div className="flex justify-center pb-2">
+            <button
+              type="button"
+              onClick={() => void doLoadMore()}
+              disabled={isLoadingMore}
+              className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded px-2 py-1"
+            >
+              {isLoadingMore ? t.loadingMoreMessages : t.loadMoreMessages}
+            </button>
+          </div>
+        )}
         {msgs.map((m) => (
           <MessageBubble
             key={m.clientMessageId ?? m.id}

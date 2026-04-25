@@ -25,7 +25,8 @@ export default async function MessagesLayout({ children }: { children: React.Rea
   }
   const messages = getMessages(userLanguage);
 
-  const initialConversations = await getConversationList();
+  const { items: initialConversations, nextCursor: initialNextCursor } =
+    await getConversationList();
 
   return (
     <MessagesShell
@@ -39,6 +40,7 @@ export default async function MessagesLayout({ children }: { children: React.Rea
           <div className="flex-1 overflow-y-auto">
             <ConversationList
               initialConversations={initialConversations}
+              initialNextCursor={initialNextCursor}
               messages={messages.dm}
               locale={userLanguage}
             />

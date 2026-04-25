@@ -259,6 +259,11 @@ export const en: Messages = {
         // Round 6 / A2 — Inbox attachment preview hints
         inboxAttachmentPhoto: '📷 Photo',
         inboxAttachmentDocument: '📄 Document',
+        // Round 8 — Pagination
+        loadMoreMessages: 'Load older messages',
+        loadingMoreMessages: 'Loading…',
+        loadMoreConversations: 'Load more',
+        loadingMoreConversations: 'Loading…',
     },
     landing_social_proof: {
         heroJoinCta: 'Join the community',
@@ -272,6 +277,61 @@ export const en: Messages = {
         weekLessonsCompleted: 'lessons completed',
         memberCountTemplate: 'Join {count}+ Science Experts',
         enrolledCountLabel: 'enrolled',
+    },
+    // CR14 — Bug Reporter (admin-only floating button + command center tab)
+    bugReporter: {
+        buttonAriaLabel: 'Report a bug',
+        modalTitle: 'Report a Bug',
+        fieldTitle: 'Title',
+        fieldTitlePlaceholder: 'Brief description of the bug',
+        fieldDescription: 'Description',
+        fieldDescriptionPlaceholder: 'Steps to reproduce, expected vs actual behaviour…',
+        fieldPriority: 'Priority',
+        fieldReproducibility: 'Reproducibility',
+        fieldCategory: 'Category',
+        fieldPageUrl: 'Page URL',
+        fieldScreenshots: 'Screenshots',
+        fieldScreenshotsHint: 'optional, max 5',
+        priorityP1: 'P1 — Critical',
+        priorityP2: 'P2 — High',
+        priorityP3: 'P3 — Medium',
+        priorityP4: 'P4 — Low',
+        reproducibilityAlways: 'Always',
+        reproducibilitySometimes: 'Sometimes',
+        reproducibilityOnce: 'Once',
+        submit: 'Submit Bug Report',
+        submitting: 'Submitting…',
+        cancel: 'Cancel',
+        submitSuccess: 'Bug report submitted',
+        submitError: 'Failed to submit bug report',
+        screenshotDropHint: 'Drop screenshots here, paste (Cmd+V), or click to pick',
+        screenshotTypeHint: 'JPEG · PNG · WebP · GIF · max 5 MB each',
+        screenshotAtLimit: 'Max 5 screenshots reached',
+        screenshotUploading: 'Uploading…',
+        screenshotTooLarge: 'Screenshot too large — max 5 MB',
+        screenshotInvalidType: 'Only JPEG, PNG, WebP, and GIF screenshots allowed',
+        screenshotUploadFailed: 'Screenshot upload failed — please try again',
+        tablePageTitle: 'Bug Reports',
+        tablePageSubtitle: 'Triage and track bugs submitted by the team.',
+        tableExportPdf: 'Export PDF ↗',
+        tableFilterAllStatuses: 'All Statuses',
+        tableFilterAllPriorities: 'All Priorities',
+        tableLoadMore: 'Load more',
+        tableLoadingMore: 'Loading…',
+        tableEmpty: 'No bug reports found',
+        tableColPriority: 'Priority',
+        tableColTitle: 'Title',
+        tableColCategory: 'Category',
+        tableColUrl: 'URL',
+        tableColReported: 'Reported',
+        tableColStatus: 'Status',
+        tableColReporter: 'Reporter',
+        tableColScreenshots: 'Screenshots',
+        statusOpen: 'Open',
+        statusInProgress: 'In Progress',
+        statusResolved: 'Resolved',
+        statusClosed: 'Closed',
+        navLabel: 'Bug Reports',
     },
 };
 
@@ -517,5 +577,65 @@ export interface Messages {
         // Round 6 / A2 — Inbox attachment preview hints
         inboxAttachmentPhoto: string;
         inboxAttachmentDocument: string;
+        // Round 8 — Pagination
+        loadMoreMessages: string;
+        loadingMoreMessages: string;
+        loadMoreConversations: string;
+        loadingMoreConversations: string;
+    };
+    // CR14 — Bug Reporter
+    bugReporter: {
+        buttonAriaLabel: string;
+        modalTitle: string;
+        fieldTitle: string;
+        fieldTitlePlaceholder: string;
+        fieldDescription: string;
+        fieldDescriptionPlaceholder: string;
+        fieldPriority: string;
+        fieldReproducibility: string;
+        fieldCategory: string;
+        fieldPageUrl: string;
+        fieldScreenshots: string;
+        fieldScreenshotsHint: string;
+        priorityP1: string;
+        priorityP2: string;
+        priorityP3: string;
+        priorityP4: string;
+        reproducibilityAlways: string;
+        reproducibilitySometimes: string;
+        reproducibilityOnce: string;
+        submit: string;
+        submitting: string;
+        cancel: string;
+        submitSuccess: string;
+        submitError: string;
+        screenshotDropHint: string;
+        screenshotTypeHint: string;
+        screenshotAtLimit: string;
+        screenshotUploading: string;
+        screenshotTooLarge: string;
+        screenshotInvalidType: string;
+        screenshotUploadFailed: string;
+        tablePageTitle: string;
+        tablePageSubtitle: string;
+        tableExportPdf: string;
+        tableFilterAllStatuses: string;
+        tableFilterAllPriorities: string;
+        tableLoadMore: string;
+        tableLoadingMore: string;
+        tableEmpty: string;
+        tableColPriority: string;
+        tableColTitle: string;
+        tableColCategory: string;
+        tableColUrl: string;
+        tableColReported: string;
+        tableColStatus: string;
+        tableColReporter: string;
+        tableColScreenshots: string;
+        statusOpen: string;
+        statusInProgress: string;
+        statusResolved: string;
+        statusClosed: string;
+        navLabel: string;
     };
 }

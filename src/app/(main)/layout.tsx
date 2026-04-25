@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth';
 import { Header } from '@/components/layout/header';
 import { StickyHeaderWrapper } from '@/components/layout/sticky-header-wrapper';
 import { PaywallModal } from '@/components/paywall/paywall-modal';
+import { BugReporterButton } from '@/components/admin/bug-reporter/bug-reporter-button';
 import { Toaster } from 'sonner';
 import { canEditSettings } from '@/lib/permissions';
 import { getMessages } from '@/lib/i18n';
@@ -42,6 +43,7 @@ export default async function MainLayout({
       <main className="py-6 px-4 md:px-8">{children}</main>
       <Toaster position="top-center" richColors />
       <PaywallModal isOpen={!!showPaywall} />
+      {showAdminLink && <BugReporterButton />}
     </div>
   );
 }

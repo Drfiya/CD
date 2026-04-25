@@ -13,6 +13,8 @@ import type { Messages } from '@/lib/i18n/messages/en';
 
 interface ConversationListProps {
   initialConversations: ConversationListItem[];
+  /** A8 — cursor for the second page, or null when all conversations fit in one page. */
+  initialNextCursor: string | null;
   messages: Messages['dm'];
   /** Round 6 / A1 — App-locale string (e.g. 'en', 'de') threaded from the server
    *  so conversation timestamps match the UI language, not the browser/OS locale. */
@@ -21,6 +23,7 @@ interface ConversationListProps {
 
 export function ConversationList({
   initialConversations,
+  initialNextCursor,
   messages,
   locale,
 }: ConversationListProps) {
@@ -33,6 +36,8 @@ export function ConversationList({
       ? pathname.split('/')[2]
       : undefined;
   const [conversations, setConversations] = useState<ConversationListItem[]>(initialConversations);
+  const [nextCursor, setNextCursor] = useState<string | null>(initialNextCursor);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   // Round 5 / Item 5 — track which conversation id is navigating so we can
   // apply an optimistic active state before the page transition completes.
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -40,7 +45,8 @@ export function ConversationList({
 
   useEffect(() => {
     setConversations(initialConversations);
-  }, [initialConversations]);
+    setNextCursor(initialNextCursor);
+  }, [initialConversations, initialNextCursor]);
 
   // Clear pending state when navigation lands (pathname changes).
   useEffect(() => {
@@ -50,10 +56,13 @@ export function ConversationList({
   useEffect(() => {
     if (!userId) return;
     const supabase = createClient();
+    // Realtime refetch always resets to page 1 so the inbox reflects the
+    // latest ordering after a new message or read event.
     const refetch = () => {
       startTransition(async () => {
-        const fresh = await getConversationList();
+        const { items: fresh, nextCursor: freshCursor } = await getConversationList();
         setConversations(fresh);
+        setNextCursor(freshCursor);
       });
     };
     const channel = supabase
@@ -70,6 +79,22 @@ export function ConversationList({
     };
   }, [userId]);
 
+  async function handleLoadMore() {
+    if (!nextCursor || isLoadingMore) return;
+    setIsLoadingMore(true);
+    try {
+      const { items: more, nextCursor: moreCursor } = await getConversationList({ cursor: nextCursor });
+      // Deduplicate by id in case a Realtime refetch already prepended some rows.
+      setConversations((prev) => {
+        const seen = new Set(prev.map((c) => c.id));
+        return [...prev, ...more.filter((c) => !seen.has(c.id))];
+      });
+      setNextCursor(moreCursor);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }
+
   if (conversations.length === 0) {
     return (
       <div className="p-6 text-center">
@@ -80,6 +105,7 @@ export function ConversationList({
   }
 
   return (
+    <div>
     <ul className="divide-y divide-border" role="list">
       {conversations.map((c) => {
         const isActive = c.id === activeConversationId;
@@ -148,6 +174,19 @@ export function ConversationList({
         );
       })}
     </ul>
+    {nextCursor && (
+      <div className="px-4 py-3 flex justify-center">
+        <button
+          type="button"
+          onClick={() => void handleLoadMore()}
+          disabled={isLoadingMore}
+          className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+        >
+          {isLoadingMore ? messages.loadingMoreConversations : messages.loadMoreConversations}
+        </button>
+      </div>
+    )}
+    </div>
   );
 }
 

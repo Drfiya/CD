@@ -63,6 +63,8 @@ model User {
   messagesSent          Message[]      @relation("MessageSender")
   dmBlocksCreated       DmBlock[]      @relation("DmBlockCreator")
   dmBlocksReceived      DmBlock[]      @relation("DmBlockTarget")
+  // CR14: Bug Reporter (append-only relation)
+  bugReports            BugReport[]    @relation("BugReporter")
 
   @@index([email])
   @@index([points])
@@ -960,4 +962,68 @@ model DmBlock {
   @@unique([blockerId, blockedId])
   @@index([blockerId])
   @@index([blockedId])
+}
+
+// ─── CR14 — Bug Reporter (admin-only) ────────────────────────────────────────
+
+enum BugPriority {
+  P1
+  P2
+  P3
+  P4
+}
+
+enum BugStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum BugReproducibility {
+  ALWAYS
+  SOMETIMES
+  ONCE
+}
+
+/// Bug report submitted via the floating Bug Reporter button (admin-only).
+/// Screenshots are stored in the private `bug-screenshots` Supabase Storage
+/// bucket and referenced as paths in BugScreenshot rows; the UI re-issues
+/// short-lived signed URLs on every request.
+model BugReport {
+  id              String             @id @default(cuid())
+  title           String             @db.VarChar(200)
+  description     String             @db.Text
+  priority        BugPriority
+  status          BugStatus          @default(OPEN)
+  reproducibility BugReproducibility
+  category        String             @db.VarChar(100)
+  pageUrl         String             @db.VarChar(2048)
+  reporterId      String
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  reporter    User            @relation("BugReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  screenshots BugScreenshot[]
+
+  @@index([reporterId])
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt(sort: Desc)])
+}
+
+/// One screenshot attached to a BugReport. Stored in the private
+/// `bug-screenshots` bucket; served exclusively via signed URLs.
+model BugScreenshot {
+  id          String    @id @default(cuid())
+  bugReportId String
+  path        String    @db.VarChar(512)
+  name        String    @db.VarChar(255)
+  mime        String    @db.VarChar(64)
+  size        Int
+  createdAt   DateTime  @default(now())
+
+  bugReport BugReport @relation(fields: [bugReportId], references: [id], onDelete: Cascade)
+
+  @@index([bugReportId])
 }

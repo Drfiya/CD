@@ -3,7 +3,57 @@
 import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth-guards';
 import db from '@/lib/db';
+import { Prisma } from '@/generated/prisma/client';
 import { startConversationSchema } from '@/lib/validations/dm';
+
+// ---------------------------------------------------------------------------
+// Inbox pagination constants + cursor helpers
+// ---------------------------------------------------------------------------
+
+const INBOX_TAKE = 20;
+
+type CursorPayload = {
+  /** lastMessageAt ISO string, or null for conversations without messages. */
+  lat: string | null;
+  /** createdAt ISO string — secondary sort key for tie-breaking. */
+  cat: string;
+  /** Conversation id — final tie-breaker. */
+  id: string;
+};
+
+function encodeCursor(lat: Date | null, cat: Date, id: string): string {
+  const payload: CursorPayload = { lat: lat?.toISOString() ?? null, cat: cat.toISOString(), id };
+  return Buffer.from(JSON.stringify(payload)).toString('base64url');
+}
+
+function decodeCursor(cursor: string): CursorPayload | null {
+  try {
+    const raw = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
+    if (!raw || typeof raw.id !== 'string' || typeof raw.cat !== 'string') return null;
+    return { lat: typeof raw.lat === 'string' ? raw.lat : null, cat: raw.cat, id: raw.id };
+  } catch {
+    return null;
+  }
+}
+
+// Raw row shape returned by the $queryRaw LATERAL JOIN in getConversationList.
+interface ConvRow {
+  id: string;
+  userAId: string;
+  userBId: string;
+  lastMessageAt: Date | null;
+  createdAt: Date;
+  ua_id: string;
+  ua_name: string | null;
+  ua_image: string | null;
+  ub_id: string;
+  ub_name: string | null;
+  ub_image: string | null;
+  lm_body: string | null;
+  lm_created_at: Date | null;
+  lm_sender_id: string | null;
+  lm_attachment_mime: string | null;
+}
 
 /**
  * Return the canonical `[userA, userB]` pair for a DM conversation.
@@ -87,38 +137,79 @@ export async function startOrGetConversation(input: { otherUserId: string }) {
 }
 
 /**
- * List all conversations for the caller, sorted by `lastMessageAt` desc.
- * Filters out conversations where the caller has blocked the counterparty
- * (brief §2.1: "bestehende Conversation wird für Blocker ausgeblendet").
+ * List conversations for the caller, sorted by `lastMessageAt` DESC NULLS LAST.
+ * Returns a page of `INBOX_TAKE` items plus an opaque `nextCursor` for
+ * continuation. Returns `{ items: [], nextCursor: null }` when the inbox is
+ * empty or there are no more pages.
+ *
+ * A3 — Uses a single `$queryRaw` with a LATERAL subquery to fetch the last
+ * message per conversation in one round-trip instead of N+1.
  */
-export async function getConversationList(): Promise<ConversationListItem[]> {
+export async function getConversationList(
+  opts?: { cursor?: string },
+): Promise<{ items: ConversationListItem[]; nextCursor: string | null }> {
   const session = await requireAuth();
   const me = session.user.id;
 
-  // Conversations where I am either userA or userB
-  const conversations = await db.conversation.findMany({
-    where: {
-      OR: [{ userAId: me }, { userBId: me }],
-    },
-    orderBy: [{ lastMessageAt: 'desc' }, { createdAt: 'desc' }],
-    select: {
-      id: true,
-      userAId: true,
-      userBId: true,
-      lastMessageAt: true,
-      userA: { select: { id: true, name: true, image: true } },
-      userB: { select: { id: true, name: true, image: true } },
-      messages: {
-        take: 1,
-        orderBy: { createdAt: 'desc' },
-        // Round 6 / A2 — include attachmentMime so the inbox can show a
-        // fallback hint ("📷 Photo" / "📄 Document") when body is empty.
-        select: { body: true, createdAt: true, senderId: true, attachmentMime: true },
-      },
-    },
-  });
+  const decoded = opts?.cursor ? decodeCursor(opts.cursor) : null;
 
-  if (conversations.length === 0) return [];
+  // Build the cursor WHERE fragment for keyset pagination.
+  // Sort order: lastMessageAt DESC NULLS LAST, createdAt DESC, id DESC.
+  const cursorWhere: Prisma.Sql = decoded === null
+    ? Prisma.empty
+    : decoded.lat !== null
+      ? Prisma.sql`AND (
+          c."lastMessageAt" < ${new Date(decoded.lat)}::timestamptz
+          OR (c."lastMessageAt" = ${new Date(decoded.lat)}::timestamptz AND c."createdAt" < ${new Date(decoded.cat)}::timestamptz)
+          OR (c."lastMessageAt" = ${new Date(decoded.lat)}::timestamptz AND c."createdAt" = ${new Date(decoded.cat)}::timestamptz AND c.id < ${decoded.id})
+          OR c."lastMessageAt" IS NULL
+        )`
+      : Prisma.sql`AND (
+          c."lastMessageAt" IS NULL
+          AND (
+            c."createdAt" < ${new Date(decoded.cat)}::timestamptz
+            OR (c."createdAt" = ${new Date(decoded.cat)}::timestamptz AND c.id < ${decoded.id})
+          )
+        )`;
+
+  // Fetch INBOX_TAKE + 1 so we can detect whether a next page exists.
+  const rows = await db.$queryRaw<ConvRow[]>`
+    SELECT
+      c.id,
+      c."userAId",
+      c."userBId",
+      c."lastMessageAt",
+      c."createdAt",
+      ua.id        AS ua_id,
+      ua.name      AS ua_name,
+      ua.image     AS ua_image,
+      ub.id        AS ub_id,
+      ub.name      AS ub_name,
+      ub.image     AS ub_image,
+      lm.body           AS lm_body,
+      lm."createdAt"    AS lm_created_at,
+      lm."senderId"     AS lm_sender_id,
+      lm."attachmentMime" AS lm_attachment_mime
+    FROM "Conversation" c
+    INNER JOIN "User" ua ON ua.id = c."userAId"
+    INNER JOIN "User" ub ON ub.id = c."userBId"
+    LEFT JOIN LATERAL (
+      SELECT m.body, m."createdAt", m."senderId", m."attachmentMime"
+      FROM "Message" m
+      WHERE m."conversationId" = c.id
+      ORDER BY m."createdAt" DESC
+      LIMIT 1
+    ) lm ON true
+    WHERE (c."userAId" = ${me} OR c."userBId" = ${me})
+    ${cursorWhere}
+    ORDER BY c."lastMessageAt" DESC NULLS LAST, c."createdAt" DESC, c.id DESC
+    LIMIT ${INBOX_TAKE + 1}
+  `;
+
+  if (rows.length === 0) return { items: [], nextCursor: null };
+
+  const hasMore = rows.length > INBOX_TAKE;
+  const page = hasMore ? rows.slice(0, INBOX_TAKE) : rows;
 
   // Load blocks and unread counts in parallel — neither depends on the other.
   const [myBlocks, counts] = await Promise.all([
@@ -129,35 +220,48 @@ export async function getConversationList(): Promise<ConversationListItem[]> {
     db.message.groupBy({
       by: ['conversationId'],
       where: {
-        conversationId: { in: conversations.map((c) => c.id) },
+        conversationId: { in: page.map((r) => r.id) },
         senderId: { not: me },
         readAt: null,
       },
       _count: { _all: true },
     }),
   ]);
+
   const blockedSet = new Set(myBlocks.map((b) => b.blockedId));
   const unreadByConv = new Map(counts.map((c) => [c.conversationId, c._count._all]));
 
-  return conversations
-    .map((c) => {
-      const other = c.userAId === me ? c.userB : c.userA;
+  const items = page
+    .map((r) => {
+      // Mirror the original ORM logic: userAId === me → other is userB.
+      const other =
+        r.userAId === me
+          ? { id: r.ub_id, name: r.ub_name, image: r.ub_image }
+          : { id: r.ua_id, name: r.ua_name, image: r.ua_image };
       return {
-        id: c.id,
+        id: r.id,
         otherUser: other,
-        lastMessage: c.messages[0]
-          ? {
-              body: c.messages[0].body,
-              createdAt: c.messages[0].createdAt,
-              senderId: c.messages[0].senderId,
-              attachmentMime: c.messages[0].attachmentMime ?? null,
-            }
-          : null,
-        unreadCount: unreadByConv.get(c.id) ?? 0,
-        lastMessageAt: c.lastMessageAt,
+        lastMessage:
+          r.lm_sender_id !== null
+            ? {
+                body: r.lm_body ?? '',
+                createdAt: r.lm_created_at!,
+                senderId: r.lm_sender_id,
+                attachmentMime: r.lm_attachment_mime ?? null,
+              }
+            : null,
+        unreadCount: unreadByConv.get(r.id) ?? 0,
+        lastMessageAt: r.lastMessageAt,
       };
     })
     .filter((c) => !blockedSet.has(c.otherUser.id));
+
+  const lastRow = page[page.length - 1];
+  const nextCursor = hasMore
+    ? encodeCursor(lastRow.lastMessageAt, lastRow.createdAt, lastRow.id)
+    : null;
+
+  return { items, nextCursor };
 }
 
 /**
@@ -232,7 +336,11 @@ export async function getConversation(conversationId: string, opts?: { cursor?: 
       canSend: !theyBlocked,
     },
     messages: messages.reverse(), // return chronological (oldest-first)
-    nextCursor: messages.length === limit ? messages[0]?.createdAt.toISOString() : null,
+    // NOTE: .reverse() mutates `messages` in place. After the call above,
+    // messages[0] is the OLDEST message in the page (lowest createdAt).
+    // The cursor points here so the next `createdAt < cursor` fetch returns
+    // the preceding batch with no overlap.
+    nextCursor: messages.length === limit ? messages[0]?.createdAt.toISOString() ?? null : null,
   };
 }
 

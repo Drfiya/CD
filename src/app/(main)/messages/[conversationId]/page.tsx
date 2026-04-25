@@ -47,6 +47,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
       conversationId={result.conversation.id}
       otherUser={result.conversation.otherUser}
       initialMessages={initialMessages}
+      initialNextCursor={result.nextCursor}
       canSend={result.conversation.canSend}
       iBlocked={blockStatus.iBlocked}
       theyBlocked={blockStatus.theyBlocked}
