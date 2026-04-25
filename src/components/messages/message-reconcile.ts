@@ -87,7 +87,9 @@ export function mergeRefetch(
 
   const merged = [...prev];
   for (const m of fresh) {
-    if (sinceMs !== null && m.createdAt.getTime() <= sinceMs) continue;
+    // Use strict `<` (not `<=`) so a message whose createdAt equals the watermark
+    // timestamp is NOT dropped. The ID-based dedup below prevents actual duplicates.
+    if (sinceMs !== null && m.createdAt.getTime() < sinceMs) continue;
     if (seenIds.has(m.id)) continue;
     if (m.clientMessageId && seenClientIds.has(m.clientMessageId)) continue;
     merged.push(m);

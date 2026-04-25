@@ -172,26 +172,34 @@ export function ChatWindow({
 
     function upsertFromRow(row: unknown) {
       if (!row) return;
-      const r = row as any;
-
       // Supabase Realtime payloads can vary between camelCase and snake_case
-      // depending on Postgres quoting/WAL config. We catch both to prevent
-      // messages from being "silently dropped" due to property name mismatch.
-      const rowConvId = r.conversationId ?? r.conversation_id ?? r.conversationid;
+      // depending on Postgres quoting/WAL config. We catch all three variants
+      // to prevent messages being "silently dropped" due to a column-name mismatch.
+      const r = row as Record<string, unknown>;
+      const rowConvId = (r.conversationId ?? r.conversation_id ?? r.conversationid) as string | undefined;
       if (rowConvId !== conversationId) return;
 
+      const str = (k1: string, k2: string, k3: string): string =>
+        ((r[k1] ?? r[k2] ?? r[k3]) as string | null | undefined) ?? '';
+      const strNull = (k1: string, k2: string, k3: string): string | null =>
+        ((r[k1] ?? r[k2] ?? r[k3]) as string | null | undefined) ?? null;
+      const numNull = (k1: string, k2: string, k3: string): number | null =>
+        ((r[k1] ?? r[k2] ?? r[k3]) as number | null | undefined) ?? null;
+      const rawTs = (r.createdAt ?? r.created_at ?? r.createdat) as string;
+      const rawRead = (r.readAt ?? r.read_at ?? r.readat) as string | null | undefined;
+
       const incoming: ChatMessage = {
-        id: r.id,
+        id: r.id as string,
         conversationId: rowConvId,
-        senderId: r.senderId ?? r.sender_id ?? r.senderid,
-        body: r.body,
-        clientMessageId: r.clientMessageId ?? r.client_message_id ?? r.clientmessageid,
-        createdAt: new Date(r.createdAt ?? r.created_at ?? r.createdat),
-        readAt: (r.readAt ?? r.read_at ?? r.readat) ? new Date(r.readAt ?? r.read_at ?? r.readat) : null,
-        attachmentPath: r.attachmentPath ?? r.attachment_path ?? r.attachmentpath ?? null,
-        attachmentMime: r.attachmentMime ?? r.attachment_mime ?? r.attachmentmime ?? null,
-        attachmentSize: r.attachmentSize ?? r.attachment_size ?? r.attachmentsize ?? null,
-        attachmentName: r.attachmentName ?? r.attachment_name ?? r.attachmentname ?? null,
+        senderId: str('senderId', 'sender_id', 'senderid'),
+        body: str('body', 'body', 'body'),
+        clientMessageId: strNull('clientMessageId', 'client_message_id', 'clientmessageid'),
+        createdAt: new Date(rawTs),
+        readAt: rawRead ? new Date(rawRead) : null,
+        attachmentPath: strNull('attachmentPath', 'attachment_path', 'attachmentpath'),
+        attachmentMime: strNull('attachmentMime', 'attachment_mime', 'attachmentmime'),
+        attachmentSize: numNull('attachmentSize', 'attachment_size', 'attachmentsize'),
+        attachmentName: strNull('attachmentName', 'attachment_name', 'attachmentname'),
       };
 
       lastSeenCreatedAtRef.current = incoming.createdAt.toISOString();
@@ -226,13 +234,16 @@ export function ChatWindow({
       }
     }
 
-    // Secondary: Inbox Broadcast fallback (same as UnreadBadge).
-    // If Postgres Changes are blocked (RLS/config), the application-level
-    // broadcast reliably tells us to re-query the messages.
+    // Secondary: Inbox Broadcast fallback.
+    // Subscribes to the SAME channel name the server broadcasts to (dmInboxChannel)
+    // so that if Postgres Changes are unreliable (e.g. RLS filter mismatch on
+    // camelCase columns), the application-level broadcast triggers a DB refetch.
+    // NOTE: the channel name must NOT have any suffix — `dm:inbox:<id>:chat`
+    // is a different channel than `dm:inbox:<id>` and would never receive the event.
     const inboxChannel = supabase
-      .channel(`${dmInboxChannel(myId)}:chat`)
+      .channel(dmInboxChannel(myId))
       .on('broadcast', { event: DM_INBOX_EVENT }, (payload) => {
-        const data = payload.payload as any;
+        const data = payload.payload as Record<string, unknown>;
         if (data.conversationId === conversationId && data.senderId !== myId) {
           void refetch();
         }
