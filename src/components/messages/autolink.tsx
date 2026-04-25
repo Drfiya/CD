@@ -37,6 +37,10 @@ function ensureProtocol(url: string): string {
 export function renderMessageBody(text: string): ReactNode {
   if (!text) return null;
 
+  // Unescape HTML entities (e.g. &#x27; -> ') before splitting/linking.
+  // This prevents double-escaping when serving raw DB content in English.
+  const decodedText = decodeEntities(text);
+
   const nodes: ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -44,13 +48,13 @@ export function renderMessageBody(text: string): ReactNode {
   // Reset regex state (it's a shared global)
   URL_REGEX.lastIndex = 0;
 
-  while ((match = URL_REGEX.exec(text)) !== null) {
+  while ((match = URL_REGEX.exec(decodedText)) !== null) {
     const [raw] = match;
     const start = match.index;
     const end = start + raw.length;
 
     if (start > lastIndex) {
-      nodes.push(text.slice(lastIndex, start));
+      nodes.push(decodedText.slice(lastIndex, start));
     }
 
     const [urlBody, trailing] = splitTrailingPunct(raw);
@@ -73,9 +77,20 @@ export function renderMessageBody(text: string): ReactNode {
     lastIndex = end;
   }
 
-  if (lastIndex < text.length) {
-    nodes.push(text.slice(lastIndex));
+  if (lastIndex < decodedText.length) {
+    nodes.push(decodedText.slice(lastIndex));
   }
 
   return nodes;
+}
+
+function decodeEntities(text: string) {
+  if (!text || !text.includes('&')) return text;
+  return text
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#39;/g, "'");
 }

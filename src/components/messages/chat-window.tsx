@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 import { Avatar } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
-import { dmConversationChannel } from '@/lib/dm-realtime';
+import { dmConversationChannel, dmInboxChannel, DM_INBOX_EVENT } from '@/lib/dm-realtime';
 import { sendMessage, markConversationRead } from '@/lib/message-actions';
 import { blockUser, unblockUser } from '@/lib/dm-block-actions';
 import { getConversation } from '@/lib/conversation-actions';
@@ -167,42 +167,30 @@ export function ChatWindow({
     const supabase = createClient();
 
     function upsertFromRow(row: unknown) {
-      // Prisma schema uses camelCase field names without @map, so Postgres
-      // columns are also camelCase. Supabase Realtime returns the exact
-      // Postgres column names in its payload — camelCase, not snake_case.
-      type Row = {
-        id: string;
-        conversationId: string;
-        senderId: string;
-        body: string;
-        clientMessageId: string | null;
-        createdAt: string;
-        readAt: string | null;
-        // Round 3 / Item 5 — attachment fields arrive via the same Postgres
-        // Changes payload. Round-trip them so MessageBubble can render without
-        // an extra refetch.
-        attachmentPath: string | null;
-        attachmentMime: string | null;
-        attachmentSize: number | null;
-        attachmentName: string | null;
-      };
-      const r = row as Row;
-      if (r.conversationId !== conversationId) return;
+      if (!row) return;
+      const r = row as any;
+
+      // Supabase Realtime payloads can vary between camelCase and snake_case
+      // depending on Postgres quoting/WAL config. We catch both to prevent
+      // messages from being "silently dropped" due to property name mismatch.
+      const rowConvId = r.conversationId ?? r.conversation_id ?? r.conversationid;
+      if (rowConvId !== conversationId) return;
+
       const incoming: ChatMessage = {
         id: r.id,
-        conversationId: r.conversationId,
-        senderId: r.senderId,
+        conversationId: rowConvId,
+        senderId: r.senderId ?? r.sender_id ?? r.senderid,
         body: r.body,
-        clientMessageId: r.clientMessageId,
-        createdAt: new Date(r.createdAt),
-        readAt: r.readAt ? new Date(r.readAt) : null,
-        attachmentPath: r.attachmentPath,
-        attachmentMime: r.attachmentMime,
-        attachmentSize: r.attachmentSize,
-        attachmentName: r.attachmentName,
+        clientMessageId: r.clientMessageId ?? r.client_message_id ?? r.clientmessageid,
+        createdAt: new Date(r.createdAt ?? r.created_at ?? r.createdat),
+        readAt: (r.readAt ?? r.read_at ?? r.readat) ? new Date(r.readAt ?? r.read_at ?? r.readat) : null,
+        attachmentPath: r.attachmentPath ?? r.attachment_path ?? r.attachmentpath ?? null,
+        attachmentMime: r.attachmentMime ?? r.attachment_mime ?? r.attachmentmime ?? null,
+        attachmentSize: r.attachmentSize ?? r.attachment_size ?? r.attachmentsize ?? null,
+        attachmentName: r.attachmentName ?? r.attachment_name ?? r.attachmentname ?? null,
       };
-      lastSeenCreatedAtRef.current = r.createdAt;
 
+      lastSeenCreatedAtRef.current = incoming.createdAt.toISOString();
       setMsgs((prev) => upsertIncoming(prev, incoming));
 
       // If the new row came from the other user, mark as read right away
@@ -210,6 +198,39 @@ export function ChatWindow({
         void markConversationRead({ conversationId });
       }
     }
+
+    async function refetch() {
+      const since = lastSeenCreatedAtRef.current;
+      const result = await getConversation(conversationId, { limit: 100 });
+      if ('error' in result) return;
+      const fresh: ChatMessage[] = result.messages.map((m) => ({
+        id: m.id,
+        conversationId: m.conversationId,
+        senderId: m.senderId,
+        body: m.body,
+        clientMessageId: m.clientMessageId,
+        createdAt: new Date(m.createdAt),
+        readAt: m.readAt ? new Date(m.readAt) : null,
+        attachmentPath: m.attachmentPath ?? null,
+        attachmentMime: m.attachmentMime ?? null,
+        attachmentSize: m.attachmentSize ?? null,
+        attachmentName: m.attachmentName ?? null,
+      }));
+      setMsgs((prev) => mergeRefetch(prev, fresh, since));
+    }
+
+    // Secondary: Inbox Broadcast fallback (same as UnreadBadge).
+    // If Postgres Changes are blocked (RLS/config), the application-level
+    // broadcast reliably tells us to re-query the messages.
+    const inboxChannel = supabase
+      .channel(`${dmInboxChannel(myId)}:chat`)
+      .on('broadcast', { event: DM_INBOX_EVENT }, (payload) => {
+        const data = payload.payload as any;
+        if (data.conversationId === conversationId && data.senderId !== myId) {
+          void refetch();
+        }
+      })
+      .subscribe();
 
     const channel = supabase
       .channel(dmConversationChannel(conversationId))
@@ -241,28 +262,13 @@ export function ChatWindow({
         // Reconnect safety — on (re)subscribe, fetch anything we might have
         // missed. Dedupe is owned by `mergeRefetch` + `upsertIncoming`.
         if (status === 'SUBSCRIBED') {
-          const since = lastSeenCreatedAtRef.current;
-          const result = await getConversation(conversationId, { limit: 100 });
-          if ('error' in result) return;
-          const fresh: ChatMessage[] = result.messages.map((m) => ({
-            id: m.id,
-            conversationId: m.conversationId,
-            senderId: m.senderId,
-            body: m.body,
-            clientMessageId: m.clientMessageId,
-            createdAt: new Date(m.createdAt),
-            readAt: m.readAt ? new Date(m.readAt) : null,
-            attachmentPath: m.attachmentPath ?? null,
-            attachmentMime: m.attachmentMime ?? null,
-            attachmentSize: m.attachmentSize ?? null,
-            attachmentName: m.attachmentName ?? null,
-          }));
-          setMsgs((prev) => mergeRefetch(prev, fresh, since));
+          void refetch();
         }
       });
 
     return () => {
       void supabase.removeChannel(channel);
+      void supabase.removeChannel(inboxChannel);
     };
   }, [conversationId, myId]);
 
