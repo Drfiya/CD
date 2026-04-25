@@ -243,6 +243,11 @@ export const de: Messages = {
         dropFileToAttach: 'Datei zum Anhängen ablegen',
         openEmojiPicker: 'Emoji-Auswahl öffnen',
         closeEmojiPicker: 'Emoji-Auswahl schließen',
+        // Round 5 — Smarte Zeitstempel + Block-UX
+        messageDateToday: 'Heute',
+        messageDateYesterday: 'Gestern',
+        confirmUnblockTitle: 'Diesen Nutzer entblocken?',
+        confirmUnblockBody: 'Er kann dir dann wieder Nachrichten senden.',
     },
     landing_social_proof: {
         heroJoinCta: 'Der Community beitreten',

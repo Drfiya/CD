@@ -40,7 +40,8 @@ function formatSize(bytes: number): string {
 
 // Global in-memory cache to prevent refetching signed URLs on every re-mount.
 const urlCache = new Map<string, string>();
-const urlFetchPromises = new Map<string, Promise<any>>();
+type FetchResult = Awaited<ReturnType<typeof getAttachmentSignedUrl>>;
+const urlFetchPromises = new Map<string, Promise<FetchResult>>();
 
 function getCachedUrl(id: string): string | null {
   if (urlCache.has(id)) return urlCache.get(id)!;
@@ -71,7 +72,9 @@ export function MessageAttachment({
     // inside this client-side hook to actually use the sessionStorage cache.
     const clientCached = getCachedUrl(messageId);
     if (clientCached) {
-      setSignedUrl(clientCached);
+      // Defer to microtask to avoid calling setState synchronously inside an effect
+      // (react-hooks/set-state-in-effect). The URL is available in the same tick.
+      queueMicrotask(() => setSignedUrl(clientCached));
       return;
     }
 
@@ -107,9 +110,9 @@ export function MessageAttachment({
         } else {
           setError('missing_url');
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (!cancelled) {
-          setError(err?.message || 'Server Action crashed');
+          setError(err instanceof Error ? err.message : 'Server Action crashed');
           urlFetchPromises.delete(messageId);
         }
       }
@@ -139,7 +142,7 @@ export function MessageAttachment({
         className="mb-1 flex h-20 w-full items-center justify-center rounded-md bg-muted/30 text-xs text-muted-foreground"
         aria-live="polite"
       >
-        <span className="h-3 w-3 rounded-full bg-amber-500 animate-pulse" aria-hidden />
+        <span className="h-3 w-3 rounded-full bg-dm-connecting animate-pulse" aria-hidden />
       </div>
     );
   }

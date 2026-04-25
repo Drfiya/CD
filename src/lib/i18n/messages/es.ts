@@ -243,6 +243,11 @@ export const es: Messages = {
         dropFileToAttach: 'Soltar archivo para adjuntar',
         openEmojiPicker: 'Abrir selector de emojis',
         closeEmojiPicker: 'Cerrar selector de emojis',
+        // Round 5 — Marcas de tiempo inteligentes + UX de bloqueo
+        messageDateToday: 'Hoy',
+        messageDateYesterday: 'Ayer',
+        confirmUnblockTitle: '¿Desbloquear a este usuario?',
+        confirmUnblockBody: 'Podrá volver a enviarte mensajes.',
     },
     landing_social_proof: {
         heroJoinCta: 'Únete a la comunidad',

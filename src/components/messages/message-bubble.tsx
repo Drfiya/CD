@@ -1,4 +1,6 @@
 import { cn } from '@/lib/utils';
+import { Avatar } from '@/components/ui/avatar';
+import { formatMessageTimestamp } from '@/lib/dm-date-format';
 import { renderMessageBody } from './autolink';
 import { MessageAttachment } from './message-attachment';
 
@@ -39,7 +41,16 @@ export interface MessageBubbleProps {
   readAriaLabel: string;
   retryLabel: string;
   sendFailedLabel: string;
+  /** Round 5 / Item 1 — Smart timestamp labels. */
+  messageDateToday: string;
+  messageDateYesterday: string;
+  /** Round 5 / Item 3 — Sender avatar. Passed from the parent so we don't re-fetch. */
+  senderImage?: string | null;
+  senderName?: string | null;
 }
+
+// Re-export so callers that historically imported from this file still work.
+export { formatMessageTimestamp } from '@/lib/dm-date-format';
 
 export function MessageBubble(props: MessageBubbleProps) {
   const {
@@ -57,12 +68,13 @@ export function MessageBubble(props: MessageBubbleProps) {
     readAriaLabel,
     retryLabel,
     sendFailedLabel,
+    messageDateToday,
+    messageDateYesterday,
+    senderImage,
+    senderName,
   } = props;
 
-  const timeStr = createdAt.toLocaleTimeString(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const timeStr = formatMessageTimestamp(createdAt, messageDateToday, messageDateYesterday);
 
   // Render the attachment only for persisted rows (messageId present). During
   // the optimistic pre-ACK window the attachment preview lives in the
@@ -72,10 +84,13 @@ export function MessageBubble(props: MessageBubbleProps) {
     attachment && attachmentLabels && messageId && !isPending;
 
   return (
-    <div className={cn('flex w-full', isMine ? 'justify-end' : 'justify-start')}>
+    <div className={cn('flex items-end gap-1.5 w-full', isMine && 'flex-row-reverse')}>
+      <div className="shrink-0">
+        <Avatar src={senderImage} name={senderName} size="sm" />
+      </div>
       <div
         className={cn(
-          'max-w-[75%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap break-words',
+          'max-w-[72%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap break-words',
           isMine
             ? 'bg-primary text-primary-foreground rounded-br-sm'
             : 'bg-muted text-foreground rounded-bl-sm',
@@ -104,7 +119,7 @@ export function MessageBubble(props: MessageBubbleProps) {
             <span
               aria-label={readAt ? readAriaLabel : deliveredAriaLabel}
               title={readAt ? readAriaLabel : deliveredAriaLabel}
-              className={cn('select-none', readAt && 'text-blue-200')}
+              className={cn('select-none', readAt && 'text-dm-read-check')}
             >
               {readAt ? '✓✓' : '✓'}
             </span>

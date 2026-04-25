@@ -52,7 +52,7 @@ export function ConnectionBanner({ status, messages }: ConnectionBannerProps) {
     >
       <span
         aria-hidden
-        className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"
+        className="inline-block h-1.5 w-1.5 rounded-full bg-dm-connecting animate-pulse"
       />
       {label}
     </div>

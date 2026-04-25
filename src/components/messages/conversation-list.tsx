@@ -29,12 +29,19 @@ export function ConversationList({
       ? pathname.split('/')[2]
       : undefined;
   const [conversations, setConversations] = useState<ConversationListItem[]>(initialConversations);
+  // Round 5 / Item 5 — track which conversation id is navigating so we can
+  // apply an optimistic active state before the page transition completes.
+  const [pendingId, setPendingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   useEffect(() => {
-    // Keep props in sync if the server re-renders with fresh data
     setConversations(initialConversations);
   }, [initialConversations]);
+
+  // Clear pending state when navigation lands (pathname changes).
+  useEffect(() => {
+    setPendingId(null);
+  }, [pathname]);
 
   useEffect(() => {
     if (!userId) return;
@@ -77,12 +84,14 @@ export function ConversationList({
           <li key={c.id}>
             <Link
               href={`/messages/${c.id}`}
-              prefetch={false}
+              prefetch={true}
               aria-current={isActive ? 'page' : undefined}
+              aria-busy={pendingId === c.id ? true : undefined}
+              onClick={() => setPendingId(c.id)}
               className={cn(
                 'flex items-center gap-3 px-3 py-3 transition-colors',
                 'hover:bg-muted focus-visible:outline-none focus-visible:bg-muted',
-                isActive && 'bg-muted',
+                (isActive || pendingId === c.id) && 'bg-muted',
               )}
             >
               <Avatar src={c.otherUser.image} name={c.otherUser.name} size="sm" />
@@ -117,7 +126,7 @@ export function ConversationList({
                   {hasUnread && (
                     <span
                       aria-label={`${c.unreadCount} ${messages.unreadLabel}`}
-                      className="shrink-0 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-semibold"
+                      className="shrink-0 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-dm-badge text-white text-[10px] font-semibold"
                     >
                       {c.unreadCount > 99 ? '99+' : c.unreadCount}
                     </span>

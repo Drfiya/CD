@@ -48,8 +48,20 @@ export function EmojiPickerButton({
         setShowPicker(false);
       }
     }
+    // Round 5 / Item 4 — ESC key closes the picker. Cleanup is mandatory to
+    // prevent listener stacking on every re-open (memory-leak guard, Dealbreaker §10.3.4).
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        setShowPicker(false);
+      }
+    }
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [showPicker]);
 
   function handleEmojiSelect(data: EmojiData) {
@@ -68,10 +80,10 @@ export function EmojiPickerButton({
         aria-haspopup="dialog"
         title={ariaLabel}
         className={cn(
-          'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full',
-          'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-600',
+          'px-3 py-1.5 text-sm',
+          'text-gray-700 dark:text-neutral-300 rounded-full hover:bg-gray-50 dark:hover:bg-neutral-600 transition-colors border border-transparent',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-          'disabled:opacity-50 disabled:cursor-not-allowed text-sm border border-transparent',
+          'disabled:opacity-50 disabled:cursor-not-allowed',
           showPicker && 'bg-gray-100 dark:bg-neutral-600 border-gray-400'
         )}
       >

@@ -243,6 +243,11 @@ export const fr: Messages = {
         dropFileToAttach: 'Déposer le fichier pour joindre',
         openEmojiPicker: 'Ouvrir le sélecteur d\'emoji',
         closeEmojiPicker: 'Fermer le sélecteur d\'emoji',
+        // Round 5 — Horodatage intelligent + UX de blocage
+        messageDateToday: 'Aujourd\'hui',
+        messageDateYesterday: 'Hier',
+        confirmUnblockTitle: 'Débloquer cet utilisateur ?',
+        confirmUnblockBody: 'Il pourra à nouveau vous envoyer des messages.',
     },
     landing_social_proof: {
         heroJoinCta: 'Rejoindre la communauté',

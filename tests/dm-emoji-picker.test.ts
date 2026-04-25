@@ -170,3 +170,49 @@ describe('<EmojiPickerButton /> — initial render (picker closed)', () => {
     expect(html).toContain('Emoji öffnen');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Round 5 / Item 4 — ESC key handler wiring (structural checks)
+// ---------------------------------------------------------------------------
+
+describe('<EmojiPickerButton /> — Round 5 ESC handler', () => {
+  function render(
+    overrides: Partial<import('@/components/messages/emoji-picker-button').EmojiPickerButtonProps> = {},
+  ): string {
+    return renderToStaticMarkup(
+      createElement(EmojiPickerButton, {
+        onEmojiSelect: () => {},
+        ariaLabel: 'Open emoji picker',
+        closeLabel: 'Close emoji picker',
+        ...overrides,
+      }),
+    );
+  }
+
+  it('component still renders correctly after ESC handler addition', () => {
+    const html = render();
+    expect(html).toContain('type="button"');
+  });
+
+  it('ESC handler does not affect the initial closed state', () => {
+    // On initial SSR render (closed), the picker dialog must not appear
+    const html = render();
+    expect(html).not.toContain('role="dialog"');
+  });
+
+  it('aria-expanded is false on initial render (ESC has nothing to close)', () => {
+    const html = render();
+    expect(html).toContain('aria-expanded="false"');
+  });
+
+  it('SVG smiley icon renders correctly after ESC handler addition', () => {
+    const html = render();
+    // Heroicons face-smile path — preserved through the ESC handler patch
+    expect(html).toContain('15.182 15.182a4.5 4.5 0');
+  });
+
+  it('component is still disabled-able after ESC handler addition', () => {
+    const html = render({ disabled: true });
+    expect(html).toContain('disabled');
+  });
+});

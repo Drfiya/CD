@@ -9,6 +9,7 @@ import { PointsDisplay } from '@/components/gamification/points-display';
 import { BadgeDisplay } from '@/components/gamification/badge-display';
 import { UGCText } from '@/components/translation/UGCText';
 import { SendMessageButton } from '@/components/messages/send-message-button';
+import { UnblockButton } from '@/components/messages/unblock-button';
 import { getMessages } from '@/lib/i18n';
 import { getUserLanguage } from '@/lib/translation/helpers';
 
@@ -42,7 +43,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
   }
   const messages = getMessages(userLanguage);
 
-  const [user, completedLessons] = await Promise.all([
+  const [user, completedLessons, block] = await Promise.all([
     db.user.findUnique({
       where: { id },
       select: {
@@ -68,6 +69,11 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
     }),
     // LessonProgress rows are only created on completion — count = completed count
     db.lessonProgress.count({ where: { userId: id } }),
+    // Check if the current user blocked this member
+    session?.user?.id ? db.dmBlock.findUnique({
+      where: { blockerId_blockedId: { blockerId: session.user.id, blockedId: id } },
+      select: { id: true },
+    }) : Promise.resolve(null),
   ]);
 
   if (!user) {
@@ -159,7 +165,11 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
         ) : (
           session?.user?.id && (
             <div className="mt-6 flex justify-center">
-              <SendMessageButton targetUserId={user.id} label={messages.dm.sendMessageCta} />
+              {block ? (
+                <UnblockButton targetUserId={user.id} label={messages.dm.unblock} />
+              ) : (
+                <SendMessageButton targetUserId={user.id} label={messages.dm.sendMessageCta} />
+              )}
             </div>
           )
         )}

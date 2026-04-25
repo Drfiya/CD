@@ -34,6 +34,14 @@
 
   --font-sans: 'Inter', system-ui, sans-serif;
   --radius-default: 0.75rem;
+
+  /* Round 5 — DM UI color tokens. Each token maps to a hardcoded Tailwind
+     literal that appeared in messages/. Using tokens keeps both light and dark
+     variants in one place and makes future palette changes a one-liner. */
+  --color-dm-badge: #ef4444;      /* Unread badge (red-500 — matches notification-bell) */
+  --color-dm-connecting: #f59e0b; /* Connecting / upload-pulse dot (amber-500) */
+  --color-dm-read-check: #bfdbfe; /* Read-receipt double-check on dark sent-bubble (blue-200) */
+  --color-dm-overlay: #000000;    /* Lightbox backdrop base — use with /90 opacity modifier */
 }
 
 /* Dark theme overrides — applied when next-themes adds .dark to <html> */
@@ -46,6 +54,8 @@
   --color-muted: #171717;
   --color-muted-foreground: #a3a3a3;
   --color-border: #262626;
+  /* DM tokens — dark-mode overrides */
+  --color-dm-read-check: #2563eb; /* blue-600 — readable on light bg-primary in dark mode */
 }
 
 /* CR11 — Badge frame: glyph color follows theme via `currentColor`, so

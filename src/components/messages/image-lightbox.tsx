@@ -87,7 +87,7 @@ export function ImageLightbox({
       role="dialog"
       aria-modal="true"
       aria-label={alt}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 transition-opacity"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-dm-overlay/90 p-4 transition-opacity"
       onClick={handleBackdropClick}
     >
       <button

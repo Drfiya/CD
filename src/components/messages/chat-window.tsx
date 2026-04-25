@@ -97,6 +97,8 @@ export function ChatWindow({
   const theyBlocked = initialTheyBlocked;
   const canSend = initialCanSend && !iBlocked && !theyBlocked;
   const [confirmingBlock, setConfirmingBlock] = useState(false);
+  // Round 5 / Item 2 — unblock also requires confirmation (mirrors block flow).
+  const [confirmingUnblock, setConfirmingUnblock] = useState(false);
   const [, startTransition] = useTransition();
   const [realtimeStatus, setRealtimeStatus] = useState<RealtimeStatus>('connecting');
   // Round 3 / A2 — banner visibility is gated behind a 500 ms grace period so
@@ -443,9 +445,11 @@ export function ChatWindow({
       const result = await unblockUser({ targetUserId: otherUser.id });
       if ('error' in result) {
         toast.error(result.error);
+        setConfirmingUnblock(false);
         return;
       }
       setIBlocked(false);
+      setConfirmingUnblock(false);
     });
   }, [otherUser.id]);
 
@@ -537,11 +541,14 @@ export function ChatWindow({
             </p>
           </div>
         </Link>
+        {/* Round 5 / Item 2 — both block and unblock are proper destructive buttons
+            with confirmation dialogs. Underlined text → visible bordered button per
+            tester feedback that users missed the block/unblock affordance. */}
         {iBlocked ? (
           <button
             type="button"
-            onClick={handleUnblock}
-            className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+            onClick={() => setConfirmingUnblock(true)}
+            className="h-8 px-3 rounded-md text-xs font-medium border border-destructive/50 text-destructive hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
           >
             {t.unblock}
           </button>
@@ -549,7 +556,7 @@ export function ChatWindow({
           <button
             type="button"
             onClick={() => setConfirmingBlock(true)}
-            className="text-xs text-muted-foreground hover:text-destructive underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive rounded"
+            className="h-8 px-3 rounded-md text-xs font-medium border border-destructive/40 text-destructive/70 hover:text-destructive hover:border-destructive/70 hover:bg-destructive/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
           >
             {t.block}
           </button>
@@ -568,6 +575,39 @@ export function ChatWindow({
       )}
 
 
+
+      {/* Unblock confirmation — mirrors the block confirmation pattern. */}
+      {confirmingUnblock && (
+        <div
+          role="alertdialog"
+          aria-labelledby="dm-unblock-title"
+          aria-describedby="dm-unblock-body"
+          className="border-b border-border bg-muted/50 px-4 py-3"
+        >
+          <p id="dm-unblock-title" className="text-sm font-semibold text-foreground">
+            {t.confirmUnblockTitle}
+          </p>
+          <p id="dm-unblock-body" className="text-xs text-muted-foreground mt-1">
+            {t.confirmUnblockBody}
+          </p>
+          <div className="mt-3 flex gap-2 justify-end">
+            <button
+              type="button"
+              onClick={() => setConfirmingUnblock(false)}
+              className="h-8 px-3 rounded-md text-xs font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              {t.cancel}
+            </button>
+            <button
+              type="button"
+              onClick={handleUnblock}
+              className="h-8 px-3 rounded-md text-xs font-medium border border-destructive/50 text-destructive hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
+            >
+              {t.unblock}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Block confirmation (lightweight inline dialog — no external deps) */}
       {confirmingBlock && (
@@ -640,6 +680,10 @@ export function ChatWindow({
             readAriaLabel={t.readAriaLabel}
             retryLabel={t.retry}
             sendFailedLabel={t.sendFailed}
+            messageDateToday={t.messageDateToday}
+            messageDateYesterday={t.messageDateYesterday}
+            senderImage={m.senderId === myId ? (session?.user?.image ?? null) : otherUser.image}
+            senderName={m.senderId === myId ? (session?.user?.name ?? null) : otherUser.name}
           />
         ))}
       </div>

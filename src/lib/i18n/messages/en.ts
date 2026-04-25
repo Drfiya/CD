@@ -243,6 +243,11 @@ export const en: Messages = {
         dropFileToAttach: 'Drop file to attach',
         openEmojiPicker: 'Open emoji picker',
         closeEmojiPicker: 'Close emoji picker',
+        // Round 5 — Smart Timestamps + Block UX
+        messageDateToday: 'Today',
+        messageDateYesterday: 'Yesterday',
+        confirmUnblockTitle: 'Unblock this user?',
+        confirmUnblockBody: 'They will be able to send you messages again.',
     },
     landing_social_proof: {
         heroJoinCta: 'Join the community',
@@ -485,5 +490,10 @@ export interface Messages {
         dropFileToAttach: string;
         openEmojiPicker: string;
         closeEmojiPicker: string;
+        // Round 5 — Smart Timestamps + Block UX
+        messageDateToday: string;
+        messageDateYesterday: string;
+        confirmUnblockTitle: string;
+        confirmUnblockBody: string;
     };
 }
