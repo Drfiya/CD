@@ -38,6 +38,22 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+// Global in-memory cache to prevent refetching signed URLs on every re-mount.
+const urlCache = new Map<string, string>();
+const urlFetchPromises = new Map<string, Promise<any>>();
+
+function getCachedUrl(id: string): string | null {
+  if (urlCache.has(id)) return urlCache.get(id)!;
+  if (typeof window !== 'undefined') {
+    const fromSession = sessionStorage.getItem(`dm-url-${id}`);
+    if (fromSession) {
+      urlCache.set(id, fromSession);
+      return fromSession;
+    }
+  }
+  return null;
+}
+
 export function MessageAttachment({
   messageId,
   mime,
@@ -45,29 +61,57 @@ export function MessageAttachment({
   name,
   labels,
 }: MessageAttachmentProps) {
-  const [signedUrl, setSignedUrl] = useState<string | null>(null);
+  const [signedUrl, setSignedUrl] = useState<string | null>(() => getCachedUrl(messageId));
   const [error, setError] = useState<string | null>(null);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   useEffect(() => {
+    // Because Next.js Server-Side Rendering (SSR) evaluates `window` to undefined, 
+    // the initial state of `signedUrl` is null. We MUST re-check `getCachedUrl` 
+    // inside this client-side hook to actually use the sessionStorage cache.
+    const clientCached = getCachedUrl(messageId);
+    if (clientCached) {
+      setSignedUrl(clientCached);
+      return;
+    }
+
+    if (signedUrl) return;
+
     let cancelled = false;
+
     (async () => {
-      const result = await getAttachmentSignedUrl({ messageId });
+      // Deduplicate simultaneous requests for the same messageId
+      let fetchPromise = urlFetchPromises.get(messageId);
+      if (!fetchPromise) {
+        fetchPromise = getAttachmentSignedUrl({ messageId });
+        urlFetchPromises.set(messageId, fetchPromise);
+      }
+
+      const result = await fetchPromise;
+
       if (cancelled) return;
+
       if ('error' in result) {
         setError(typeof result.error === 'string' ? result.error : 'unknown');
+        urlFetchPromises.delete(messageId); // Free up so we can retry later
         return;
       }
+
       if (typeof result.signedUrl === 'string') {
+        urlCache.set(messageId, result.signedUrl);
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem(`dm-url-${messageId}`, result.signedUrl);
+        }
         setSignedUrl(result.signedUrl);
       } else {
         setError('missing_url');
       }
     })();
+
     return () => {
       cancelled = true;
     };
-  }, [messageId]);
+  }, [messageId, signedUrl]);
 
   const openLightbox = useCallback(() => setIsLightboxOpen(true), []);
   const closeLightbox = useCallback(() => setIsLightboxOpen(false), []);

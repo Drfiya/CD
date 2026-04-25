@@ -1,6 +1,8 @@
 'use client';
 
 import {
+  forwardRef,
+  useImperativeHandle,
   useRef,
   useState,
   type KeyboardEvent,
@@ -8,6 +10,10 @@ import {
   type ReactNode,
 } from 'react';
 import { cn } from '@/lib/utils';
+
+export interface MessageInputHandle {
+  insertAtCursor: (text: string) => void;
+}
 
 export interface MessageInputProps {
   onSend: (body: string) => void | Promise<void>;
@@ -28,9 +34,12 @@ export interface MessageInputProps {
   hasAttachment?: boolean;
   /** True while an upload is in flight; disables the Send button. */
   isUploading?: boolean;
+  /** Round 4 / Item 2 — slot for the emoji picker button, rendered between the textarea and Send. */
+  emojiSlot?: ReactNode;
 }
 
-export function MessageInput({
+export const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
+function MessageInput({
   onSend,
   disabled,
   disabledReason,
@@ -41,10 +50,28 @@ export function MessageInput({
   attachmentSlot,
   hasAttachment,
   isUploading,
-}: MessageInputProps) {
+  emojiSlot,
+}: MessageInputProps, ref) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [value, setValue] = useState('');
   const [pending, setPending] = useState(false);
+
+  useImperativeHandle(ref, () => ({
+    insertAtCursor(text: string) {
+      const el = textareaRef.current;
+      const selStart = el?.selectionStart ?? value.length;
+      const selEnd = el?.selectionEnd ?? value.length;
+      const newVal = value.slice(0, selStart) + text + value.slice(selEnd);
+      setValue(newVal);
+      // Restore cursor position after React flushes the state update.
+      requestAnimationFrame(() => {
+        if (!el) return;
+        const pos = selStart + text.length;
+        el.setSelectionRange(pos, pos);
+        el.focus();
+      });
+    },
+  }), [value]);
 
   async function submit() {
     const trimmed = value.trim();
@@ -113,6 +140,8 @@ export function MessageInput({
           )}
           aria-label={placeholder}
         />
+        {/* Round 4 / Item 2 — emoji picker button, between textarea and Send */}
+        {emojiSlot}
         <button
           type="submit"
           disabled={
@@ -122,15 +151,18 @@ export function MessageInput({
             (value.trim().length === 0 && !hasAttachment)
           }
           className={cn(
-            'h-10 px-4 rounded-md text-sm font-medium',
-            'bg-primary text-primary-foreground hover:bg-primary/90',
+            'px-5 py-2 rounded-full text-sm font-semibold tracking-wide text-white transition-colors shadow-sm',
             'disabled:opacity-50 disabled:cursor-not-allowed',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
           )}
+          style={{ backgroundColor: '#D94A4A' }}
+          onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.backgroundColor = '#C43E3E'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#D94A4A'; }}
         >
           {pending || isUploading ? sendingLabel : sendLabel}
         </button>
       </div>
     </form>
   );
-}
+});
+

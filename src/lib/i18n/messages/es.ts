@@ -239,6 +239,10 @@ export const es: Messages = {
         attachmentDownload: 'Descargar',
         attachmentOpenImage: 'Abrir imagen a tamaño completo',
         attachmentImageAlt: 'Adjunto de imagen: {name}',
+        // Round 4 — Arrastrar y soltar + Selector de emojis
+        dropFileToAttach: 'Soltar archivo para adjuntar',
+        openEmojiPicker: 'Abrir selector de emojis',
+        closeEmojiPicker: 'Cerrar selector de emojis',
     },
     landing_social_proof: {
         heroJoinCta: 'Únete a la comunidad',

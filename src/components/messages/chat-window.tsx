@@ -22,7 +22,8 @@ import { getConversation } from '@/lib/conversation-actions';
 import { requestAttachmentUploadUrl } from '@/lib/dm-attachment-actions';
 import type { AttachmentMetadata } from '@/lib/validations/dm';
 import { MessageBubble } from './message-bubble';
-import { MessageInput } from './message-input';
+import { MessageInput, type MessageInputHandle } from './message-input';
+import { EmojiPickerButton } from './emoji-picker-button';
 import { AttachmentUploader } from './attachment-uploader';
 import {
   ConnectionBanner,
@@ -38,7 +39,11 @@ import {
   mergeRefetch,
   type ChatMessage as ReconcileChatMessage,
 } from './message-reconcile';
-import { MAX_MESSAGE_BODY_LENGTH } from '@/lib/validations/dm';
+import {
+  MAX_MESSAGE_BODY_LENGTH,
+  DM_ATTACHMENT_ALLOWED_MIMES,
+  DM_ATTACHMENT_MAX_BYTES,
+} from '@/lib/validations/dm';
 import type { Messages } from '@/lib/i18n/messages/en';
 
 type ChatMessage = ReconcileChatMessage;
@@ -59,6 +64,16 @@ function generateClientId(): string {
     return crypto.randomUUID();
   }
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+type DragFileResult = 'ok' | 'type_error' | 'size_error';
+
+function validateDragFile(file: File): DragFileResult {
+  if (!(DM_ATTACHMENT_ALLOWED_MIMES as readonly string[]).includes(file.type)) {
+    return 'type_error';
+  }
+  if (file.size > DM_ATTACHMENT_MAX_BYTES) return 'size_error';
+  return 'ok';
 }
 
 export function ChatWindow({
@@ -93,6 +108,11 @@ export function ChatWindow({
   // uploader child) so doSend() can coordinate upload → sendMessage.
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  // Round 4 / Item 1 — drag-and-drop
+  const dragCounter = useRef(0);
+  const [isDragOver, setIsDragOver] = useState(false);
+  // Round 4 / Item 2 — emoji picker inserts text at cursor via this ref
+  const messageInputRef = useRef<MessageInputHandle | null>(null);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const lastSeenCreatedAtRef = useRef<string | null>(
@@ -429,6 +449,48 @@ export function ChatWindow({
     });
   }, [otherUser.id]);
 
+  // Round 4 / Item 1 — drag-and-drop. Counter-based enter/leave tracking
+  // prevents false negatives when the pointer moves over child elements.
+  const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!canSend) return;
+    dragCounter.current += 1;
+    if (dragCounter.current === 1) setIsDragOver(true);
+  }, [canSend]);
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current = Math.max(0, dragCounter.current - 1);
+    if (dragCounter.current === 0) setIsDragOver(false);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current = 0;
+    setIsDragOver(false);
+    if (!canSend) return;
+    const file = e.dataTransfer.files.item(0);
+    if (!file) return;
+    const result = validateDragFile(file);
+    if (result === 'type_error') {
+      toast.error(t.attachmentInvalidType);
+      return;
+    }
+    if (result === 'size_error') {
+      toast.error(t.attachmentTooLarge.replace('{mb}', '10'));
+      return;
+    }
+    setAttachedFile(file);
+  }, [canSend, t]);
+
   const disabledReason = useMemo(() => {
     if (iBlocked) return t.youBlockedThisUser;
     if (theyBlocked) return t.theyBlockedYou;
@@ -436,7 +498,25 @@ export function ChatWindow({
   }, [iBlocked, theyBlocked, t]);
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div
+      className="relative flex flex-col h-full min-h-0"
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {/* Round 4 / Item 1 — drag-over overlay. Scoped to the chat surface,
+          pointer-events-none so it doesn't capture mouse events. */}
+      {isDragOver && canSend && (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 z-50 flex items-center justify-center rounded-md ring-2 ring-inset ring-primary bg-primary/10 pointer-events-none"
+        >
+          <span className="text-sm font-medium text-primary select-none px-4 text-center">
+            {t.dropFileToAttach}
+          </span>
+        </div>
+      )}
       {/* Chat header */}
       <header className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card">
         <Link
@@ -566,8 +646,10 @@ export function ChatWindow({
 
       {/* Composer — Round 3 / Item 5: paperclip + preview chip live in the
           `attachmentSlot`, above the textarea. Send button is disabled while an
-          upload is in flight and treats an attached file as a valid non-empty body. */}
+          upload is in flight and treats an attached file as a valid non-empty body.
+          Round 4 / Item 2: emoji picker button in `emojiSlot`, between textarea and Send. */}
       <MessageInput
+        ref={messageInputRef}
         onSend={doSend}
         disabled={!canSend}
         disabledReason={disabledReason}
@@ -592,6 +674,15 @@ export function ChatWindow({
               onValidationError={(msg) => toast.error(msg)}
             />
           </div>
+        }
+        emojiSlot={
+          <EmojiPickerButton
+            onEmojiSelect={(emoji) => messageInputRef.current?.insertAtCursor(emoji)}
+            disabled={!canSend}
+            ariaLabel={t.openEmojiPicker}
+            closeLabel={t.closeEmojiPicker}
+            theme="auto"
+          />
         }
       />
       <p

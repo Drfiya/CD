@@ -96,7 +96,7 @@ export function UnreadBadge({ ariaLabel }: { ariaLabel: string }) {
       {count > 0 && (
         <span
           aria-hidden
-          className="absolute -top-0.5 -right-0.5 min-w-[1rem] h-4 px-1 rounded-full bg-blue-600 text-white text-[10px] font-semibold inline-flex items-center justify-center"
+          className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none"
         >
           {count > 99 ? '99+' : count}
         </span>

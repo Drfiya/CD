@@ -239,6 +239,10 @@ export const en: Messages = {
         attachmentDownload: 'Download',
         attachmentOpenImage: 'Open full-size image',
         attachmentImageAlt: 'Image attachment: {name}',
+        // Round 4 — Drag-Drop + Emoji Picker
+        dropFileToAttach: 'Drop file to attach',
+        openEmojiPicker: 'Open emoji picker',
+        closeEmojiPicker: 'Close emoji picker',
     },
     landing_social_proof: {
         heroJoinCta: 'Join the community',
@@ -477,5 +481,9 @@ export interface Messages {
         attachmentDownload: string;
         attachmentOpenImage: string;
         attachmentImageAlt: string;
+        // Round 4 — Drag-Drop + Emoji Picker
+        dropFileToAttach: string;
+        openEmojiPicker: string;
+        closeEmojiPicker: string;
     };
 }

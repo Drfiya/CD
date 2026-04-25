@@ -117,7 +117,7 @@ export function ConversationList({
                   {hasUnread && (
                     <span
                       aria-label={`${c.unreadCount} ${messages.unreadLabel}`}
-                      className="shrink-0 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-blue-600 text-white text-[10px] font-semibold"
+                      className="shrink-0 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-semibold"
                     >
                       {c.unreadCount > 99 ? '99+' : c.unreadCount}
                     </span>

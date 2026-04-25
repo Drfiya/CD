@@ -239,6 +239,10 @@ export const de: Messages = {
         attachmentDownload: 'Herunterladen',
         attachmentOpenImage: 'Bild in voller Größe öffnen',
         attachmentImageAlt: 'Bildanhang: {name}',
+        // Round 4 — Drag-Drop + Emoji-Auswahl
+        dropFileToAttach: 'Datei zum Anhängen ablegen',
+        openEmojiPicker: 'Emoji-Auswahl öffnen',
+        closeEmojiPicker: 'Emoji-Auswahl schließen',
     },
     landing_social_proof: {
         heroJoinCta: 'Der Community beitreten',

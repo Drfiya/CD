@@ -239,6 +239,10 @@ export const fr: Messages = {
         attachmentDownload: 'Télécharger',
         attachmentOpenImage: 'Ouvrir l\'image en taille réelle',
         attachmentImageAlt: 'Pièce jointe : {name}',
+        // Round 4 — Glisser-déposer + Sélecteur d'emoji
+        dropFileToAttach: 'Déposer le fichier pour joindre',
+        openEmojiPicker: 'Ouvrir le sélecteur d\'emoji',
+        closeEmojiPicker: 'Fermer le sélecteur d\'emoji',
     },
     landing_social_proof: {
         heroJoinCta: 'Rejoindre la communauté',
