@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { Avatar } from '@/components/ui/avatar';
 import { CommentContent } from './comment-content-parser';
@@ -32,14 +32,30 @@ interface CommentThreadTreeProps {
   comments: Comment[];
 }
 
+import { useRouter } from 'next/navigation';
+import { deleteComment } from '@/lib/comment-actions';
+import { useTranslations } from '@/components/translation/TranslationContext';
+
 /**
  * Renders the list of top-level comments, the inline reply input, and the
  * "Show N replies" toggle. Owns the transient UI state for replies — no
  * server mutation logic lives here; that sits in CommentInput.
  */
 export function CommentThreadTree({ postId, currentUserId, userImage, comments }: CommentThreadTreeProps) {
+  const ui = useTranslations('comment');
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const executeDelete = (commentId: string) => {
+    startTransition(async () => {
+      await deleteComment(commentId);
+      setConfirmDeleteId(null);
+      router.refresh();
+    });
+  };
 
   function toggleReplies(commentId: string) {
     setExpandedReplies((prev) => {
@@ -74,13 +90,33 @@ export function CommentThreadTree({ postId, currentUserId, userImage, comments }
               <CommentContent content={comment.content} />
 
               {currentUserId && (
-                <button
-                  type="button"
-                  onClick={() => setReplyingTo(isReplying ? null : comment.id)}
-                  className="mt-1 text-xs text-gray-400 dark:text-neutral-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
-                >
-                  {isReplying ? 'Cancel' : 'Reply'}
-                </button>
+                <div className="mt-1 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setReplyingTo(isReplying ? null : comment.id)}
+                    className="text-xs text-gray-400 dark:text-neutral-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                  >
+                    {isReplying ? ui.cancel : ui.reply}
+                  </button>
+                  {currentUserId === comment.authorId && (
+                    confirmDeleteId === comment.id ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] uppercase font-bold text-red-500">{ui.confirmDelete}</span>
+                        <button type="button" onClick={() => executeDelete(comment.id)} disabled={isPending} className="text-xs font-bold text-red-600 hover:text-red-700">{ui.confirmYes}</button>
+                        <button type="button" onClick={() => setConfirmDeleteId(null)} disabled={isPending} className="text-xs text-gray-500 hover:text-gray-700">{ui.confirmNo}</button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteId(comment.id)}
+                        disabled={isPending}
+                        className="text-xs text-gray-400 dark:text-neutral-500 hover:text-red-500 transition-colors disabled:opacity-50"
+                      >
+                        {ui.delete}
+                      </button>
+                    )
+                  )}
+                </div>
               )}
 
               {isReplying && (
@@ -129,6 +165,26 @@ export function CommentThreadTree({ postId, currentUserId, userImage, comments }
                           </span>
                         </div>
                         <CommentContent content={reply.content} />
+                        {currentUserId === reply.authorId && (
+                          <div className="mt-1 flex items-center gap-3">
+                            {confirmDeleteId === reply.id ? (
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] uppercase font-bold text-red-500">{ui.confirmDelete}</span>
+                                <button type="button" onClick={() => executeDelete(reply.id)} disabled={isPending} className="text-xs font-bold text-red-600 hover:text-red-700">{ui.confirmYes}</button>
+                                <button type="button" onClick={() => setConfirmDeleteId(null)} disabled={isPending} className="text-xs text-gray-500 hover:text-gray-700">{ui.confirmNo}</button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeleteId(reply.id)}
+                                disabled={isPending}
+                                className="text-xs text-gray-400 dark:text-neutral-500 hover:text-red-500 transition-colors disabled:opacity-50"
+                              >
+                                {ui.delete}
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}

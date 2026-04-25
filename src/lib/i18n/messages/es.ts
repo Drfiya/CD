@@ -53,6 +53,7 @@ export const es: Messages = {
         contentPlaceholder: '¿Qué te gustaría compartir?',
         imageVideo: 'Imagen/Video',
         link: 'Enlace',
+        backToFeed: 'Volver',
     },
 
     // Post menu (three-dot dropdown)
@@ -79,6 +80,13 @@ export const es: Messages = {
         writeComment: 'Escribe un comentario...',
         reply: 'Responder',
         replies: 'Respuestas',
+        cancel: 'Cancelar',
+        delete: 'Eliminar',
+        confirmDelete: '¿Seguro?',
+        confirmYes: 'Sí',
+        confirmNo: 'No',
+        show: 'Mostrar',
+        hide: 'Ocultar',
     },
 
     // Gamification

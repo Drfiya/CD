@@ -51,6 +51,7 @@ export const en: Messages = {
         contentPlaceholder: 'What would you like to share?',
         imageVideo: 'Image/Video',
         link: 'Link',
+        backToFeed: 'Back to Feed',
     },
 
     // Post menu (three-dot dropdown)
@@ -77,6 +78,13 @@ export const en: Messages = {
         writeComment: 'Write a comment...',
         reply: 'Reply',
         replies: 'Replies',
+        cancel: 'Cancel',
+        delete: 'Delete',
+        confirmDelete: 'Sure?',
+        confirmYes: 'Yes',
+        confirmNo: 'No',
+        show: 'Show',
+        hide: 'Hide',
     },
 
     // Gamification
@@ -309,6 +317,7 @@ export interface Messages {
         contentPlaceholder: string;
         imageVideo: string;
         link: string;
+        backToFeed: string;
     };
     postMenu: {
         copyLink: string;
@@ -329,6 +338,13 @@ export interface Messages {
         writeComment: string;
         reply: string;
         replies: string;
+        cancel: string;
+        delete: string;
+        confirmDelete: string;
+        confirmYes: string;
+        confirmNo: string;
+        show: string;
+        hide: string;
     };
     gamification: {
         level: string;

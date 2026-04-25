@@ -188,7 +188,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
-        Back to Feed
+        {messages.post.backToFeed}
       </Link>
 
       {/* Post card */}
@@ -199,10 +199,10 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
             <Link href={`/members/${post.author.id}`} className="flex items-center gap-3 group">
               <div className="relative">
                 <Avatar src={post.author.image} name={post.author.name} size="md" />
-                <LevelBadge level={post.author.level} size="sm" className="absolute -bottom-1 -right-1" />
+
               </div>
               <div>
-                <div className="font-semibold text-gray-900 dark:text-neutral-100 group-hover:text-blue-600 transition-colors">
+                <div className="font-semibold text-gray-900 dark:text-neutral-100 group-hover:text-[#D94A4A] transition-colors">
                   {post.author.name}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-neutral-400">
@@ -210,7 +210,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
                   {post.category && (
                     <>
                       <span>·</span>
-                      <span className="text-blue-600 hover:underline">{post.category.name}</span>
+                      <span className="text-[#D94A4A] hover:underline">{post.category.name}</span>
                     </>
                   )}
                 </div>
