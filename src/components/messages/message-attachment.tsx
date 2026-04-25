@@ -80,31 +80,38 @@ export function MessageAttachment({
     let cancelled = false;
 
     (async () => {
-      // Deduplicate simultaneous requests for the same messageId
-      let fetchPromise = urlFetchPromises.get(messageId);
-      if (!fetchPromise) {
-        fetchPromise = getAttachmentSignedUrl({ messageId });
-        urlFetchPromises.set(messageId, fetchPromise);
-      }
-
-      const result = await fetchPromise;
-
-      if (cancelled) return;
-
-      if ('error' in result) {
-        setError(typeof result.error === 'string' ? result.error : 'unknown');
-        urlFetchPromises.delete(messageId); // Free up so we can retry later
-        return;
-      }
-
-      if (typeof result.signedUrl === 'string') {
-        urlCache.set(messageId, result.signedUrl);
-        if (typeof window !== 'undefined') {
-          sessionStorage.setItem(`dm-url-${messageId}`, result.signedUrl);
+      try {
+        // Deduplicate simultaneous requests for the same messageId
+        let fetchPromise = urlFetchPromises.get(messageId);
+        if (!fetchPromise) {
+          fetchPromise = getAttachmentSignedUrl({ messageId });
+          urlFetchPromises.set(messageId, fetchPromise);
         }
-        setSignedUrl(result.signedUrl);
-      } else {
-        setError('missing_url');
+
+        const result = await fetchPromise;
+
+        if (cancelled) return;
+
+        if ('error' in result) {
+          setError(typeof result.error === 'string' ? result.error : 'unknown');
+          urlFetchPromises.delete(messageId); // Free up so we can retry later
+          return;
+        }
+
+        if (typeof result.signedUrl === 'string') {
+          urlCache.set(messageId, result.signedUrl);
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem(`dm-url-${messageId}`, result.signedUrl);
+          }
+          setSignedUrl(result.signedUrl);
+        } else {
+          setError('missing_url');
+        }
+      } catch (err: any) {
+        if (!cancelled) {
+          setError(err?.message || 'Server Action crashed');
+          urlFetchPromises.delete(messageId);
+        }
       }
     })();
 
