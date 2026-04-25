@@ -24,6 +24,13 @@ import {
     type TranslationTarget,
 } from './dom-utils';
 
+const decodeHtml = (text: string) => {
+    if (!text || !text.includes('&')) return text;
+    const textArea = document.createElement('textarea');
+    textArea.innerHTML = text;
+    return textArea.value;
+};
+
 export function GlobalTranslator() {
     const { currentLanguage, translationVersion, setIsTranslating } = useTranslation();
     const pathname = usePathname();
@@ -56,7 +63,7 @@ export function GlobalTranslator() {
                         parent.setAttribute('data-original-text', target.originalText);
                     }
                     pendingOurMutations.add(target.node);
-                    target.node.textContent = translation;
+                    target.node.textContent = decodeHtml(translation);
                     translatedNodesRef.current.set(target.node, currentLanguage);
                     if (parent) parent.classList.add('translated');
                 } else if (target.type === 'attribute' && target.element && target.attribute) {
@@ -64,7 +71,7 @@ export function GlobalTranslator() {
                     if (!target.element.hasAttribute(originalAttr)) {
                         target.element.setAttribute(originalAttr, target.originalText);
                     }
-                    target.element.setAttribute(target.attribute, translation);
+                    target.element.setAttribute(target.attribute, decodeHtml(translation));
                 }
             });
         } catch (error) {
@@ -122,7 +129,7 @@ export function GlobalTranslator() {
                     const cached = getFromCache(original, currentLanguage);
                     if (cached) {
                         pendingOurMutations.add(node);
-                        node.textContent = cached;
+                        node.textContent = decodeHtml(cached);
                         translatedNodesRef.current.set(node, currentLanguage);
                     }
                 } else if (shouldTranslateText(text)) {
