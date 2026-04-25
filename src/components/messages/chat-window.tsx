@@ -135,9 +135,13 @@ export function ChatWindow({
   // The UnreadBadge + ConversationList listen to the DM_READ_EVENT broadcast
   // fired from `markConversationRead` — surgical live update, no layout-wide
   // RSC revalidation triggered by opening a conversation.
+  // Mark conversation as read on mount and whenever new messages arrive.
+  // The UnreadBadge + ConversationList listen to the DM_READ_EVENT broadcast
+  // fired from `markConversationRead` — surgical live update.
   useEffect(() => {
+    if (!myId) return;
     void markConversationRead({ conversationId });
-  }, [conversationId]);
+  }, [conversationId, msgs.length, myId]);
 
   // Round 3 / A2 — install the connection-banner grace helper once on mount.
   // Re-mount happens on conversationId change via parent `key` prop, so tying
@@ -217,6 +221,9 @@ export function ChatWindow({
         attachmentName: m.attachmentName ?? null,
       }));
       setMsgs((prev) => mergeRefetch(prev, fresh, since));
+      if (fresh.length > 0) {
+        lastSeenCreatedAtRef.current = fresh[fresh.length - 1].createdAt.toISOString();
+      }
     }
 
     // Secondary: Inbox Broadcast fallback (same as UnreadBadge).
