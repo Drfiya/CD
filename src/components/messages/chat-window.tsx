@@ -167,39 +167,41 @@ export function ChatWindow({
     const supabase = createClient();
 
     function upsertFromRow(row: unknown) {
-      // Supabase payloads use snake_case for Postgres column names
+      // Prisma schema uses camelCase field names without @map, so Postgres
+      // columns are also camelCase. Supabase Realtime returns the exact
+      // Postgres column names in its payload — camelCase, not snake_case.
       type Row = {
         id: string;
-        conversation_id: string;
-        sender_id: string;
+        conversationId: string;
+        senderId: string;
         body: string;
-        client_message_id: string | null;
-        created_at: string;
-        read_at: string | null;
+        clientMessageId: string | null;
+        createdAt: string;
+        readAt: string | null;
         // Round 3 / Item 5 — attachment fields arrive via the same Postgres
         // Changes payload. Round-trip them so MessageBubble can render without
         // an extra refetch.
-        attachment_path: string | null;
-        attachment_mime: string | null;
-        attachment_size: number | null;
-        attachment_name: string | null;
+        attachmentPath: string | null;
+        attachmentMime: string | null;
+        attachmentSize: number | null;
+        attachmentName: string | null;
       };
       const r = row as Row;
-      if (r.conversation_id !== conversationId) return;
+      if (r.conversationId !== conversationId) return;
       const incoming: ChatMessage = {
         id: r.id,
-        conversationId: r.conversation_id,
-        senderId: r.sender_id,
+        conversationId: r.conversationId,
+        senderId: r.senderId,
         body: r.body,
-        clientMessageId: r.client_message_id,
-        createdAt: new Date(r.created_at),
-        readAt: r.read_at ? new Date(r.read_at) : null,
-        attachmentPath: r.attachment_path,
-        attachmentMime: r.attachment_mime,
-        attachmentSize: r.attachment_size,
-        attachmentName: r.attachment_name,
+        clientMessageId: r.clientMessageId,
+        createdAt: new Date(r.createdAt),
+        readAt: r.readAt ? new Date(r.readAt) : null,
+        attachmentPath: r.attachmentPath,
+        attachmentMime: r.attachmentMime,
+        attachmentSize: r.attachmentSize,
+        attachmentName: r.attachmentName,
       };
-      lastSeenCreatedAtRef.current = r.created_at;
+      lastSeenCreatedAtRef.current = r.createdAt;
 
       setMsgs((prev) => upsertIncoming(prev, incoming));
 
@@ -672,7 +674,11 @@ export function ChatWindow({
             attachmentLabels={{
               download: t.attachmentDownload,
               openImage: t.attachmentOpenImage,
-              imageAlt: (name) => t.attachmentImageAlt.replace('{name}', name),
+              // Round 6 / A3 — strip file extension for cleaner screen-reader
+              // announcement: "Image attachment: photo" instead of "Image attachment: photo.jpg".
+              // Falls back to the full name when the string contains no dot.
+              imageAlt: (name) =>
+                t.attachmentImageAlt.replace('{name}', name.replace(/\.[^.]+$/, '') || name),
               uploadFailed: t.attachmentUploadFailed,
               closeLightbox: t.cancel,
             }}

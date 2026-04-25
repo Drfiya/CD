@@ -5,6 +5,7 @@ import {
   useImperativeHandle,
   useRef,
   useState,
+  useCallback,
   type KeyboardEvent,
   type FormEvent,
   type ReactNode,
@@ -55,6 +56,21 @@ function MessageInput({
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [value, setValue] = useState('');
   const [pending, setPending] = useState(false);
+  // Round 6 / B3 — pressing state drives the scale-95 animation so the button
+  // gives haptic-like feedback on both click and Enter-key sends.
+  const [pressing, setPressing] = useState(false);
+  const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Trigger a 120 ms press animation. Safe to call multiple times — each call
+  // resets the timer so rapid sends don't leave the button stuck scaled-down.
+  const triggerPress = useCallback(() => {
+    if (pressTimerRef.current !== null) clearTimeout(pressTimerRef.current);
+    setPressing(true);
+    pressTimerRef.current = setTimeout(() => {
+      setPressing(false);
+      pressTimerRef.current = null;
+    }, 120);
+  }, []);
 
   useImperativeHandle(ref, () => ({
     insertAtCursor(text: string) {
@@ -77,6 +93,8 @@ function MessageInput({
     const trimmed = value.trim();
     // Round 3 / Item 5 — allow empty body when an attachment is queued.
     if ((!trimmed && !hasAttachment) || pending || disabled || isUploading) return;
+    // Round 6 / B3 — trigger pressing animation (works for both click and Enter).
+    triggerPress();
     setPending(true);
     try {
       await onSend(trimmed);
@@ -151,11 +169,16 @@ function MessageInput({
             (value.trim().length === 0 && !hasAttachment)
           }
           className={cn(
-            'px-5 py-2 rounded-full text-sm font-semibold tracking-wide text-white transition-colors shadow-sm',
+            'px-5 py-2 rounded-full text-sm font-semibold tracking-wide text-white shadow-sm',
+            // Round 6 / B3 — pressing animation: scale-95 on send (click + Enter).
+            // transition-transform drives the animation; motion-reduce disables it
+            // for users who prefer reduced motion (WCAG 2.1 §2.3.3).
+            'transition-transform motion-reduce:transition-none',
+            pressing && 'scale-95',
             'disabled:opacity-50 disabled:cursor-not-allowed',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
           )}
-          style={{ backgroundColor: '#D94A4A' }}
+          style={{ backgroundColor: '#D94A4A', transitionDuration: '120ms' }}
           onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.backgroundColor = '#C43E3E'; }}
           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#D94A4A'; }}
         >

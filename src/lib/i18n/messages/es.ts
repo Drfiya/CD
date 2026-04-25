@@ -248,6 +248,9 @@ export const es: Messages = {
         messageDateYesterday: 'Ayer',
         confirmUnblockTitle: '¿Desbloquear a este usuario?',
         confirmUnblockBody: 'Podrá volver a enviarte mensajes.',
+        // Round 6 / A2 — Vista previa de archivo adjunto en la lista de conversaciones
+        inboxAttachmentPhoto: '📷 Foto',
+        inboxAttachmentDocument: '📄 Documento',
     },
     landing_social_proof: {
         heroJoinCta: 'Únete a la comunidad',

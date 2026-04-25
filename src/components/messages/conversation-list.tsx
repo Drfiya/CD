@@ -14,11 +14,15 @@ import type { Messages } from '@/lib/i18n/messages/en';
 interface ConversationListProps {
   initialConversations: ConversationListItem[];
   messages: Messages['dm'];
+  /** Round 6 / A1 — App-locale string (e.g. 'en', 'de') threaded from the server
+   *  so conversation timestamps match the UI language, not the browser/OS locale. */
+  locale: string;
 }
 
 export function ConversationList({
   initialConversations,
   messages,
+  locale,
 }: ConversationListProps) {
   const { data: session } = useSession();
   const userId = session?.user?.id;
@@ -110,7 +114,7 @@ export function ConversationList({
                       dateTime={c.lastMessageAt.toISOString?.() ?? String(c.lastMessageAt)}
                       className="shrink-0 text-[11px] text-muted-foreground"
                     >
-                      {formatShortTime(new Date(c.lastMessageAt))}
+                      {formatShortTime(new Date(c.lastMessageAt), locale)}
                     </time>
                   )}
                 </div>
@@ -121,7 +125,13 @@ export function ConversationList({
                       hasUnread ? 'text-foreground font-medium' : 'text-muted-foreground',
                     )}
                   >
-                    {c.lastMessage?.body ?? ''}
+                    {/* Round 6 / A2 — show attachment hint when body is empty */}
+                    {c.lastMessage?.body ||
+                      (c.lastMessage?.attachmentMime?.startsWith('image/')
+                        ? messages.inboxAttachmentPhoto
+                        : c.lastMessage?.attachmentMime === 'application/pdf'
+                          ? messages.inboxAttachmentDocument
+                          : '')}
                   </p>
                   {hasUnread && (
                     <span
@@ -141,15 +151,18 @@ export function ConversationList({
   );
 }
 
-function formatShortTime(date: Date): string {
+// Round 6 / A1 — `locale` replaces `undefined` so timestamps match the UI
+// language, not the browser/OS locale (e.g. German device + English UI → 'Mon'
+// not 'Mo.').
+function formatShortTime(date: Date, locale: string): string {
   const now = Date.now();
   const diff = now - date.getTime();
   const oneDay = 24 * 60 * 60 * 1000;
   if (diff < oneDay && date.getDate() === new Date().getDate()) {
-    return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
   }
   if (diff < 7 * oneDay) {
-    return date.toLocaleDateString(undefined, { weekday: 'short' });
+    return date.toLocaleDateString(locale, { weekday: 'short' });
   }
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return date.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
 }

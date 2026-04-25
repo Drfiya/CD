@@ -25,6 +25,8 @@ export interface ConversationListItem {
     body: string;
     createdAt: Date;
     senderId: string;
+    /** Round 6 / A2 — MIME of the last message's attachment, if any. */
+    attachmentMime: string | null;
   } | null;
   unreadCount: number;
   lastMessageAt: Date | null;
@@ -109,30 +111,32 @@ export async function getConversationList(): Promise<ConversationListItem[]> {
       messages: {
         take: 1,
         orderBy: { createdAt: 'desc' },
-        select: { body: true, createdAt: true, senderId: true },
+        // Round 6 / A2 — include attachmentMime so the inbox can show a
+        // fallback hint ("📷 Photo" / "📄 Document") when body is empty.
+        select: { body: true, createdAt: true, senderId: true, attachmentMime: true },
       },
     },
   });
 
   if (conversations.length === 0) return [];
 
-  // Load my outgoing blocks once, for filtering
-  const myBlocks = await db.dmBlock.findMany({
-    where: { blockerId: me },
-    select: { blockedId: true },
-  });
+  // Load blocks and unread counts in parallel — neither depends on the other.
+  const [myBlocks, counts] = await Promise.all([
+    db.dmBlock.findMany({
+      where: { blockerId: me },
+      select: { blockedId: true },
+    }),
+    db.message.groupBy({
+      by: ['conversationId'],
+      where: {
+        conversationId: { in: conversations.map((c) => c.id) },
+        senderId: { not: me },
+        readAt: null,
+      },
+      _count: { _all: true },
+    }),
+  ]);
   const blockedSet = new Set(myBlocks.map((b) => b.blockedId));
-
-  // Batch unread counts per conversation
-  const counts = await db.message.groupBy({
-    by: ['conversationId'],
-    where: {
-      conversationId: { in: conversations.map((c) => c.id) },
-      senderId: { not: me },
-      readAt: null,
-    },
-    _count: { _all: true },
-  });
   const unreadByConv = new Map(counts.map((c) => [c.conversationId, c._count._all]));
 
   return conversations
@@ -141,7 +145,14 @@ export async function getConversationList(): Promise<ConversationListItem[]> {
       return {
         id: c.id,
         otherUser: other,
-        lastMessage: c.messages[0] ?? null,
+        lastMessage: c.messages[0]
+          ? {
+              body: c.messages[0].body,
+              createdAt: c.messages[0].createdAt,
+              senderId: c.messages[0].senderId,
+              attachmentMime: c.messages[0].attachmentMime ?? null,
+            }
+          : null,
         unreadCount: unreadByConv.get(c.id) ?? 0,
         lastMessageAt: c.lastMessageAt,
       };

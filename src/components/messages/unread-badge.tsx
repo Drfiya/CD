@@ -33,7 +33,16 @@ export function UnreadBadge({ ariaLabel }: { ariaLabel: string }) {
       if (typeof document !== 'undefined' && document.hidden) return;
       try {
         const n = await getTotalUnreadCount();
-        if (active) setCount(n);
+        if (!active) return;
+        setCount(n);
+        // Round 6 / C2 — propagate unread count to the browser tab title so
+        // users see "(3) ScienceExperts.ai" without switching to this tab.
+        // SSR-safe: guarded by `typeof document` so Next.js server render
+        // doesn't throw. The title is restored when the component unmounts.
+        if (typeof document !== 'undefined') {
+          const APP_NAME = 'ScienceExperts.ai';
+          document.title = n > 0 ? `(${n > 99 ? '99+' : n}) ${APP_NAME}` : APP_NAME;
+        }
       } catch {
         // Fail silently; next tick will retry
       }
@@ -65,6 +74,10 @@ export function UnreadBadge({ ariaLabel }: { ariaLabel: string }) {
       active = false;
       poller.stop();
       void supabase.removeChannel(channel);
+      // Restore the tab title when the badge unmounts (e.g. user logs out).
+      if (typeof document !== 'undefined') {
+        document.title = 'ScienceExperts.ai';
+      }
     };
   }, [userId]);
 

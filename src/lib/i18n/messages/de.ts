@@ -248,6 +248,9 @@ export const de: Messages = {
         messageDateYesterday: 'Gestern',
         confirmUnblockTitle: 'Diesen Nutzer entblocken?',
         confirmUnblockBody: 'Er kann dir dann wieder Nachrichten senden.',
+        // Round 6 / A2 — Inbox-Anhang-Vorschau-Hinweise
+        inboxAttachmentPhoto: '📷 Foto',
+        inboxAttachmentDocument: '📄 Dokument',
     },
     landing_social_proof: {
         heroJoinCta: 'Der Community beitreten',

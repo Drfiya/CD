@@ -72,7 +72,15 @@ export function buildAttachmentStoragePath(
   uploadId: string,
   sanitisedName: string,
 ): string {
-  return `${conversationId}/${uploadId}/${sanitisedName}`;
+  const path = `${conversationId}/${uploadId}/${sanitisedName}`;
+  // Round 6 / A4 — Belt-and-suspenders path-confinement. The path must start
+  // with the trusted conversationId prefix and must not contain any
+  // path-traversal sequences. sanitiseAttachmentName already strips separators,
+  // but this assertion catches any future caller that bypasses sanitisation.
+  if (path.includes('..') || !path.startsWith(`${conversationId}/`)) {
+    throw new Error('DM_ATTACHMENT_PATH_TRAVERSAL');
+  }
+  return path;
 }
 
 // Magic-byte signatures. Offsets below are relative to the start of the file.

@@ -58,3 +58,12 @@ src/generated/
 ._*
 transparent-black-small.png
 .env*.local
+
+# Orphan binary assets — never commit raw images to repo root
+# (exceptions: public/ and src/ intentional product assets)
+*.jpeg
+*.jpg
+!public/**/*.jpeg
+!public/**/*.jpg
+!src/**/*.jpeg
+!src/**/*.jpg

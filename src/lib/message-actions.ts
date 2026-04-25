@@ -17,6 +17,7 @@ import {
   type DmInboxBroadcast,
   type DmReadBroadcast,
 } from '@/lib/dm-realtime';
+import { sendDmEmailNotification } from '@/lib/dm-email';
 
 const DM_SEND_LIMIT = 30;
 const DM_SEND_WINDOW_MS = 60_000;
@@ -224,6 +225,16 @@ export async function sendMessage(input: {
     },
     recipientId,
   );
+
+  // Round 6 / B2 — Fire-and-forget email fallback for offline recipients.
+  // sendDmEmailNotification catches all errors internally; it never rejects.
+  // The sender's response is not delayed — email is dispatched asynchronously.
+  void sendDmEmailNotification({
+    conversationId,
+    recipientId,
+    senderName: session.user.name ?? null,
+    messagePreview: body || '📎 Attachment',
+  });
 
   return { message };
 }

@@ -248,6 +248,9 @@ export const en: Messages = {
         messageDateYesterday: 'Yesterday',
         confirmUnblockTitle: 'Unblock this user?',
         confirmUnblockBody: 'They will be able to send you messages again.',
+        // Round 6 / A2 — Inbox attachment preview hints
+        inboxAttachmentPhoto: '📷 Photo',
+        inboxAttachmentDocument: '📄 Document',
     },
     landing_social_proof: {
         heroJoinCta: 'Join the community',
@@ -495,5 +498,8 @@ export interface Messages {
         messageDateYesterday: string;
         confirmUnblockTitle: string;
         confirmUnblockBody: string;
+        // Round 6 / A2 — Inbox attachment preview hints
+        inboxAttachmentPhoto: string;
+        inboxAttachmentDocument: string;
     };
 }
