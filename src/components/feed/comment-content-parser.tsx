@@ -50,7 +50,7 @@ export function CommentContent({ content }: { content: string }) {
     if (m.start > lastEnd) {
       const textBefore = content.slice(lastEnd, m.start).trim();
       if (textBefore) {
-        parts.push(<span key={keyIndex++}>{textBefore} </span>);
+        parts.push(<span key={keyIndex++}>{decodeEntities(textBefore)} </span>);
       }
     }
 
@@ -93,13 +93,24 @@ export function CommentContent({ content }: { content: string }) {
   if (lastEnd < content.length) {
     const remainingText = content.slice(lastEnd).trim();
     if (remainingText) {
-      parts.push(<span key={keyIndex++}>{remainingText}</span>);
+      parts.push(<span key={keyIndex++}>{decodeEntities(remainingText)}</span>);
     }
   }
 
   if (parts.length === 0) {
-    return <UGCText as="p" className="text-sm text-gray-700 dark:text-neutral-300 mt-0.5">{content}</UGCText>;
+    return <UGCText as="p" className="text-sm text-gray-700 dark:text-neutral-300 mt-0.5">{decodeEntities(content)}</UGCText>;
   }
 
   return <UGCText as="div" className="text-sm text-gray-700 dark:text-neutral-300 mt-0.5">{parts}</UGCText>;
+}
+
+function decodeEntities(text: string) {
+  if (!text || !text.includes('&')) return text;
+  return text
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#39;/g, "'");
 }
