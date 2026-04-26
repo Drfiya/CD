@@ -100,12 +100,9 @@ export function BugReportModal({ onClose }: Props) {
   };
 
   return (
-    /* Backdrop */
+    /* Backdrop — intentionally does NOT close on click outside (prevents accidental data loss) */
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
     >
       <div
         className="w-full max-w-lg rounded-xl bg-white dark:bg-neutral-900 shadow-2xl overflow-hidden"
