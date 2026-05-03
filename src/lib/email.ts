@@ -61,7 +61,7 @@ export async function sendPasswordResetEmail(email: string) {
     const resend = getResendClient();
     if (!resend) return { success: true };
     await resend.emails.send({
-      from: 'Community <onboarding@resend.dev>', // Use Resend's test domain
+      from: 'ScienceExperts <noreply@scienceexperts.ai>',
       to: email,
       subject: 'Reset your password',
       html: `
@@ -139,7 +139,7 @@ export async function sendActivityEmail({
     const resend = getResendClient();
     if (!resend) return;
     await resend.emails.send({
-      from: 'Community <onboarding@resend.dev>',
+      from: 'ScienceExperts <noreply@scienceexperts.ai>',
       to: recipient.email,
       subject,
       html: `
